@@ -1,0 +1,1 @@
+pgbench -i -p 5432 -d geostore -U gfw -h gfw-postgres.cmwunwkcyxbz.us-east-1.rds.amazonaws.com

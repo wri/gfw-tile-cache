@@ -1,0 +1,180 @@
+{
+  "currentVersion": 10.7,
+  "name": "NASE VIIRS Fire Alerts",
+  "copyrightText": "Sources: NASA, Global Forest Watch",
+  "capabilities": "TilesOnly",
+  "type": "indexedVector",
+  "defaultStyles": "resources/styles",
+  "tiles": [
+    "../pbf/{z}/{x}/{y}.pbf"
+  ],
+  "exportTilesAllowed": true,
+  "initialExtent": {
+    "xmin": -20037508.342787,
+    "ymin": -20037508.342787,
+    "xmax": 20037508.342787,
+    "ymax": 20037508.342787,
+    "spatialReference": {
+      "wkid": 102100,
+      "latestWkid": 3857
+    }
+  },
+  "fullExtent": {
+    "xmin": -20037508.342787,
+    "ymin": -20037508.342787,
+    "xmax": 20037508.342787,
+    "ymax": 20037508.342787,
+    "spatialReference": {
+      "wkid": 102100,
+      "latestWkid": 3857
+    }
+  },
+  "minScale": 0,
+  "maxScale": 0,
+  "tileInfo": {
+    "rows": 512,
+    "cols": 512,
+    "dpi": 96,
+    "format": "pbf",
+    "origin": {
+      "x": -20037508.342787,
+      "y": 20037508.342787
+    },
+    "spatialReference": {
+      "wkid": 102100,
+      "latestWkid": 3857
+    },
+    "lods": [
+      {
+        "level": 0,
+        "resolution": 78271.51696401172,
+        "scale": 295829355.45453244
+      },
+      {
+        "level": 1,
+        "resolution": 39135.75848200586,
+        "scale": 147914677.72726622
+      },
+      {
+        "level": 2,
+        "resolution": 19567.87924100293,
+        "scale": 73957338.86363311
+      },
+      {
+        "level": 3,
+        "resolution": 9783.939620501465,
+        "scale": 36978669.431816556
+      },
+      {
+        "level": 4,
+        "resolution": 4891.969810250733,
+        "scale": 18489334.715908278
+      },
+      {
+        "level": 5,
+        "resolution": 2445.9849051253664,
+        "scale": 9244667.357954139
+      },
+      {
+        "level": 6,
+        "resolution": 1222.9924525626832,
+        "scale": 4622333.678977069
+      },
+      {
+        "level": 7,
+        "resolution": 611.4962262813416,
+        "scale": 2311166.8394885347
+      },
+      {
+        "level": 8,
+        "resolution": 305.7481131406708,
+        "scale": 1155583.4197442674
+      },
+      {
+        "level": 9,
+        "resolution": 152.8740565703354,
+        "scale": 577791.7098721337
+      },
+      {
+        "level": 10,
+        "resolution": 76.4370282851677,
+        "scale": 288895.85493606684
+      },
+      {
+        "level": 11,
+        "resolution": 38.21851414258385,
+        "scale": 144447.92746803342
+      },
+      {
+        "level": 12,
+        "resolution": 19.109257071291925,
+        "scale": 72223.96373401671
+      },
+      {
+        "level": 13,
+        "resolution": 9.554628535645962,
+        "scale": 36111.981867008355
+      },
+      {
+        "level": 14,
+        "resolution": 4.777314267822981,
+        "scale": 18055.990933504178
+      },
+      {
+        "level": 15,
+        "resolution": 2.3886571339114906,
+        "scale": 9027.995466752089
+      },
+      {
+        "level": 16,
+        "resolution": 1.1943285669557453,
+        "scale": 4513.997733376044
+      },
+      {
+        "level": 17,
+        "resolution": 0.5971642834778726,
+        "scale": 2256.998866688022
+      },
+      {
+        "level": 18,
+        "resolution": 0.2985821417389363,
+        "scale": 1128.499433344011
+      },
+      {
+        "level": 19,
+        "resolution": 0.14929107086946816,
+        "scale": 564.2497166720055
+      },
+      {
+        "level": 20,
+        "resolution": 0.07464553543473408,
+        "scale": 282.1248583360028
+      },
+      {
+        "level": 21,
+        "resolution": 0.03732276771736704,
+        "scale": 141.0624291680014
+      },
+      {
+        "level": 22,
+        "resolution": 0.01866138385868352,
+        "scale": 70.5312145840007
+      }
+    ]
+  },
+  "maxzoom": 22,
+  "minLOD": 0,
+  "maxLOD": 16,
+  "resourceInfo": {
+    "styleVersion": 8,
+    "tileCompression": "gzip",
+    "cacheInfo": {
+      "storageInfo": {
+        "packetSize": 128,
+        "storageFormat": "compactV2"
+      }
+    }
+  },
+  "serviceItemId": "274684d7a9d74ca4b87f529776feb3a2",
+  "maxExportTilesCount": 10000
+}

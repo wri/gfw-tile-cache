@@ -1,0 +1,85 @@
+pgbench -c 10 -T 300 -S -n -p 5432 -d geostore -U gfw -h gfw-postgres.cmwunwkcyxbz.us-east-1.rds.amazonaws.com -f benchmark-zoom9.sql
+
+transaction type: Custom query
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 20
+tps = 0.038505 (including connections establishing)
+tps = 0.038511 (excluding connections establishing)
+
+After geom_wm and acq_date index
+
+transaction type: multiple scripts
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 425
+latency average = 7202.475 ms
+tps = 1.388412 (including connections establishing)
+tps = 1.388448 (excluding connections establishing)
+SQL script 1: <builtin: select only>
+ - weight: 1 (targets 50.0% of total)
+ - 201 transactions (47.3% of total, tps = 0.656637)
+ - latency average = 5.443 ms
+ - latency stddev = 3.737 ms
+SQL script 2: benchmark-zoom9.sql
+ - weight: 1 (targets 50.0% of total)
+ - 224 transactions (52.7% of total, tps = 0.731775)
+ - latency average = 13532.364 ms
+ - latency stddev = 887.980 ms
+
+
+After cluster
+
+transaction type: multiple scripts
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 479
+latency average = 6370.342 ms
+tps = 1.569774 (including connections establishing)
+tps = 1.569813 (excluding connections establishing)
+SQL script 1: <builtin: select only>
+ - weight: 1 (targets 50.0% of total)
+ - 246 transactions (51.4% of total, tps = 0.806189)
+ - latency average = 5.300 ms
+ - latency stddev = 3.254 ms
+SQL script 2: benchmark-zoom9.sql
+ - weight: 1 (targets 50.0% of total)
+ - 233 transactions (48.6% of total, tps = 0.763585)
+ - latency average = 12973.331 ms
+ - latency stddev = 792.726 ms
+
+
+
+pgbench -c 10 -T 300  -n -p 5432 -d geostore -U gfw -h gfw-postgres.cmwunwkcyxbz.us-east-1.rds.amazonaws.com -f benchmark-zoom9.sql
+
+transaction type: benchmark-zoom9.sql
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 230
+latency average = 13412.325 ms
+tps = 0.745583 (including connections establishing)
+tps = 0.745601 (excluding connections establishing)
+
+
+transaction type: benchmark-zoom9.sql
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 231
+latency average = 13207.984 ms
+tps = 0.757118 (including connections establishing)
+tps = 0.757148 (excluding connections establishing)

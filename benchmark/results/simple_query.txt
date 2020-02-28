@@ -1,0 +1,11 @@
+pgbench -c 10 -T 300 -S -n -p 5432 -d geostore -U gfw -h gfw-postgres.cmwunwkcyxbz.us-east-1.rds.amazonaws.com
+
+transaction type: SELECT only
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 3826953
+tps = 12756.464544 (including connections establishing)
+tps = 12760.412772 (excluding connections establishing)

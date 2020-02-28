@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'/>
+    <title>Mapbox GL JS Examples</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no'/>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.0/mapbox-gl.css' rel='stylesheet'/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<script>
+
+    var map = new mapboxgl.Map({
+        'container': 'map',
+        'zoom': 6,
+        'center': [10, 10],
+        'style': {
+            'version': 8,
+            'sources': {
+                'carto-dark': {
+                    'type': 'raster',
+                    'tiles': [
+                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+                    ]
+                },
+                'nasa_viirs_fire_alerts': {
+                    'type': 'vector',
+                    'tiles': [
+                        "https://d20lgxzbmjgu8w.cloudfront.net/nasa_viirs_fire_alerts/latest/default/{z}/{x}/{y}.pbf?start_date=2018-10-01&end_date=2018-10-14"
+                    ]
+                }
+
+            },
+            'layers': [{
+                'id': 'carto-dark-layer',
+                'type': 'raster',
+                'source': 'carto-dark',
+                'minzoom': 0,
+                'maxzoom': 22
+            }, {
+                'id': 'viirs-points',
+                'type': 'circle',
+                'source': 'nasa_viirs_fire_alerts',
+                // ST_AsMVT() uses 'default' as layer name
+                'source-layer': 'default',
+                'minzoom': 5,
+                'maxzoom': 22,
+                'paint': {
+                    "circle-color": "#d64b00",
+                    'circle-radius': {
+                        'base': 0.5,
+                        'stops': [[7, 0.75], [8, 1.5], [9, 2], [10, 2.5], [11, 3], [12, 4]]
+                    },
+                }
+            }, {
+                'id': 'viirs-heatmap',
+                'type': 'heatmap',
+                'source': 'nasa_viirs_fire_alerts',
+                // ST_AsMVT() uses 'default' as layer name
+                'source-layer': 'default',
+                'minzoom': 0,
+                'maxzoom': 6,
+                'paint': {
+// Increase the heatmap weight based on frequency and property magnitude
+                    'heatmap-weight': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'count'],
+                        0,
+                        0,
+                        500000,
+                        1000
+                    ],
+// Increase the heatmap color weight weight by zoom level
+// heatmap-intensity is a multiplier on top of heatmap-weight
+                    'heatmap-intensity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        0,
+                        1,
+                        1,
+                        2
+                    ],
+// Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+// Begin color ramp at 0-stop with a 0-transparancy color
+// to create a blur-like effect.
+                    'heatmap-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0,
+                        'rgba(33,102,172,0)',
+                        0.2,
+                        'rgb(214,75,0)',
+                        0.4,
+                        'rgb(198,52,0)',
+                        0.6,
+                        'rgb(180,7,0)',
+                        0.8,
+                        'rgb(149,0,92)',
+                        1,
+                        'rgb(178,162,162)'
+                    ],
+// Adjust the heatmap radius by zoom level
+                    'heatmap-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        0,
+                        2,
+                        9,
+                        20
+                    ],
+// Transition from heatmap to circle layer by zoom level
+                    'heatmap-opacity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        7,
+                        1,
+                        22,
+                        0
+                    ]
+                }
+            }]
+        }
+    });
+
+
+    map.addControl(new mapboxgl.NavigationControl());
+    // When a click event occurs on a feature in the states layer, open a popup at the
+    // location of the click, with description HTML from its properties.
+    map.on('click', 'viirs-points', function (e) {
+        new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML("<strong>MODIS VIIRS Fire Alerts</strong>" +
+                "<p>Number of alerts: " + e.features[0].properties.count + "</p>" +
+                "<p>Brightness: " + e.features[0].properties.bright_ti4 + "</p>")
+
+            .addTo(map);
+    });
+
+    // Change the cursor to a pointer when the mouse is over the states layer.
+    map.on('mouseenter', 'viirs-points', function () {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change it back to a pointer when it leaves.
+    map.on('mouseleave', 'viirs-points', function () {
+        map.getCanvas().style.cursor = '';
+    });
+
+</script>
+
+</body>
+</html>
