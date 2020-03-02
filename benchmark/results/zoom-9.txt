@@ -83,3 +83,30 @@ number of transactions actually processed: 231
 latency average = 13207.984 ms
 tps = 0.757118 (including connections establishing)
 tps = 0.757148 (excluding connections establishing)
+
+##################################
+AURORA
+pgbench -c 10 -T 300  -n -p 5432 -d geostore -U gfw -h $POSTGRES_HOST -f benchmark-zoom9.sql
+
+transaction type: benchmark-zoom9.sql
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 290
+latency average = 10623.236 ms
+tps = 0.941333 (including connections establishing)
+tps = 0.941360 (excluding connections establishing)
+
+
+transaction type: benchmark-zoom9.sql
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+duration: 300 s
+number of transactions actually processed: 292
+latency average = 10396.453 ms
+tps = 0.961867 (including connections establishing)
+tps = 0.961896 (excluding connections establishing)

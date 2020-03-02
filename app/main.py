@@ -9,7 +9,8 @@ from fastapi import FastAPI, Path, Query
 from starlette.responses import HTMLResponse, Response
 
 app = FastAPI()
-POOL: Optional[asyncpg.pool] = None
+POOL: Optional[asyncpg.pool.Pool] = None
+# POOL = None
 ENV = "dev"
 
 
@@ -59,11 +60,6 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/nasa_viirs_fire_alerts/latest/default/map", response_class=HTMLResponse)
-async def map():
-    return await mapbox()
-
-
 @app.get("/nasa_viirs_fire_alerts/latest/mapbox.html", response_class=HTMLResponse)
 async def mapbox():
     dirname = os.path.dirname(__file__)
@@ -73,7 +69,7 @@ async def mapbox():
 
 
 @app.get("/nasa_viirs_fire_alerts/latest/esri.html", response_class=HTMLResponse)
-async def exri():
+async def esri():
     dirname = os.path.dirname(__file__)
     with open(os.path.join(dirname, "static/esri.html"), "r") as myfile:
         html_content = myfile.read()
@@ -97,10 +93,17 @@ async def nasa_viirs_fire_alerts(
     z: int = Path(..., title="Zoom level", ge=0),
     start_date: str = Query("2018-01-01"),
     end_date: str = Query("2018-01-08"),
+    high_confidence_only: bool = Query(False),
 ) -> Response:
     LOGGER.info(f"Get tile {z}/{x}/{y}")
     LOGGER.info(f"Date range set to {start_date} - {end_date}")
-    return await get_tile(x, y, z, start_date, end_date)
+
+    if z >= 6:
+        return await get_tile(x, y, z, start_date, end_date, high_confidence_only)
+    else:
+        return await get_aggregated_tile(
+            x, y, z, start_date, end_date, high_confidence_only
+        )
 
 
 @app.get("/nasa_viirs_fire_alerts/latest/default/VectorTileServer")
@@ -111,38 +114,97 @@ async def vector_tile_server():
     return json_content
 
 
-async def get_tile(x: int, y: int, z: int, start_date: str, end_date: str) -> Response:
-    POOL: asyncpg.pool
+async def get_aggregated_tile(
+    x: int, y: int, z: int, start_date: str, end_date: str, high_confidence_only: bool
+) -> Response:
 
-    left, bottom, right, top = mercantile.xy_bounds(x, y, z)
-    sql = f"""
-            WITH
-            bounds AS (
-                SELECT ST_MakeEnvelope({left}, {bottom}, {right}, {top}, 3857) AS geom
-            ),
-            mvtgeom AS (
-                SELECT ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d) AS geom,
-                        bright_ti4, bright_ti5
-                FROM viirs.v20200224 t, bounds
-                WHERE ST_Intersects(t.geom_wm, bounds.geom) AND acq_date BETWEEN '{start_date}'::timestamp
-                             AND '{end_date}'::timestamp
-            ),
-            mvtgroup AS (
-                SELECT geom, count(*) as count, sum(bright_ti4) as bright_ti4, sum(bright_ti5) as bright_ti5 FROM mvtgeom
-                GROUP BY geom
-                )
+    global POOL
+    if isinstance(POOL, asyncpg.pool.Pool):
 
-             SELECT ST_AsMVT(mvtgroup.*) FROM mvtgroup;
-            """
-    async with POOL.acquire() as conn:
-        async with conn.transaction():
-            row = await conn.fetchval(sql)
+        left, bottom, right, top = mercantile.xy_bounds(x, y, z)
 
-    return Response(
-        content=row,
-        status_code=200,
-        headers={
-            "Content-Type": "application/x-protobuf",
-            "Access-Control-Allow-Origin": "*",
-        },
-    )
+        if high_confidence_only:
+            confidence_filter = "AND confidence = 'h'"
+        else:
+            confidence_filter = ""
+
+        sql = f"""
+                WITH
+                bounds AS (
+                    SELECT ST_MakeEnvelope({left}, {bottom}, {right}, {top}, 3857) AS geom
+                ),
+                mvtgeom AS (
+                    SELECT ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d) AS geom,
+                            bright_ti4, bright_ti5, frp
+                    FROM viirs.v20200224 t, bounds
+                    WHERE ST_Intersects(t.geom_wm, bounds.geom) AND acq_date BETWEEN '{start_date}'::timestamp
+                                 AND '{end_date}'::timestamp {confidence_filter}
+                ),
+                mvtgroup AS (
+                    SELECT geom, count(*) as count, avg(bright_ti4) as bright_ti4, avg(bright_ti5) as bright_ti5, sum(frp) as frp FROM mvtgeom
+                    GROUP BY geom
+                    )
+
+                 SELECT ST_AsMVT(mvtgroup.*) FROM mvtgroup;
+                """
+        async with POOL.acquire() as conn:
+            async with conn.transaction():
+                row = await conn.fetchval(sql)
+
+        return Response(
+            content=row,
+            status_code=200,
+            headers={
+                "Content-Type": "application/x-protobuf",
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+    else:
+        raise ConnectionError("No Database connection")
+
+
+async def get_tile(
+    x: int, y: int, z: int, start_date: str, end_date: str, high_confidence_only: bool
+) -> Response:
+
+    # POOL: asyncpg.pool
+
+    global POOL
+    if isinstance(POOL, asyncpg.pool.Pool):
+
+        left, bottom, right, top = mercantile.xy_bounds(x, y, z)
+
+        if high_confidence_only:
+            confidence_filter = "AND confidence = 'h'"
+        else:
+            confidence_filter = ""
+
+        sql = f"""
+                    WITH
+                    bounds AS (
+                        SELECT ST_MakeEnvelope({left}, {bottom}, {right}, {top}, 3857) AS geom
+                    ),
+                    mvtgeom AS (
+                        SELECT ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d) AS geom,
+                                latitude, longitude, acq_date, acq_time, confidence, bright_ti4, bright_ti5, frp
+                        FROM viirs.v20200224 t, bounds
+                        WHERE ST_Intersects(t.geom_wm, bounds.geom) AND acq_date BETWEEN '{start_date}'::timestamp
+                                     AND '{end_date}'::timestamp {confidence_filter}
+                    )
+
+                     SELECT ST_AsMVT(mvtgeom.*) FROM mvtgeom;
+                    """
+        async with POOL.acquire() as conn:
+            async with conn.transaction():
+                row = await conn.fetchval(sql)
+
+        return Response(
+            content=row,
+            status_code=200,
+            headers={
+                "Content-Type": "application/x-protobuf",
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+    else:
+        raise ConnectionError("No database connection")

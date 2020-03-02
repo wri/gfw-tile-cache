@@ -1,6 +1,7 @@
 import os
 
 import psycopg2
+import pendulum
 from pendulum.parsing.exceptions import ParserError
 
 
@@ -33,6 +34,7 @@ def cli():
     for year in years:
         for week in range(1, 54):
             try:
+                pendulum.parse(f"{year}-W{week}")
                 week = f"{week:02}"
                 cursor.execute(
                     get_sql(
