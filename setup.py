@@ -8,9 +8,13 @@ setup(
     author="Thomas Maschler",
     license="MIT",
     install_requires=[
-        "asyncpg==0.20.1",
-        "fastapi==0.49.0",
+        "databases[postgresql]==0.2.6",
+        "fastapi==0.52.0",
         "mercantile==1.1.2",
         "uvicorn==0.11.3",
+        "pendulum==2.1.0",
+        "shapely==1.7.0",
+        "requests==2.23.0",
+        "async_lru==1.0.2",
     ],
 )

@@ -21,7 +21,7 @@ variable "container_port" {
 
 variable "desired_count" {
 
-  default     = 1
+  default     = 0
   type        = number
   description = "Number of tasks"
 }

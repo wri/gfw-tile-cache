@@ -3,5 +3,5 @@ locals {
   tf_state_bucket = "gfw-terraform${local.bucket_suffix}"
   tags            = data.terraform_remote_state.core.outputs.tags
   name_suffix     = terraform.workspace == "default" ? "" : "-${terraform.workspace}"
-  project         = "fire-vector-tiles"
+  project         = "gfw-vector-tiles"
 }
