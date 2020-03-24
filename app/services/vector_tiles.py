@@ -7,7 +7,7 @@ from sqlalchemy import select, text, literal_column, table
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import get_databse
+from app import get_database
 
 
 Geometry = Dict[str, Any]
@@ -54,8 +54,8 @@ async def get_aggregated_tile(
 
 
 async def _get_tile(query: Select, values: Dict[str, Any]) -> Response:
-    database: Database = await get_databse()
-    tile = await database.fetch_val(query=query, values=values)
+    database: Database = await get_database()
+    tile = await database.fetch_val(query=str(query), values=values)
 
     return Response(
         content=tile,

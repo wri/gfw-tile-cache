@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app import get_databse, get_module_logger
+from app import get_database, get_module_logger
 from app.routers import tile_server
 
 app = FastAPI()
@@ -21,7 +21,8 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 @app.on_event("startup")
 async def startup():
     global DATABASE
-    DATABASE = await get_databse()
+    DATABASE = await get_database()
+    await DATABASE.connect()
     # global POOL
     # POOL = await get_pool()
 
@@ -35,4 +36,4 @@ async def shutdown():
     # POOL.close()
 
 
-app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")
+# app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")

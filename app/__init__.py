@@ -33,7 +33,7 @@ def get_module_logger(name) -> logging.Logger:
 logger = get_module_logger(__name__)
 
 
-async def get_databse() -> Database:
+async def get_database() -> Database:
     """
     Database connection pool
     """
