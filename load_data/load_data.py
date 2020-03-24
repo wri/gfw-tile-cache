@@ -9,6 +9,11 @@ import psycopg2
 @click.option("--schema", default="nasa_viirs_fire_alerts")
 @click.option("--table", default="v202003")
 def cli(input, schema, table):
+    load(input, schema, table)
+
+
+def load(input, schema="nasa_viirs_fire_alerts", table="v202003"):
+
     connection = psycopg2.connect(
         database=os.environ["POSTGRES_NAME"],
         user=os.environ["POSTGRES_USERNAME"],
