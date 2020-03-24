@@ -1,11 +1,10 @@
-#FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
-FROM cmgg/uvicorn-gunicorn-docker:python3.8-alpine3.11
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 
-RUN apk update && \
-    apk add --virtual .build-deps gcc  musl-dev postgresql-dev
+RUN apt-get update && apt-get install \
+        make gcc libc-dev libgeos-dev musl-dev libpq-dev libffi-dev
 
-RUN pip install mercantile databases[postgresql]
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-COPY ./app /app
+COPY ./app /app/app
 
-RUN apk del .build-deps gcc libc-dev make

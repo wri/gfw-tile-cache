@@ -1,14 +1,14 @@
 from typing import Dict, Any, List, Tuple
 
 from databases import Database
+from fastapi import Response
 from shapely.geometry import box
-from sqlalchemy import select, text, column, literal_column, table
-from sqlalchemy.sql import Select, TableClause
+from sqlalchemy import select, text, literal_column, table
+from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app.src import get_databse  # get_pool
-from asyncpg.pool import Pool
-from fastapi import Response
+from app import get_databse
+
 
 Geometry = Dict[str, Any]
 
@@ -98,9 +98,7 @@ def _get_mvt_table(table_name: str, bounds: Select, *columns: ColumnClause) -> S
         col.append(c)
     bound_filter = text("ST_Intersects(t.geom_wm, bounds.geom)")
 
-    return (
-        select(columns).select_from(src_table).select_from(bounds).where(bound_filter)
-    )
+    return select(col).select_from(src_table).select_from(bounds).where(bound_filter)
 
 
 def _filter_mvt_table(query: Select, *filters: TextClause) -> Select:
@@ -113,7 +111,7 @@ def _filter_mvt_table(query: Select, *filters: TextClause) -> Select:
 def _group_mvt_table(
     query: Select, columns: List[ColumnClause], group_by_columns: List[ColumnClause]
 ) -> Select:
-    query = select([columns]).select_from(query)
+    query = select(columns).select_from(query)
     for col in group_by_columns:
         query = query.group_by(col)
 
@@ -121,4 +119,4 @@ def _group_mvt_table(
 
 
 def _as_vector_tile(query: Select) -> Select:
-    return select([column("ST_AsMVT(*)")]).select_from(query)
+    return select([literal_column("ST_AsMVT(*)")]).select_from(query)

@@ -4,21 +4,15 @@ from shapely.geometry import box
 from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
-from app.src.services import vector_tiles
+from app.services import vector_tiles
+from app.models.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
 from fastapi import Response
 
 Geometry = Dict[str, Any]
 
 SCHEMA = "nasa_viirs_fire_alerts"
 COLUMNS: List[ColumnClause] = [
-    column("latitude"),
-    column("longitude"),
-    column("acq_date"),
-    column("acq_time"),
-    column("confidence"),
-    column("bright_ti4"),
-    column("bright_ti5"),
-    column("frp"),
+    column(col) for col in NasaViirsFireAlertsBase.schema()["properties"].keys()
 ]
 
 

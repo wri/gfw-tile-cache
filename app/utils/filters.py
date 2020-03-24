@@ -5,8 +5,8 @@ from shapely.geometry import box
 from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
-from app.src.utils.geostore import get_geostore_geometry
-from app.src.utils.decorators import LogDecorator
+from app.utils.geostore import get_geostore_geometry
+from app.utils.decorators import LogDecorator
 
 Filter = Tuple[TextClause, Dict[str, Any]]
 

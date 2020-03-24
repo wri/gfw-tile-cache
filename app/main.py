@@ -1,16 +1,15 @@
 import os
 from typing import Optional
 
-# from asyncpg.pool import Pool
 from databases import Database
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.src import get_databse, get_module_logger  # , get_pool
-from app.src.routers import tile_server
+from app import get_databse, get_module_logger
+from app.routers import tile_server
 
 app = FastAPI()
-# POOL: Optional[Pool] = None
 DATABASE: Optional[Database] = None
 ENV: str = os.environ["ENV"]
 LOGGER = get_module_logger(__name__)
@@ -34,3 +33,6 @@ async def shutdown():
     LOGGER.info("Closing DB connection pool")
     DATABASE.close()
     # POOL.close()
+
+
+app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")

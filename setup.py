@@ -8,6 +8,7 @@ setup(
     author="Thomas Maschler",
     license="MIT",
     install_requires=[
+        "aiofiles==0.4.0",
         "databases[postgresql]==0.2.6",
         "fastapi==0.52.0",
         "mercantile==1.1.2",

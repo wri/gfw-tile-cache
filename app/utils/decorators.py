@@ -1,6 +1,6 @@
 import functools
 
-from app.src import get_module_logger
+from app import get_module_logger
 
 
 class LogDecorator(object):

@@ -1,29 +1,12 @@
-from typing import Dict, Any
+from datetime import date, time
+from typing import Dict, Any, List
 
 import pendulum
 from fastapi import HTTPException
 
+from app.models.nasa_viirs_fire_alerts import NasaViirsFireAlertsExtended
 
-supported_fields = {
-    "is__regional_primary_forest": bool,
-    "is__alliance_for_zero_extinction_site": bool,
-    "is__key_biodiversity_area": bool,
-    "is__landmark": bool,
-    "gfw_plantation__type": str,
-    "is__gfw_mining": bool,
-    "is__gfw_logging": bool,
-    "rspo_oil_palm__certification_status": str,
-    "is__gfw_wood_fiber": bool,
-    "is__peat_land": bool,
-    "is__idn_forest_moratorium": bool,
-    "is__gfw_oil_palm": bool,
-    "idn_forest_area__type": str,
-    "per_forest_concession__type": str,
-    "is__gfw_oil_gas": bool,
-    "is__mangroves_2016": bool,
-    "is__intact_forest_landscapes_2016": bool,
-    "bra_biome__name": str,
-}
+supported_fields = NasaViirsFireAlertsExtended.schema()["properties"]
 
 
 def validate_dates(start_date: str, end_date: str) -> None:
@@ -47,10 +30,10 @@ def validate_bbox(left: float, bottom: float, right: float, top: float) -> None:
 
 def validate_field_types(**fields: Any) -> None:
     for field, value in fields.items():
-        if type(value) is not supported_fields[field]:
+        if value is not None and type(value) not in _get_types(supported_fields[field]):
             raise HTTPException(
                 status_code=400,
-                detail=f"Field {field} must be of type {supported_fields[field]}",
+                detail=f"Field {field} must be of type {_get_types(supported_fields[field])}",
             )
 
 
@@ -59,3 +42,13 @@ def sanitize_fields(**fields: Any) -> Dict[str, Any]:
         if field not in supported_fields.keys():
             fields.pop(field)
     return fields
+
+
+def _get_types(value: Dict[str, Any]) -> List[Any]:
+    types: Dict[str, List[Any]] = {
+        "number": [int, float],
+        "string": [str, date, time],  # TODO find better way to validate data/time
+        "boolean": [bool],
+    }
+
+    return types[value["type"]]

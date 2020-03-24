@@ -1,0 +1,14 @@
+version: "3.7"
+services:
+  vector-tiles:
+    build:
+      context: .
+    environment:
+      - POSTGRES_USERNAME
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - POSTGRES_NAME
+      - POSTGRES_PASSWORD
+      - ENV
+    ports:
+      - "8000:80"
