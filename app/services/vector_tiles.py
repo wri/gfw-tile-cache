@@ -7,10 +7,11 @@ from sqlalchemy import select, text, literal_column, table
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import get_database
+from app import get_database, get_module_logger
 
 
 Geometry = Dict[str, Any]
+LOGGER = get_module_logger(__name__)
 
 
 def get_mvt_table(
@@ -18,7 +19,7 @@ def get_mvt_table(
     bbox: box,
     columns: List[ColumnClause],
     *filters: text,
-    **values: Any
+    **values: Any,
 ) -> Tuple[Select, Dict[str, Any]]:
     bounds: Select
     bound_values: Dict[str, Any]
@@ -42,19 +43,23 @@ async def get_aggregated_tile(
     query: Select,
     columns: List[ColumnClause],
     group_by_columns: List[ColumnClause],
-    **values: Any
+    **values: Any,
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     This function makes a SQL query that aggregates point features based on proximity.
     """
-    query = _group_mvt_table(query, columns, group_by_columns)
+    query = _group_mvt_table(query, columns, group_by_columns).alias(
+        "grouped_mvt_table"
+    )
     query = _as_vector_tile(query)
     return await _get_tile(query, values)
 
 
 async def _get_tile(query: Select, values: Dict[str, Any]) -> Response:
     database: Database = await get_database()
+    LOGGER.debug(f"SQL: {query}")
+    LOGGER.debug(f"VALUES: {values}")
     tile = await database.fetch_val(query=str(query), values=values)
 
     return Response(
@@ -105,7 +110,7 @@ def _filter_mvt_table(query: Select, *filters: TextClause) -> Select:
     for f in filters:
         query = query.where(f)
 
-    return query
+    return query.alias("mvt_table")
 
 
 def _group_mvt_table(
@@ -115,7 +120,7 @@ def _group_mvt_table(
     for col in group_by_columns:
         query = query.group_by(col)
 
-    return query
+    return query.alias("grouped_mvt")
 
 
 def _as_vector_tile(query: Select) -> Select:

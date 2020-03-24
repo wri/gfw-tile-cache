@@ -41,14 +41,17 @@ def confidence_filter(high_confidence_only: bool) -> Optional[Filter]:
 def contextual_filter(**fields: Union[str, bool]) -> List[Filter]:
     filters = list()
     for field, value in fields.items():
-        f = text(f"{field} = :{field}")
-        v = {f"{field}": value}
-        filters.append((f, v))
+        if value is not None:
+            f = text(f"{field} = :{field}")
+            v = {f"{field}": value}
+            filters.append((f, v))
     return filters
 
 
 @LogDecorator()
 def date_filter(start_date: str, end_date: str) -> Filter:
-    f = text("acq_date BETWEEN :start_date::timestamp AND :end_date::timestamp")
+    f = text(
+        "acq_date BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
+    )
     value = {"start_date": start_date, "end_date": end_date}
     return f, value
