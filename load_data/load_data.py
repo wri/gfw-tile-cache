@@ -6,8 +6,8 @@ import psycopg2
 
 @click.command()
 @click.argument("input")
-@click.option("--schema", default="viirs")
-@click.option("--table", default="v20200224")
+@click.option("--schema", default="nasa_viirs_fire_alerts")
+@click.option("--table", default="v202003")
 def cli(input, schema, table):
     connection = psycopg2.connect(
         database=os.environ["POSTGRES_NAME"],
@@ -25,14 +25,37 @@ def cli(input, schema, table):
             f,
             f"{schema}.{table}",
             columns=(
+                "iso",
+                "adm1",
+                "adm2",
                 "latitude",
                 "longitude",
-                "acq_date",
-                "acq_time",
-                "confidence",
-                "bright_ti4",
-                "bright_ti5",
-                "frp",
+                "alert__date",
+                "alert__time_utc",
+                "confidence__cat",
+                "bright_ti4__K",
+                "bright_ti5__K",
+                "frp__MW",
+                "wdpa_protected_area__iucn_cat",
+                "is__regional_primary_forest",
+                "is__alliance_for_zero_extinction_site",
+                "is__key_biodiversity_area",
+                "is__landmark",
+                "gfw_plantation__type",
+                "is__gfw_mining",
+                "is__gfw_logging",
+                "rspo_oil_palm__certification_status",
+                "is__gfw_wood_fiber",
+                "is__peat_land",
+                "is__idn_forest_moratorium",
+                "is__gfw_oil_palm",
+                "idn_forest_area__type",
+                "per_forest_concession__type",
+                "is__gfw_oil_gas",
+                "is__mangroves_2016",
+                "is__intact_forest_landscapes_2016",
+                "bra_biome__name",
+                "alert__count",
             ),
         )
 

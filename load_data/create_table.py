@@ -22,8 +22,8 @@ def cli():
     )
 
     years = range(2011, 2022)
-    schema = "viirs"
-    table = "v20200224"
+    schema = "nasa_viirs_fire_alerts"
+    table = "v202003"
 
     cursor = connection.cursor()
     print(f"Create table")
