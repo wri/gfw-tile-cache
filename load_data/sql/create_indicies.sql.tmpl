@@ -4,6 +4,6 @@ CREATE INDEX {table}_geom_idx
 CREATE INDEX {table}_geom_wm_idx
     ON {schema}.{table} USING gist
     (geom_wm);
-CREATE INDEX {table}_acq_date_idx
+CREATE INDEX {table}_alert__date_idx
     ON {schema}.{table} USING btree
-    (acq_date);
+    (alert__date);

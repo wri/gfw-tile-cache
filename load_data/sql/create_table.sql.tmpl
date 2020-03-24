@@ -37,4 +37,4 @@ CREATE TABLE {schema}.{table}
     geom geometry(POINT,4326),
     geom_wm geometry(POINT, 3857)
 )
-PARTITION BY RANGE (acq_date);
+PARTITION BY RANGE (alert__date);
