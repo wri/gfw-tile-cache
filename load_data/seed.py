@@ -1,9 +1,9 @@
 import os
 import boto3
 
-from .create_table import cli as create_table
-from .load_data import load
-from .post_processing import cli as post_processing
+from create_table import cli as create_table
+from load import load
+from post_processing import cli as post_processing
 
 s3 = boto3.client("s3")
 
