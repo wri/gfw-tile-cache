@@ -22,8 +22,11 @@ async def main() -> None:
 
     # https://stackoverflow.com/questions/48052217/how-to-use-an-async-for-loop-to-iterate-over-a-list
     xs = stream.iterate(weeks) | pipe.map(partiontions, task_limit=10)
-    async for result in xs:
-        print(result)
+
+    # Use a stream context for proper resource management
+    async with xs.stream() as streamer:
+        async for result in streamer:
+            print(result)
 
 
 async def get_pool() -> Pool:
@@ -51,7 +54,7 @@ async def create_indicies_only() -> None:
     conn = await pool.acquire()
 
     async with conn.transaction():
-        conn.execute(
+        await conn.execute(
             _get_sql("sql/create_indicies.sql.tmpl", schema=SCHEMA, table=TABLE)
         )
 
@@ -64,7 +67,7 @@ async def partiontions(weeks: Tuple[int, str]) -> Tuple[int, str]:
     conn = await pool.acquire()
 
     async with conn.transaction():
-        conn.execute(
+        await conn.execute(
             _get_sql(
                 "sql/update_geometry.sql.tmpl",
                 schema=SCHEMA,
@@ -74,7 +77,7 @@ async def partiontions(weeks: Tuple[int, str]) -> Tuple[int, str]:
             )
         )
     async with conn.transaction():
-        conn.execute(
+        await conn.execute(
             _get_sql(
                 "sql/create_partition_indicies.sql.tmpl",
                 schema=SCHEMA,
@@ -85,7 +88,7 @@ async def partiontions(weeks: Tuple[int, str]) -> Tuple[int, str]:
         )
 
     async with conn.transaction():
-        conn.execute(
+        await conn.execute(
             _get_sql(
                 "sql/cluster_partitions.sql.tmpl",
                 schema=SCHEMA,
