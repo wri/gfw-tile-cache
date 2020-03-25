@@ -16,6 +16,13 @@ TABLE = "v202003"
 
 
 async def main() -> None:
+    """
+    Post processing of VIRRS fire data
+    -> update geographic columns
+    -> create indicies
+    -> cluster partitions
+    Tasks are run asynchronously for each partition
+    """
     weeks = _get_weeks()
 
     await create_indicies_only()
@@ -124,6 +131,10 @@ def _get_weeks() -> List[Tuple[int, str]]:
     return weeks
 
 
-if __name__ == "__main__":
+def cli():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
+
+
+if __name__ == "__main__":
+    cli()
