@@ -6,12 +6,12 @@ from pydantic import BaseModel
 class NasaViirsFireAlertsBase(BaseModel):
     latitude: float
     longitude: float
-    acq_date: date
-    acq_time: time
-    confidence: str
-    bright_ti4: float
-    bright_ti5: float
-    frp: float
+    alert__date: date
+    alert__time_utc: time
+    confidence__cat: str
+    bright_ti4__K: float
+    bright_ti5__K: float
+    frp__MW: float
 
 
 class NasaViirsFireAlertsExtended(NasaViirsFireAlertsBase):

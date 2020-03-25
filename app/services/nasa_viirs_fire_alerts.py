@@ -41,10 +41,12 @@ async def get_aggregated_tile(
 
     columns = [
         literal_column("count(*)").label("count"),
-        literal_column("mode() WITHIN GROUP (ORDER BY acq_date)").label("acq_date"),
-        literal_column("avg(bright_ti4)").label("bright_ti4"),
-        literal_column("avg(bright_ti5)").label("bright_ti5"),
-        literal_column("sum(frp)").label("frp"),
+        literal_column("mode() WITHIN GROUP (ORDER BY alert__date)").label(
+            "alert__date"
+        ),
+        literal_column("avg(bright_ti4__K)").label("bright_ti4__K"),
+        literal_column("avg(bright_ti5__K)").label("bright_ti5__K"),
+        literal_column("sum(frp__MW)").label("frp__MW"),
     ]
     group_by_columns = [column("geom")]
 

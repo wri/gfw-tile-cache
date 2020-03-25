@@ -33,7 +33,7 @@ async def geometry_filter(
 @LogDecorator()
 def confidence_filter(high_confidence_only: bool) -> Optional[Filter]:
     if high_confidence_only:
-        return text("confidence = :confidence"), {"confidence": "h"}
+        return text("confidence__cat = :confidence"), {"confidence": "h"}
     return None
 
 
@@ -51,7 +51,7 @@ def contextual_filter(**fields: Union[str, bool]) -> List[Filter]:
 @LogDecorator()
 def date_filter(start_date: str, end_date: str) -> Filter:
     f = text(
-        "acq_date BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
+        "alert__date BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
     )
     value = {"start_date": start_date, "end_date": end_date}
     return f, value
