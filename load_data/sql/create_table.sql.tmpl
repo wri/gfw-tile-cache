@@ -4,12 +4,12 @@ DROP TABLE IF EXISTS {schema}.{table} CASCADE;
 CREATE TABLE {schema}.{table}
 (
     iso character(3),
-	  adm1 smallint,
-		adm2 smallint,
+	  adm1 text,
+		adm2 text,
     longitude numeric NOT NULL,
     latitude numeric NOT NULL,
     alert__date date,
-    alert__time_utc time without time zone,
+    alert__time_utc text,
     confidence__cat character(1),
     bright_ti4__K numeric,
     bright_ti5__K numeric,
