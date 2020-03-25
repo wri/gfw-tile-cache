@@ -9,9 +9,9 @@ class NasaViirsFireAlertsBase(BaseModel):
     alert__date: date
     alert__time_utc: time
     confidence__cat: str
-    bright_ti4__K: float
-    bright_ti5__K: float
-    frp__MW: float
+    bright_ti4__k: float
+    bright_ti5__k: float
+    frp__mw: float
 
 
 class NasaViirsFireAlertsExtended(NasaViirsFireAlertsBase):
