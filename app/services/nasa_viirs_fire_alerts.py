@@ -40,6 +40,7 @@ async def get_aggregated_tile(
     )
 
     columns = [
+        column("geom"),
         literal_column("count(*)").label("count"),
         literal_column("mode() WITHIN GROUP (ORDER BY alert__date)").label(
             "alert__date"
