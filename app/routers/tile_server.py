@@ -188,7 +188,7 @@ async def tile(
 
     if implementation == "default":
         query, values = get_mvt_table(
-            f"{dataset}.{version}", bbox, list(), *filters, **values
+            dataset, version, bbox, list(), *filters, **values
         )
 
         return await vector_tiles.get_tile(query, **values)

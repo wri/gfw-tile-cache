@@ -9,12 +9,12 @@ from sqlalchemy.sql.elements import TextClause, ColumnClause
 
 from app import get_database, get_module_logger
 
-
 Geometry = Dict[str, Any]
 LOGGER = get_module_logger(__name__)
 
 
 def get_mvt_table(
+    schema_name: str,
     table_name: str,
     bbox: box,
     columns: List[ColumnClause],
@@ -27,7 +27,7 @@ def get_mvt_table(
     bounds, bound_values = _get_bounds(*bbox)
     values.update(bound_values)
 
-    query: Select = _get_mvt_table(table_name, bounds, *columns)
+    query: Select = _get_mvt_table(schema_name, table_name, bounds, *columns)
     return _filter_mvt_table(query, *filters), values
 
 
@@ -90,14 +90,20 @@ def _get_bounds(
     return bounds, values
 
 
-def _get_mvt_table(table_name: str, bounds: Select, *columns: ColumnClause) -> Select:
+def _get_mvt_table(
+    schema_name: str, table_name: str, bounds: Select, *columns: ColumnClause
+) -> Select:
     """
     Create MVT Geom query
     """
     mvt_geom = literal_column(
         "ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, 4096, 0,false)"
     ).label("geom")
-    src_table = table(table_name).alias("t")
+
+    src_table = table(table_name)
+    src_table.schema = schema_name
+    src_table = src_table.alias("t")
+
     col = [mvt_geom]
     for c in columns:
         col.append(c)

@@ -9,13 +9,16 @@ from app.services.vector_tiles import (
 
 
 def test_get_mvt_table():
+    schema_name = "my_schema"
     table_name = "my_table"
     bbox = box(1, 1, 2, 2)
     columns = [column("column1"), column("column2")]
     filters = [text("column1 = 1"), text("column2 = 'abc")]
     values = {"a": "b"}
-    sql, v = get_mvt_table(table_name, bbox.bounds, columns, *filters, **values)
-    expected_sql = "SELECT ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, 4096, 0,false) AS geom, column1, column2 FROM my_table AS t, (SELECT ST_MakeEnvelope(:left, :bottom, :right, :top, 3857) AS geom) AS bounds WHERE ST_Intersects(t.geom_wm, bounds.geom) AND column1 = 1 AND column2 = 'abc"
+    sql, v = get_mvt_table(
+        schema_name, table_name, bbox.bounds, columns, *filters, **values
+    )
+    expected_sql = "SELECT ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, 4096, 0,false) AS geom, column1, column2 FROM my_schema.my_table AS t, (SELECT ST_MakeEnvelope(:left, :bottom, :right, :top, 3857) AS geom) AS bounds WHERE ST_Intersects(t.geom_wm, bounds.geom) AND column1 = 1 AND column2 = 'abc"
 
     assert str(sql).replace("\n", "") == expected_sql
     assert v == {"a": "b", "left": 1, "bottom": 1, "right": 2, "top": 2}
