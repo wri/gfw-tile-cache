@@ -1,9 +1,9 @@
 CREATE INDEX {table}_geom_idx
-    ON {schema}.{table} USING gist
+    ON ONLY {schema}.{table} USING gist
     (geom);
 CREATE INDEX {table}_geom_wm_idx
-    ON {schema}.{table} USING gist
+    ON ONLY {schema}.{table} USING gist
     (geom_wm);
 CREATE INDEX {table}_alert__date_idx
-    ON {schema}.{table} USING btree
+    ON ONLY {schema}.{table} USING btree
     (alert__date);
