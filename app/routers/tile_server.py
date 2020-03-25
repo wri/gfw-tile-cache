@@ -53,7 +53,7 @@ class Dataset(str, Enum):
 
 
 class ViirsVersion(str, Enum):
-    v20200224 = "v20200224"
+    v20200224 = "v202003"
     latest = "latest"
 
 

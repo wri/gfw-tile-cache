@@ -1,17 +1,5 @@
-CREATE INDEX {table}_y{year}w{week}_geom_idx
-    ON {schema}.{table}_y{year}w{week} USING gist
-    (geom);
-ALTER INDEX {schema}.{table}_geom_idx
-    ATTACH PARTITION {table}_y{year}w{week}_geom_idx;
-
-CREATE INDEX {table}_y{year}w{week}_geom_wm_idx
-    ON {schema}.{table}_y{year}w{week} USING gist
-    (geom_wm);
-ALTER INDEX {schema}.{table}_geom_wm_idx
-    ATTACH PARTITION {table}_y{year}w{week}_geom_wm_idx;
-
-CREATE INDEX {table}_y{year}w{week}_alert__date_idx
-    ON {schema}.{table}_y{year}w{week} USING btree
-    (_alert__date);
-ALTER INDEX {schema}.{table}_alert__date_idx
-    ATTACH PARTITION {table}_y{year}w{week}_alert__date_idx;
+CREATE INDEX IF NOT EXISTS {table}_y{year}w{week}_{column}_idx
+    ON {schema}.{table}_y{year}w{week} USING {index}
+    ({column});
+ALTER INDEX {schema}.{table}_{column}_idx
+    ATTACH PARTITION {schema}.{table}_y{year}w{week}_{column}_idx;

@@ -1,11 +1,13 @@
-import asyncio
 import os
 from typing import List, Tuple
 
-import asyncpg
+
+import concurrent.futures
+
+import psycopg2
+from psycopg2.pool import ThreadedConnectionPool
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import pendulum
-from aiostream import stream, pipe
-from asyncpg.pool import Pool
 from pendulum.parsing.exceptions import ParserError
 
 POOL = None
@@ -15,7 +17,7 @@ SCHEMA = "nasa_viirs_fire_alerts"
 TABLE = "v202003"
 
 
-async def main() -> None:
+def cli() -> None:
     """
     Post processing of VIRRS fire data
     -> update geographic columns
@@ -23,26 +25,27 @@ async def main() -> None:
     -> cluster partitions
     Tasks are run asynchronously for each partition
     """
+
+    pool = get_pool()
     weeks = _get_weeks()
 
-    await create_indicies_only()
+    create_indicies_only()
 
-    # https://stackoverflow.com/questions/48052217/how-to-use-an-async-for-loop-to-iterate-over-a-list
-    xs = stream.iterate(weeks) | pipe.map(partiontions, task_limit=10)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        executor.map(partiontions, weeks)
 
-    # Use a stream context for proper resource management
-    async with xs.stream() as streamer:
-        async for result in streamer:
-            print(result)
+    pool.closeall()
 
 
-async def get_pool() -> Pool:
+def get_pool() -> ThreadedConnectionPool:
     """
     The database connection pool
     """
     global POOL
     if POOL is None:
-        POOL = await asyncpg.create_pool(
+        POOL = psycopg2.pool.ThreadedConnectionPool(
+            1,
+            10,
             database=os.environ["POSTGRES_NAME"],
             user=os.environ["POSTGRES_USERNAME"],
             password=os.environ["POSTGRES_PASSWORD"],
@@ -52,60 +55,89 @@ async def get_pool() -> Pool:
     return POOL
 
 
-async def create_indicies_only() -> None:
+def create_indicies_only() -> None:
     """
     This creates an invalid index.
     It will be validated automatically, once all partitions are indexed and attached.
     """
-    pool = await get_pool()
-    conn = await pool.acquire()
+    pool = get_pool()
+    conn = pool.getconn()
 
-    async with conn.transaction():
-        await conn.execute(
+    with conn.cursor() as cursor:
+        cursor.execute(
             _get_sql("sql/create_indicies.sql.tmpl", schema=SCHEMA, table=TABLE)
         )
 
 
-async def partiontions(weeks: Tuple[int, str]) -> Tuple[int, str]:
+def partiontions(weeks: Tuple[int, str]) -> None:
+
     year = weeks[0]
     week = weeks[1]
 
-    pool = await get_pool()
-    conn = await pool.acquire()
+    pool = get_pool()
+    conn = pool.getconn()
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
 
-    async with conn.transaction():
-        await conn.execute(
-            _get_sql(
-                "sql/update_geometry.sql.tmpl",
-                schema=SCHEMA,
-                table=TABLE,
-                year=year,
-                week=week,
-            )
+    cursor.execute(
+        _get_sql(
+            "sql/update_geometry.sql.tmpl",
+            schema=SCHEMA,
+            table=TABLE,
+            year=year,
+            week=week,
         )
-    async with conn.transaction():
-        await conn.execute(
-            _get_sql(
-                "sql/create_partition_indicies.sql.tmpl",
-                schema=SCHEMA,
-                table=TABLE,
-                year=year,
-                week=week,
-            )
-        )
+    )
 
-    async with conn.transaction():
-        await conn.execute(
-            _get_sql(
-                "sql/cluster_partitions.sql.tmpl",
-                schema=SCHEMA,
-                table=TABLE,
-                year=year,
-                week=week,
-            )
+    cursor.execute(
+        _get_sql(
+            "sql/create_partition_indicies.sql.tmpl",
+            schema=SCHEMA,
+            table=TABLE,
+            year=year,
+            week=week,
+            column="geom",
+            index="gist",
         )
+    )
 
-    return weeks
+    cursor.execute(
+        _get_sql(
+            "sql/create_partition_indicies.sql.tmpl",
+            schema=SCHEMA,
+            table=TABLE,
+            year=year,
+            week=week,
+            column="geom_wm",
+            index="gist",
+        )
+    )
+
+    cursor.execute(
+        _get_sql(
+            "sql/create_partition_indicies.sql.tmpl",
+            schema=SCHEMA,
+            table=TABLE,
+            year=year,
+            week=week,
+            column="alert__date",
+            index="btree",
+        )
+    )
+
+    cursor.execute(
+        _get_sql(
+            "sql/cluster_partitions.sql.tmpl",
+            schema=SCHEMA,
+            table=TABLE,
+            year=year,
+            week=week,
+        )
+    )
+
+    cursor.close()
+
+    pool.putconn(conn)
 
 
 def _get_sql(sql_tmpl, **kwargs) -> str:
@@ -129,11 +161,6 @@ def _get_weeks() -> List[Tuple[int, str]]:
                 # Year has only 52 weeks
                 pass
     return weeks
-
-
-def cli():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
 
 
 if __name__ == "__main__":
