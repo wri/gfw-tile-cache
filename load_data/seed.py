@@ -1,72 +1,27 @@
 import os
+import boto3
 
-import click
-import psycopg2
+from load_data import create_table
+from load_data import load_data
+from load_data import post_processing
 
-
-@click.command()
-@click.argument("input")
-@click.option("--schema", default="nasa_viirs_fire_alerts")
-@click.option("--table", default="v202003")
-def cli(input, schema, table):
-    load(input, schema, table)
+s3 = boto3.client("s3")
 
 
-def load(input, schema="nasa_viirs_fire_alerts", table="v202003"):
+def cli():
+    create_table.cli()
 
-    connection = psycopg2.connect(
-        database=os.environ["POSTGRES_NAME"],
-        user=os.environ["POSTGRES_USERNAME"],
-        password=os.environ["POSTGRES_PASSWORD"],
-        port=os.environ["POSTGRES_PORT"],
-        host=os.environ["POSTGRES_HOST"],
-    )
+    for i in range(0, 300):
+        prefix = f"geotrellis/results/firealerts_gadm_2020-03-23/2020-03-23/fireAlerts_20200323_1934/all/part-00{str(i).zfill(3)}-fda1eafb-2d6e-42df-8b12-eb71454eba0f-c000.csv"
+        output = f"viirs_{i}.csv"
+        s3.download_file("gfw-pipelines-dev", prefix, output)
+        print(f"Download and load {prefix}")
+        load_data.load(output)
+        os.remove(output)
 
-    cursor = connection.cursor()
-    with open(input, "r") as f:
-        # Notice that we don't need the `csv` module.
-        next(f)  # Skip the header row.
-        cursor.copy_from(
-            f,
-            f"{schema}.{table}",
-            columns=(
-                "iso",
-                "adm1",
-                "adm2",
-                "longitude",
-                "latitude",
-                "alert__date",
-                "alert__time_utc",
-                "confidence__cat",
-                "bright_ti4__K",
-                "bright_ti5__K",
-                "frp__MW",
-                "wdpa_protected_area__iucn_cat",
-                "is__regional_primary_forest",
-                "is__alliance_for_zero_extinction_site",
-                "is__key_biodiversity_area",
-                "is__landmark",
-                "gfw_plantation__type",
-                "is__gfw_mining",
-                "is__gfw_logging",
-                "rspo_oil_palm__certification_status",
-                "is__gfw_wood_fiber",
-                "is__peat_land",
-                "is__idn_forest_moratorium",
-                "is__gfw_oil_palm",
-                "idn_forest_area__type",
-                "per_forest_concession__type",
-                "is__gfw_oil_gas",
-                "is__mangroves_2016",
-                "is__intact_forest_landscapes_2016",
-                "bra_biome__name",
-                "alert__count",
-            ),
-        )
-
-    connection.commit()
-    cursor.close()
-    connection.close()
+    print("DONE loading")
+    print("Start postprocessing")
+    post_processing.cli()
 
 
 if __name__ == "__main__":
