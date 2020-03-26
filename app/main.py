@@ -6,7 +6,7 @@ from databases import Database
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from asyncpgsa import pg
+
 from app import get_database, get_module_logger, get_pool
 from app.routers import tile_server
 

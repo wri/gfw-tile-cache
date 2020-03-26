@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Tuple
 
 from asyncpg.pool import Pool
-from asyncpgsa import pg
+
 from databases import Database
 from fastapi import Response
 from shapely.geometry import box
