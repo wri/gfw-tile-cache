@@ -1,6 +1,7 @@
 from datetime import date, time
 from typing import Dict, Any, List
 
+import mercantile
 import pendulum
 from fastapi import HTTPException
 
@@ -24,7 +25,12 @@ def validate_dates(start_date: str, end_date: str) -> None:
 
 
 def validate_bbox(left: float, bottom: float, right: float, top: float) -> None:
-    if left < -180 or bottom < -90 or right > 180 or top > 90:
+    """
+    Tile should be within WebMercator extent
+    """
+    min_left, min_bottom, max_right, max_top = mercantile.xy_bounds(0, 0, 0)
+
+    if left < min_left or bottom < min_bottom or right > max_right or top > max_top:
         raise HTTPException(status_code=400, detail="Tile index is out of bounds")
 
 
