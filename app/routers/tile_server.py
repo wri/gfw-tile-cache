@@ -128,26 +128,17 @@ async def nasa_viirs_fire_alerts_tile(
     bbox = to_bbox(x, y, z)
     validate_bbox(*bbox.bounds)
 
-    ff = [
+    filters = [
         await geometry_filter(geostore_id, bbox),
         confidence_filter(high_confidence_only),
         date_filter(start_date, end_date),
     ] + contextual_filter(**fields)
 
-    filters: List[TableClause] = list()
-    values: Dict[str, Any] = dict()
-    for f in ff:
-        if f is not None:
-            filters.append(f[0])
-            values.update(f[1])
-
     if implementation == "default" and z >= 6:
-        return await nasa_viirs_fire_alerts.get_tile(
-            version, bbox.bounds, *filters, **values
-        )
+        return await nasa_viirs_fire_alerts.get_tile(version, bbox.bounds, *filters)
     elif implementation == "default" and z < 6:
         return await nasa_viirs_fire_alerts.get_aggregated_tile(
-            version, bbox.bounds, *filters, **values
+            version, bbox.bounds, *filters
         )
     else:
         raise HTTPException(
@@ -180,18 +171,12 @@ async def tile(
     filters: List[TableClause] = list()
     values: Dict[str, Any] = dict()
 
-    f = await geometry_filter(geostore_id, bbox.bounds)
-
-    if f is not None:
-        filters.append(f[0])
-        values.update(f[1])
+    filters = await geometry_filter(geostore_id, bbox.bounds)
 
     if implementation == "default":
-        query, values = get_mvt_table(
-            dataset, version, bbox, list(), *filters, **values
-        )
+        query, values = get_mvt_table(dataset, version, bbox, list(), *filters)
 
-        return await vector_tiles.get_tile(query, **values)
+        return await vector_tiles.get_tile(query)
 
     raise HTTPException(
         status_code=400, detail=f"Unknown implementation {implementation}"

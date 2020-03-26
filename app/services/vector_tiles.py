@@ -2,7 +2,6 @@ from typing import Dict, Any, List, Tuple
 
 from asyncpg.pool import Pool
 
-from databases import Database
 from fastapi import Response
 from shapely.geometry import box
 from sqlalchemy import select, text, literal_column, table
@@ -10,7 +9,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import get_database, get_module_logger, get_pool
+from app import get_module_logger, get_pool
 
 Geometry = Dict[str, Any]
 LOGGER = get_module_logger(__name__)
@@ -22,31 +21,26 @@ def get_mvt_table(
     bbox: box,
     columns: List[ColumnClause],
     *filters: text,
-    **values: Any,
 ) -> Tuple[Select, Dict[str, Any]]:
     bounds: Select
     bound_values: Dict[str, Any]
 
-    bounds, bound_values = _get_bounds(*bbox)
-    values.update(bound_values)
+    bounds = _get_bounds(*bbox)
 
     query: Select = _get_mvt_table(schema_name, table_name, bounds, *columns)
-    return _filter_mvt_table(query, *filters), values
+    return _filter_mvt_table(query, *filters)
 
 
-async def get_tile(query: Select, **values: Any) -> Response:
+async def get_tile(query: Select) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
     query = _as_vector_tile(query)
-    return await _get_tile(query, values)
+    return await _get_tile(query)
 
 
 async def get_aggregated_tile(
-    query: Select,
-    columns: List[ColumnClause],
-    group_by_columns: List[ColumnClause],
-    **values: Any,
+    query: Select, columns: List[ColumnClause], group_by_columns: List[ColumnClause]
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
@@ -56,20 +50,16 @@ async def get_aggregated_tile(
         "grouped_mvt_table"
     )
     query = _as_vector_tile(query)
-    return await _get_tile(query, values)
+    return await _get_tile(query)
 
 
-async def _get_tile(query: Select, values: Dict[str, Any]) -> Response:
-    # database: Database = await get_database()
+async def _get_tile(query: Select) -> Response:
     pool: Pool = await get_pool()
-
-    # LOGGER.debug(f"SQL: {query}")
-    # LOGGER.debug(f"VALUES: {values}")
 
     LOGGER.debug(
         f'SQL: {query.compile(dialect=postgresql.dialect(),compile_kwargs={"literal_binds": True})}'
     )
-    # tile = await pg.fetchval(query.params(**values), column=0)
+
     async with pool.acquire() as conn:
         tile = await conn.fetchval(
             query=str(
@@ -78,7 +68,6 @@ async def _get_tile(query: Select, values: Dict[str, Any]) -> Response:
                 )
             )
         )
-    LOGGER.debug(tile)
 
     return Response(
         content=tile,
@@ -90,9 +79,7 @@ async def _get_tile(query: Select, values: Dict[str, Any]) -> Response:
     )
 
 
-def _get_bounds(
-    left: float, bottom: float, top: float, right: float
-) -> Tuple[Select, Dict[str, float]]:
+def _get_bounds(left: float, bottom: float, top: float, right: float) -> Select:
     """
     Create bounds query
     """
@@ -104,7 +91,7 @@ def _get_bounds(
 
     bounds = select([geom]).alias("bounds")
 
-    return bounds, values
+    return bounds
 
 
 def _get_mvt_table(

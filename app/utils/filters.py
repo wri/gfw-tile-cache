@@ -14,7 +14,7 @@ Filter = Tuple[TextClause, Dict[str, Any]]
 @LogDecorator()
 async def geometry_filter(
     geostore_id: Optional[str], tile_bounds: box
-) -> Optional[Filter]:
+) -> Optional[TextClause]:
     if isinstance(geostore_id, str):
         geometry, envelope = await get_geostore_geometry(geostore_id)
         if not envelope.intersects(tile_bounds):
@@ -27,26 +27,26 @@ async def geometry_filter(
         )
         value = {"geometry": f"{geometry}"}
         f = f.bindparams(**value)
-        return f, value
+        return f
     return None
 
 
 @LogDecorator()
-def confidence_filter(high_confidence_only: bool) -> Optional[Filter]:
+def confidence_filter(high_confidence_only: bool) -> Optional[TextClause]:
     if high_confidence_only:
-        return text("confidence__cat = :confidence"), {"confidence": "h"}
+        return text("confidence__cat = 'high'")
     return None
 
 
 @LogDecorator()
-def contextual_filter(**fields: Union[str, bool]) -> List[Filter]:
+def contextual_filter(**fields: Union[str, bool]) -> List[TextClause]:
     filters = list()
     for field, value in fields.items():
         if value is not None:
             f = text(f"{field} = :{field}")
             v = {f"{field}": value}
             f = f.bindparams(**v)
-            filters.append((f, v))
+            filters.append(f)
 
     return filters
 
@@ -58,4 +58,4 @@ def date_filter(start_date: str, end_date: str) -> Filter:
     )
     value = {"start_date": start_date, "end_date": end_date}
     f = f.bindparams(**value)
-    return f, value
+    return f
