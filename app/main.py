@@ -2,7 +2,6 @@ import os
 from typing import Optional
 
 from asyncpg.pool import Pool
-from databases import Database
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -11,7 +10,6 @@ from app import get_module_logger, get_pool
 from app.routers import tile_server
 
 app = FastAPI()
-DATABASE: Optional[Database] = None
 ENV: str = os.environ["ENV"]
 LOGGER = get_module_logger(__name__)
 POOL: Optional[Pool] = None
