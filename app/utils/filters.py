@@ -26,6 +26,7 @@ async def geometry_filter(
             f"ST_Intersects(t.geom, ST_SetSRID(ST_GeomFromGeoJSON(:geometry),4326))"
         )
         value = {"geometry": f"{geometry}"}
+        f = f.bindparams(**value)
         return f, value
     return None
 
@@ -44,7 +45,9 @@ def contextual_filter(**fields: Union[str, bool]) -> List[Filter]:
         if value is not None:
             f = text(f"{field} = :{field}")
             v = {f"{field}": value}
+            f = f.bindparams(**v)
             filters.append((f, v))
+
     return filters
 
 
@@ -54,4 +57,5 @@ def date_filter(start_date: str, end_date: str) -> Filter:
         "alert__date BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
     )
     value = {"start_date": start_date, "end_date": end_date}
+    f = f.bindparams(**value)
     return f, value

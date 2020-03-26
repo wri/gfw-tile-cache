@@ -2,10 +2,13 @@ import logging
 import os
 from typing import Optional
 
+import asyncpg
+from asyncpg.pool import Pool
 from databases import Database
 
 ENV: str = os.environ["ENV"]
 DATABASE: Optional[Database] = None
+POOL: Optional[Pool] = None
 
 
 def get_module_logger(name) -> logging.Logger:
@@ -56,3 +59,17 @@ async def get_database() -> Database:
         )
 
     return DATABASE
+
+
+async def get_pool() -> Pool:
+    global POOL
+    if POOL is None:
+        POOL = await asyncpg.create_pool(
+            database=os.environ["POSTGRES_NAME"],
+            user=os.environ["POSTGRES_USERNAME"],
+            password=os.environ["POSTGRES_PASSWORD"],
+            port=os.environ["POSTGRES_PORT"],
+            host=os.environ["POSTGRES_HOST"],
+            command_timeout=60,
+        )
+    return POOL

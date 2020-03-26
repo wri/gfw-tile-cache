@@ -1,13 +1,16 @@
 from typing import Dict, Any, List, Tuple
 
+from asyncpg.pool import Pool
+from asyncpgsa import pg
 from databases import Database
 from fastapi import Response
 from shapely.geometry import box
 from sqlalchemy import select, text, literal_column, table
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import get_database, get_module_logger
+from app import get_database, get_module_logger, get_pool
 
 Geometry = Dict[str, Any]
 LOGGER = get_module_logger(__name__)
@@ -57,10 +60,25 @@ async def get_aggregated_tile(
 
 
 async def _get_tile(query: Select, values: Dict[str, Any]) -> Response:
-    database: Database = await get_database()
-    LOGGER.debug(f"SQL: {query}")
-    LOGGER.debug(f"VALUES: {values}")
-    tile = await database.fetch_val(query=str(query), values=values)
+    # database: Database = await get_database()
+    pool: Pool = await get_pool()
+
+    # LOGGER.debug(f"SQL: {query}")
+    # LOGGER.debug(f"VALUES: {values}")
+
+    LOGGER.debug(
+        f'SQL: {query.compile(dialect=postgresql.dialect(),compile_kwargs={"literal_binds": True})}'
+    )
+    # tile = await pg.fetchval(query.params(**values), column=0)
+    async with pool.acquire() as conn:
+        tile = await conn.fetchval(
+            query=str(
+                query.compile(
+                    dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
+                )
+            )
+        )
+    LOGGER.debug(tile)
 
     return Response(
         content=tile,
@@ -78,14 +96,13 @@ def _get_bounds(
     """
     Create bounds query
     """
-    bounds = select(
-        [
-            literal_column("ST_MakeEnvelope(:left, :bottom, :right, :top, 3857)").label(
-                "geom"
-            )
-        ]
-    ).alias("bounds")
+    geom = text(
+        "ST_SetSRID(ST_MakeBox2D(ST_Point(:left, :bottom), ST_Point(:right, :top)),3857) AS geom"
+    )
     values = {"left": left, "bottom": bottom, "top": top, "right": right}
+    geom = geom.bindparams(**values)
+
+    bounds = select([geom]).alias("bounds")
 
     return bounds, values
 
@@ -97,7 +114,7 @@ def _get_mvt_table(
     Create MVT Geom query
     """
     mvt_geom = literal_column(
-        "ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, 4096, 0,false)"
+        "ST_AsMVTGeom(t.geom_wm, bounds.geom, 4096, 0,false)"
     ).label("geom")
 
     src_table = table(table_name)
