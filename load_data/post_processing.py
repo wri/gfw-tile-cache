@@ -1,7 +1,6 @@
 import os
 from typing import List, Tuple
 
-
 import concurrent.futures
 
 import psycopg2
@@ -29,10 +28,10 @@ def cli() -> None:
     pool = get_pool()
     weeks = _get_weeks()
 
-    create_indicies_only()
+    create_indicies()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        executor.map(partiontions, weeks)
+        executor.map(cluster, weeks)
 
     pool.closeall()
 
@@ -55,7 +54,7 @@ def get_pool() -> ThreadedConnectionPool:
     return POOL
 
 
-def create_indicies_only() -> None:
+def create_indicies() -> None:
     """
     This creates an invalid index.
     It will be validated automatically, once all partitions are indexed and attached.
@@ -65,65 +64,50 @@ def create_indicies_only() -> None:
 
     with conn.cursor() as cursor:
         cursor.execute(
-            _get_sql("sql/create_indicies.sql.tmpl", schema=SCHEMA, table=TABLE)
+            _get_sql("sql/update_geometry.sql.tmpl", schema=SCHEMA, table=TABLE,)
+        )
+
+    with conn.cursor() as cursor:
+        cursor.execute(
+            _get_sql(
+                "sql/create_indicies.sql.tmpl",
+                schema=SCHEMA,
+                table=TABLE,
+                column="geom",
+                index="gist",
+            )
+        )
+
+    with conn.cursor() as cursor:
+        cursor.execute(
+            _get_sql(
+                "sql/create_indicies.sql.tmpl",
+                schema=SCHEMA,
+                table=TABLE,
+                column="geom_wm",
+                index="gist",
+            )
+        )
+
+    with conn.cursor() as cursor:
+        cursor.execute(
+            _get_sql(
+                "sql/create_indicies.sql.tmpl",
+                schema=SCHEMA,
+                table=TABLE,
+                column="alert__date",
+                index="btree",
+            )
         )
 
 
-def partiontions(weeks: Tuple[int, str]) -> None:
-
+def cluster(weeks: Tuple[int, str]) -> None:
     year = weeks[0]
     week = weeks[1]
 
     pool = get_pool()
     conn = pool.getconn()
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = conn.cursor()
-
-    cursor.execute(
-        _get_sql(
-            "sql/update_geometry.sql.tmpl",
-            schema=SCHEMA,
-            table=TABLE,
-            year=year,
-            week=week,
-        )
-    )
-
-    cursor.execute(
-        _get_sql(
-            "sql/create_partition_indicies.sql.tmpl",
-            schema=SCHEMA,
-            table=TABLE,
-            year=year,
-            week=week,
-            column="geom",
-            index="gist",
-        )
-    )
-
-    cursor.execute(
-        _get_sql(
-            "sql/create_partition_indicies.sql.tmpl",
-            schema=SCHEMA,
-            table=TABLE,
-            year=year,
-            week=week,
-            column="geom_wm",
-            index="gist",
-        )
-    )
-
-    cursor.execute(
-        _get_sql(
-            "sql/create_partition_indicies.sql.tmpl",
-            schema=SCHEMA,
-            table=TABLE,
-            year=year,
-            week=week,
-            column="alert__date",
-            index="btree",
-        )
-    )
 
     cursor.execute(
         _get_sql(
