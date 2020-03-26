@@ -130,4 +130,5 @@ def _group_mvt_table(
 
 
 def _as_vector_tile(query: Select) -> Select:
-    return select([literal_column("ST_AsMVT(*)")]).select_from(query)
+    alias = query.name
+    return select([literal_column(f"ST_AsMVT({alias}.*)")]).select_from(query)
