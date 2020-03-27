@@ -31,7 +31,7 @@ async def get_features_by_location(dataset, version, lat, lng, zoom):
     t = table(version)  # TODO validate version
     t.schema = dataset
 
-    buffer_distance = get_buffer_distance(zoom)
+    buffer_distance = _get_buffer_distance(zoom)
     geometry = geodesic_point_buffer(lat, lng, buffer_distance)
 
     columns = [literal_column("*")]
@@ -48,7 +48,7 @@ async def get_features_by_location(dataset, version, lat, lng, zoom):
     return {"max_date": max_date}
 
 
-def get_buffer_distance(zoom: int) -> int:
+def _get_buffer_distance(zoom: int) -> int:
     zoom_buffer = {
         "z0": 10000,
         "z1": 5000,
