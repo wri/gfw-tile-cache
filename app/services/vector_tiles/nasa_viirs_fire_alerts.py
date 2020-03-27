@@ -20,7 +20,7 @@ async def get_tile(version: str, bbox: box, *filters: TextClause) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
-    query, values = vector_tiles.get_mvt_table(SCHEMA, version, bbox, COLUMNS, *filters)
+    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, COLUMNS, *filters)
     return await vector_tiles.get_tile(query)
 
 

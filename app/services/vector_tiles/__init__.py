@@ -22,7 +22,7 @@ def get_mvt_table(
     bbox: box,
     columns: List[ColumnClause],
     *filters: text,
-) -> Tuple[Select, Dict[str, Any]]:
+) -> Select:
     bounds: Select
     bound_values: Dict[str, Any]
 
