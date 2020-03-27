@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Any, List, Tuple
 
 from asyncpg.pool import Pool
@@ -5,14 +6,14 @@ from asyncpg.pool import Pool
 from fastapi import Response
 from shapely.geometry import box
 from sqlalchemy import select, text, literal_column, table
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import get_module_logger, get_pool
+from app import get_pool
+from app.utils.sql import compile_sql
 
 Geometry = Dict[str, Any]
-LOGGER = get_module_logger(__name__)
+LOGGER = logging.Logger(__name__)
 
 
 def get_mvt_table(
@@ -56,18 +57,11 @@ async def get_aggregated_tile(
 async def _get_tile(query: Select) -> Response:
     pool: Pool = await get_pool()
 
-    LOGGER.debug(
-        f'SQL: {query.compile(dialect=postgresql.dialect(),compile_kwargs={"literal_binds": True})}'
-    )
+    query = compile_sql(query)
 
     async with pool.acquire() as conn:
-        tile = await conn.fetchval(
-            query=str(
-                query.compile(
-                    dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
-                )
-            )
-        )
+        tile = await conn.fetchval(query=str(query))
+        logging.debug(tile)
 
     return Response(
         content=tile,

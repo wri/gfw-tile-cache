@@ -1,11 +1,12 @@
 import functools
+import logging
 
-from app import get_module_logger
+LOGGER = logging.Logger(__name__)
 
 
 class LogDecorator(object):
     def __init__(self):
-        self.logger = get_module_logger("decorator-log")
+        self.logger = logging.Logger("decorator-log")
 
     def __call__(self, fn):
         @functools.wraps(fn)

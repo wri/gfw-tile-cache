@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional
 
@@ -6,12 +7,12 @@ from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app import get_module_logger, get_pool
+from app import get_pool
 from app.routers import tile_server
 
 app = FastAPI()
 ENV: str = os.environ["ENV"]
-LOGGER = get_module_logger(__name__)
+LOGGER = logging.Logger(__name__)
 POOL: Optional[Pool] = None
 
 app.include_router(tile_server.router)
@@ -32,4 +33,4 @@ async def shutdown():
     POOL.terminate()
 
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")

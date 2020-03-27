@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from typing import Optional, Any, Dict, List
 
@@ -5,8 +6,8 @@ import pendulum
 from fastapi import APIRouter, Path, Query, HTTPException, Response
 from sqlalchemy.sql import TableClause
 
-from app import get_module_logger
-from app.services.vector_tiles import get_mvt_table
+from app.routers import DATE_REGEX, VERSION_REGEX
+from app.services.vector_tiles import get_mvt_table, nasa_viirs_fire_alerts
 from app.utils.tiles import to_bbox
 from app.utils.filters import (
     geometry_filter,
@@ -21,31 +22,15 @@ from app.utils.validators import (
     sanitize_fields,
 )
 from app.services import vector_tiles
-from app.services import nasa_viirs_fire_alerts
 
-LOGGER = get_module_logger(__name__)
+LOGGER = logging.Logger(__name__)
 router = APIRouter()
 NOW = pendulum.now()
-DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"  # mypy: ignore
-VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
+
 DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
 DEFAULT_END = NOW.to_date_string()
 
 Geometry = Dict[str, Any]
-
-
-# pool = get_pool()
-
-
-# @router.get(
-#     "/nasa_viirs_fire_alerts/latest/default/max_date"
-# )
-# async def nasa_viirs_fire_alerts_max_date():
-#     sql = "select max(acq_date) from viirs.v20200224;"
-#     async with pool.acquire() as conn:
-#         stmt = await conn.prepare(sql)
-#         max_date = await stmt.fetchval(timeout=30)
-#     return {"max_date": max_date}
 
 
 class Dataset(str, Enum):
@@ -134,6 +119,8 @@ async def nasa_viirs_fire_alerts_tile(
         date_filter(start_date, end_date),
     ] + contextual_filter(**fields)
 
+    filters = [f for f in filters if f is not None]
+
     if implementation == "default" and z >= 6:
         return await nasa_viirs_fire_alerts.get_tile(version, bbox.bounds, *filters)
     elif implementation == "default" and z < 6:
@@ -169,9 +156,11 @@ async def tile(
     validate_bbox(*bbox.bounds)
 
     filters: List[TableClause] = list()
-    values: Dict[str, Any] = dict()
 
-    filters = await geometry_filter(geostore_id, bbox.bounds)
+    f = await geometry_filter(geostore_id, bbox.bounds)
+
+    if f is not None:
+        filters.append(f)
 
     if implementation == "default":
         query, values = get_mvt_table(dataset, version, bbox, list(), *filters)

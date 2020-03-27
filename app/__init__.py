@@ -43,6 +43,5 @@ async def get_pool() -> Pool:
             password=os.environ["POSTGRES_PASSWORD"],
             port=os.environ["POSTGRES_PORT"],
             host=os.environ["POSTGRES_HOST"],
-            command_timeout=60,
         )
     return POOL

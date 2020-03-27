@@ -119,7 +119,7 @@
                     'circle-color': [
                         'interpolate',
                         ['linear'],
-                        ["to-number", ["get", "frp"]],
+                        ["to-number", ["get", "frp__mw"]],
                         0,
                         '#FFDA07',
                         2,
@@ -151,7 +151,7 @@
                         'circle-color': [
                             'interpolate',
                             ['linear'],
-                            ["to-number", ["get", "frp"]],
+                            ["to-number", ["get", "frp__mw"]],
                             0,
                             '#FFDA07',
                             2,
@@ -182,12 +182,12 @@
             .setHTML("<strong>MODIS VIIRS Fire Alerts</strong>" +
                 "<p>Latitude: " + e.features[0].properties.latitude + "</p>" +
                 "<p>Longitude: " + e.features[0].properties.longitude + "</p>" +
-                "<p>Acquisition Date: " + e.features[0].properties.acq_date + "</p>" +
-                "<p>Acquisition Time: " + e.features[0].properties.acq_time + "</p>" +
+                "<p>Acquisition Date: " + e.features[0].properties.alert__date + "</p>" +
+                "<p>Acquisition Time: " + e.features[0].properties.alert__time_utc + "</p>" +
                 "<p>Confidence: " + e.features[0].properties.confidence + "</p>" +
-                "<p>Brightness - TI4 (K): " + e.features[0].properties.bright_ti4 + "</p>" +
-                "<p>Brightness - TI5 (K): " + e.features[0].properties.bright_ti5 + "</p>" +
-                "<p>Fire Radiative Power (MW): " + e.features[0].properties.frp + "</p>")
+                "<p>Brightness - TI4 (K): " + e.features[0].properties.bright_ti4__k + "</p>" +
+                "<p>Brightness - TI5 (K): " + e.features[0].properties.bright_ti5__k + "</p>" +
+                "<p>Fire Radiative Power (MW): " + e.features[0].properties.frp__mw + "</p>")
 
             .addTo(map);
     });
@@ -198,10 +198,10 @@
             .setLngLat(e.lngLat)
             .setHTML("<strong>MODIS VIIRS Fire Alerts</strong>" +
                 "<p>Alert Count: " + e.features[0].properties.count + "</p>" +
-                "<p>Most frequent date: " + e.features[0].properties.acq_date + "</p>" +
-                "<p>Avg Brightness - TI4 (K): " + Math.round(e.features[0].properties.bright_ti4, 1) + "</p>" +
-                "<p>Avg Brightness - TI5 (K): " + Math.round(e.features[0].properties.bright_ti5, 1) + "</p>" +
-                "<p>Total Fire Radiative Power (MW): " + e.features[0].properties.frp + "</p>")
+                "<p>Most frequent date: " + e.features[0].properties.alert__date + "</p>" +
+                "<p>Avg Brightness - TI4 (K): " + Math.round(e.features[0].properties.bright_ti4__k, 1) + "</p>" +
+                "<p>Avg Brightness - TI5 (K): " + Math.round(e.features[0].properties.bright_ti5__k, 1) + "</p>" +
+                "<p>Total Fire Radiative Power (MW): " + e.features[0].properties.frp__mw + "</p>")
 
             .addTo(map);
     });
@@ -223,7 +223,7 @@
     let updateFires = (monthDiff) => {
         let initalDate = new Date(2012, 0, 1);
         let startDate = new Date(initalDate.setMonth(initalDate.getMonth() + monthDiff));
-        let endDate = new Date(startDate.setMonth(startDate.getMonth() + 1))
+        let endDate = new Date(startDate.setMonth(startDate.getMonth() + 1));
 
         let startStr = startDate.toISOString().slice(0, 10);
         let endStr = endDate.toISOString().slice(0, 10);
@@ -256,7 +256,7 @@
                 'circle-color': [
                     'interpolate',
                     ['linear'],
-                    ["to-number", ["get", "frp"]],
+                    ["to-number", ["get", "frp__mw"]],
                     0,
                     '#FFDA07',
                     2,
@@ -288,7 +288,7 @@
                 'circle-color': [
                     'interpolate',
                     ['linear'],
-                    ["to-number", ["get", "frp"]],
+                    ["to-number", ["get", "frp__mw"]],
                     0,
                     '#FFDA07',
                     2,
