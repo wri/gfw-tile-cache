@@ -20,5 +20,6 @@ setup(
         "requests==2.23.0",
         "async_lru==1.0.2",
         "geojson==2.5.0",
+        "orjson==2.6.1",
     ],
 )
