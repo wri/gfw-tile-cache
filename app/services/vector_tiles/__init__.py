@@ -13,13 +13,15 @@ from app import get_pool
 from app.utils.sql import compile_sql
 
 Geometry = Dict[str, Any]
+Bounds = Tuple[float, float, float, float]
+
 LOGGER = logging.Logger(__name__)
 
 
 def get_mvt_table(
     schema_name: str,
     table_name: str,
-    bbox: box,
+    bbox: Bounds,
     columns: List[ColumnClause],
     *filters: text,
 ) -> Select:
@@ -73,12 +75,13 @@ async def _get_tile(query: Select) -> Response:
     )
 
 
-def _get_bounds(left: float, bottom: float, top: float, right: float) -> Select:
+def _get_bounds(left: float, bottom: float, right: float, top: float) -> Select:
     """
     Create bounds query
     """
     geom = text(
-        "ST_SetSRID(ST_MakeBox2D(ST_Point(:left, :bottom), ST_Point(:right, :top)),3857) AS geom"
+        "ST_MakeEnvelope(:left, :bottom, :right, :top, 3857) AS geom"
+        # "ST_SetSRID(ST_MakeBox2D(ST_Point(:left, :bottom), ST_Point(:right, :top)),3857) AS geom"
     )
     values = {"left": left, "bottom": bottom, "top": top, "right": right}
     geom = geom.bindparams(**values)
@@ -95,7 +98,7 @@ def _get_mvt_table(
     Create MVT Geom query
     """
     mvt_geom = literal_column(
-        "ST_AsMVTGeom(t.geom_wm, bounds.geom, 4096, 0,false)"
+        "ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, 4096, 0,false)"
     ).label("geom")
 
     src_table = table(table_name)

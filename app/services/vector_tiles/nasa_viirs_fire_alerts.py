@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 from shapely.geometry import box
 from sqlalchemy import column, literal_column
@@ -9,6 +9,7 @@ from app.models.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
 from fastapi import Response
 
 Geometry = Dict[str, Any]
+Bounds = Tuple[float, float, float, float]
 
 SCHEMA = "nasa_viirs_fire_alerts"
 COLUMNS: List[ColumnClause] = [
@@ -16,7 +17,7 @@ COLUMNS: List[ColumnClause] = [
 ]
 
 
-async def get_tile(version: str, bbox: box, *filters: TextClause) -> Response:
+async def get_tile(version: str, bbox: Bounds, *filters: TextClause) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
@@ -25,7 +26,7 @@ async def get_tile(version: str, bbox: box, *filters: TextClause) -> Response:
 
 
 async def get_aggregated_tile(
-    version: str, bbox: box, *filters: TextClause
+    version: str, bbox: Bounds, *filters: TextClause
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.

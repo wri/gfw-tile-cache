@@ -9,17 +9,17 @@ from sqlalchemy.sql.elements import TextClause
 from app.utils.geostore import get_geostore_geometry
 
 Filter = Tuple[TextClause, Dict[str, Any]]
-
+Bounds = Tuple[float, float, float, float]
 
 LOGGER = logging.Logger(__name__)
 
 
 async def geometry_filter(
-    geostore_id: Optional[str], tile_bounds: box
+    geostore_id: Optional[str], bounds: Bounds
 ) -> Optional[TextClause]:
     if isinstance(geostore_id, str):
         geometry, envelope = await get_geostore_geometry(geostore_id)
-        if not envelope.intersects(tile_bounds):
+        if not envelope.intersects(box(*bounds)):
             raise HTTPException(
                 status_code=404, detail="Tile does not intersect with geostore"
             )

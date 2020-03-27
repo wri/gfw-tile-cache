@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
 from fastapi import APIRouter, Path, Query, HTTPException, Response
@@ -31,6 +31,7 @@ DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
 DEFAULT_END = NOW.to_date_string()
 
 Geometry = Dict[str, Any]
+Bounds = Tuple[float, float, float, float]
 
 
 class Dataset(str, Enum):
@@ -111,7 +112,7 @@ async def nasa_viirs_fire_alerts_tile(
     validate_dates(start_date, end_date)
 
     bbox = to_bbox(x, y, z)
-    validate_bbox(*bbox.bounds)
+    validate_bbox(*bbox)
 
     filters = [
         await geometry_filter(geostore_id, bbox),
@@ -122,11 +123,9 @@ async def nasa_viirs_fire_alerts_tile(
     filters = [f for f in filters if f is not None]
 
     if implementation == "default" and z >= 6:
-        return await nasa_viirs_fire_alerts.get_tile(version, bbox.bounds, *filters)
+        return await nasa_viirs_fire_alerts.get_tile(version, bbox, *filters)
     elif implementation == "default" and z < 6:
-        return await nasa_viirs_fire_alerts.get_aggregated_tile(
-            version, bbox.bounds, *filters
-        )
+        return await nasa_viirs_fire_alerts.get_aggregated_tile(version, bbox, *filters)
     else:
         raise HTTPException(
             status_code=400, detail=f"Unknown Implementation {implementation}."
@@ -153,11 +152,11 @@ async def tile(
     """
 
     bbox = to_bbox(x, y, z)
-    validate_bbox(*bbox.bounds)
+    validate_bbox(*bbox)
 
     filters: List[TableClause] = list()
 
-    f = await geometry_filter(geostore_id, bbox.bounds)
+    f = await geometry_filter(geostore_id, bbox)
 
     if f is not None:
         filters.append(f)

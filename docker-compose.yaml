@@ -10,5 +10,6 @@ services:
       - POSTGRES_NAME
       - POSTGRES_PASSWORD
       - ENV
+      - LOG_LEVEL
     ports:
       - "80:80"

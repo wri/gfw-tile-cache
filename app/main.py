@@ -33,4 +33,4 @@ async def shutdown():
     POOL.terminate()
 
 
-app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")
+# app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")
