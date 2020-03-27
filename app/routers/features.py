@@ -17,7 +17,7 @@ class Dataset(str, Enum):
 
 
 @router.get(
-    "/{dataset}/{version}/features", response_class=ORJSONResponse, tags=["features"],
+    "/{dataset}/{version}/features", response_class=ORJSONResponse, tags=["Features"],
 )
 async def features(
     *,
@@ -33,7 +33,7 @@ async def features(
 @router.get(
     "/{dataset}/{version}/feature/{feature_id}",
     response_class=ORJSONResponse,
-    tags=["features"],
+    tags=["Features"],
 )
 async def feature(
     *,
@@ -47,7 +47,7 @@ async def feature(
 @router.get(
     "/nasa_viirs_fire_alerts/{version}/max_alert__date",
     response_class=ORJSONResponse,
-    tags=["features"],
+    tags=["Max date"],
 )
 async def max_date(
     *, version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
@@ -58,7 +58,7 @@ async def max_date(
 @router.get(
     "/{dataset}/{version}/geostore/{geostore_id}",
     response_class=ORJSONResponse,
-    tags=["features"],
+    tags=["Geostore"],
 )
 async def get_geostore(
     *,

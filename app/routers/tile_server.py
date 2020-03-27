@@ -48,9 +48,9 @@ class Implementation(str, Enum):
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/{implementation}/{z}/{x}/{y}.pbf",
+    "/nasa_viirs_fire_alerts/{version}/tile/{implementation}/{z}/{x}/{y}.pbf",
     response_class=Response,
-    tags=["tiles"],
+    tags=["Tiles"],
 )
 async def nasa_viirs_fire_alerts_tile(
     version: ViirsVersion,
@@ -133,9 +133,9 @@ async def nasa_viirs_fire_alerts_tile(
 
 
 @router.get(
-    "/{dataset}/{version}/{implementation}/{z}/{x}/{y}.pbf",
+    "/{dataset}/{version}/tile/{implementation}/{z}/{x}/{y}.pbf",
     response_class=Response,
-    tags=["tiles"],
+    tags=["Tiles"],
 )
 async def tile(
     *,
@@ -171,7 +171,9 @@ async def tile(
     )
 
 
-@router.get("/{dataset}/{version}/{implementation}/VectorTileServer", tags=["esri"])
+@router.get(
+    "/{dataset}/{version}/tile/{implementation}/VectorTileServer", tags=["Tiles"]
+)
 async def esri_vector_tile_server(
     *,
     dataset: Dataset,

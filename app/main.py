@@ -8,15 +8,18 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import get_pool
-from app.routers import tile_server
+from app.routers import tile_server, features
 
 app = FastAPI()
 ENV: str = os.environ["ENV"]
 LOGGER = logging.Logger(__name__)
 POOL: Optional[Pool] = None
 
-app.include_router(tile_server.router)
+
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+app.include_router(tile_server.router)
+app.include_router(features.router)
 
 
 @app.on_event("startup")
