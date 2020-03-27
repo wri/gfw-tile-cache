@@ -22,8 +22,8 @@ async def get_feature(dataset, version, feature_id):
 
     async with pool.acquire() as conn:
         sql = await conn.prepare(str(sql))
-        max_date = await sql.fetchval(timeout=30)
-    return {"max_date": max_date}
+        feature = await sql.fetchrow(timeout=30)
+    return feature
 
 
 async def get_features_by_location(dataset, version, lat, lng, zoom):
@@ -43,8 +43,8 @@ async def get_features_by_location(dataset, version, lat, lng, zoom):
 
     async with pool.acquire() as conn:
         sql = await conn.prepare(str(sql))
-        max_date = await sql.fetchval(timeout=30)
-    return {"max_date": max_date}
+        features = await sql.fetch(timeout=30)
+    return features
 
 
 def _get_buffer_distance(zoom: int) -> int:
