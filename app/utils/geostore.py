@@ -46,4 +46,4 @@ def geodesic_point_buffer(lat, lng, meter):
     )
     buf = Point(0, 0).buffer(meter)  # distance in metres
 
-    return transform(project, buf)
+    return transform(project, buf).exterior.coords[:]

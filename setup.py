@@ -19,5 +19,6 @@ setup(
         "SQLAlchemy==1.3.15",
         "requests==2.23.0",
         "async_lru==1.0.2",
+        "geojson==2.5.0",
     ],
 )

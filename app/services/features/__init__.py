@@ -1,7 +1,7 @@
 import logging
 from asyncpg.pool import Pool
 from sqlalchemy import table, select, literal_column
-from shapely.geometry import mapping
+from geojson import Point, Polygon
 
 from app import get_pool
 from app.utils.filters import filter_eq, filter_intersects
@@ -17,7 +17,7 @@ async def get_feature(dataset, version, feature_id):
     t.schema = dataset
 
     columns = [literal_column("*")]
-    sql = select(columns).select_from(t).where(filter_eq("object_id", feature_id))
+    sql = select(columns).select_from(t).where(filter_eq("objectid", feature_id))
     sql = compile_sql(sql)
 
     async with pool.acquire() as conn:
@@ -32,14 +32,13 @@ async def get_features_by_location(dataset, version, lat, lng, zoom):
     t.schema = dataset
 
     buffer_distance = _get_buffer_distance(zoom)
-    geometry = geodesic_point_buffer(lat, lng, buffer_distance)
+    if buffer_distance:
+        geometry = Polygon(geodesic_point_buffer(lat, lng, buffer_distance))
+    else:
+        geometry = Point((lat, lng))
 
     columns = [literal_column("*")]
-    sql = (
-        select(columns)
-        .select_from(t)
-        .where(filter_intersects("geom", mapping(geometry)))
-    )
+    sql = select(columns).select_from(t).where(filter_intersects("geom", str(geometry)))
     sql = compile_sql(sql)
 
     async with pool.acquire() as conn:
