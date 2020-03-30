@@ -27,5 +27,5 @@ async def get_geostore(dataset, version, geostore_id):
 
     async with pool.acquire() as conn:
         sql = await conn.prepare(str(sql))
-        max_date = await sql.fetchval(timeout=30)
-    return {"max_date": max_date}
+        geostore = await sql.fetchone(timeout=30)
+    return geostore
