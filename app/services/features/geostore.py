@@ -20,7 +20,9 @@ async def get_geostore(dataset, version, geostore_id):
         column("gfw_geojson").label("geometry"),
         column("gfw_area__ha").label("area__ha"),
     ]
-    sql = select(columns).select_from(t).where(filter_eq("geostore_id", geostore_id))
+    sql = (
+        select(columns).select_from(t).where(filter_eq("gfw_geostore_id", geostore_id))
+    )
     sql = compile_sql(sql)
 
     async with pool.acquire() as conn:
