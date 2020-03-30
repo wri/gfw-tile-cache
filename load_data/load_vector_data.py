@@ -9,17 +9,17 @@
 # ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_area__ha NUMERIC;
 # ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_geostore_id UUID;
 # ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_geojson TEXT;
-#
+
+## http://blog.cleverelephant.ca/2018/09/postgis-external-storage.html
+# ALTER TABLE wdpa_protected_areas.v202003__raw ALTER COLUMN geom SET STORAGE EXTERNAL;
+# ALTER TABLE wdpa_protected_areas.v202003__raw ALTER COLUMN geom_wm SET STORAGE EXTERNAL;
+
+# UPDATE wdpa_protected_areas.v202003__raw SET geom = ST_SetSRID(geom, 4326);
 # UPDATE wdpa_protected_areas.v202003__raw SET geom_wm = ST_Transform(geom, 3857);
+
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_area__ha = ST_area(geom::geography)/10000;
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_geostore_id = md5(ST_asgeojson(geom))::uuid;
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_geojson = ST_asgeojson(geom);
-
-# http://blog.cleverelephant.ca/2018/09/postgis-external-storage.html
-# ALTER TABLE wdpa_protected_areas.v202003__raw ALTER COLUMN geom SET STORAGE EXTERNAL;
-# ALTER TABLE wdpa_protected_areas.v202003__raw ALTER COLUMN geom_wm SET STORAGE EXTERNAL;
-# UPDATE wdpa_protected_areas.v202003__raw SET geom = ST_SetSRID(geom, 4326);
-# UPDATE wdpa_protected_areas.v202003__raw SET geom_wm = ST_SetSRID(geom, 3857);
 
 # CREATE TABLE public.geostore (gfw_geostore_id uuid, gfw_geojson text, gfw_area__ha numeric);
 # CREATE INDEX IF NOT EXISTS geostore_gfw_geostore_id_idx
