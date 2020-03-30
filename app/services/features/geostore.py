@@ -16,9 +16,9 @@ async def get_geostore(dataset, version, geostore_id):
     t.schema = dataset
 
     columns = [
-        column("gfw_geostore_id").lable("geostore_id"),
-        column("gfw_geojson").lable("geometry"),
-        column("gfw_area__ha").lable("area__ha"),
+        column("gfw_geostore_id").label("geostore_id"),
+        column("gfw_geojson").label("geometry"),
+        column("gfw_area__ha").label("area__ha"),
     ]
     sql = select(columns).select_from(t).where(filter_eq("geostore_id", geostore_id))
     sql = compile_sql(sql)
