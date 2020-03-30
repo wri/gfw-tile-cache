@@ -27,5 +27,5 @@ async def get_geostore(dataset, version, geostore_id):
 
     async with pool.acquire() as conn:
         sql = await conn.prepare(str(sql))
-        geostore = await sql.fetchone(timeout=30)
+        geostore = await sql.fetchrow(timeout=30)
     return geostore
