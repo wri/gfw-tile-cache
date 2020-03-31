@@ -5,7 +5,7 @@ from asyncpg.pool import Pool
 from geojson import Feature, loads, FeatureCollection
 from sqlalchemy import table, select, column
 
-from app import get_pool
+from app import a_get_pool
 from app.utils.filters import filter_eq
 from app.utils.sql import compile_sql
 
@@ -14,7 +14,7 @@ LOGGER = logging.Logger(__name__)
 
 async def get_geostore(dataset, version, geostore_id):
 
-    pool: Pool = await get_pool()
+    pool: Pool = await a_get_pool()
     t = table(version)  # TODO validate version
     t.schema = dataset
 

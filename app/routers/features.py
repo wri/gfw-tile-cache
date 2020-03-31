@@ -4,7 +4,9 @@ from enum import Enum
 from fastapi import APIRouter, Path, Query
 from fastapi.responses import ORJSONResponse
 
+from app.models.dataset import Dataset
 from app.models.geostore import Geostore
+from app.models.max_date import MaxDate
 from app.routers import VERSION_REGEX
 from app.services.features import (
     get_feature,
@@ -15,10 +17,6 @@ from app.services.features import (
 
 router = APIRouter()
 LOGGER = logging.Logger(__name__)
-
-
-class Dataset(str, Enum):
-    wdpa_protected_areas = "wdpa_protected_areas"
 
 
 @router.get(
@@ -52,6 +50,7 @@ async def feature(
 @router.get(
     "/nasa_viirs_fire_alerts/{version}/max_alert__date",
     response_class=ORJSONResponse,
+    response_model=MaxDate,
     tags=["Max date"],
 )
 async def max_date(

@@ -9,7 +9,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import pendulum
 from pendulum.parsing.exceptions import ParserError
 
-POOL = None
+A_POOL = None
 YEARS = range(2011, 2022)
 WEEKS = range(1, 54)
 SCHEMA = "nasa_viirs_fire_alerts"
@@ -40,9 +40,9 @@ def get_pool() -> ThreadedConnectionPool:
     """
     The database connection pool
     """
-    global POOL
-    if POOL is None:
-        POOL = psycopg2.pool.ThreadedConnectionPool(
+    global A_POOL
+    if A_POOL is None:
+        A_POOL = psycopg2.pool.ThreadedConnectionPool(
             1,
             10,
             database=os.environ["POSTGRES_NAME"],
@@ -51,7 +51,7 @@ def get_pool() -> ThreadedConnectionPool:
             port=os.environ["POSTGRES_PORT"],
             host=os.environ["POSTGRES_HOST"],
         )
-    return POOL
+    return A_POOL
 
 
 def create_indicies() -> None:

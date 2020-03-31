@@ -3,7 +3,7 @@ from asyncpg.pool import Pool
 from sqlalchemy import table, select, literal_column
 from geojson import Point, Polygon
 
-from app import get_pool
+from app import a_get_pool
 from app.utils.filters import filter_eq, filter_intersects
 from app.utils.geostore import geodesic_point_buffer
 from app.utils.sql import compile_sql
@@ -12,7 +12,7 @@ LOGGER = logging.Logger(__name__)
 
 
 async def get_feature(dataset, version, feature_id):
-    pool: Pool = await get_pool()
+    pool: Pool = await a_get_pool()
     t = table(version)  # TODO validate version
     t.schema = dataset
 
@@ -27,7 +27,7 @@ async def get_feature(dataset, version, feature_id):
 
 
 async def get_features_by_location(dataset, version, lat, lng, zoom):
-    pool: Pool = await get_pool()
+    pool: Pool = await a_get_pool()
     t = table(version)  # TODO validate version
     t.schema = dataset
 

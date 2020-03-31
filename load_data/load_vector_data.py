@@ -21,7 +21,7 @@
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_area__ha = ST_area(geom::geography)/10000;
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_geostore_id = md5(ST_asgeojson(geom))::uuid;
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_geojson = ST_asgeojson(geom);
-# UPDATE wdpa_protected_areas.v202003__raw SET gfw_bbox = ST_box2d(geom);
+# UPDATE wdpa_protected_areas.v202003__raw SET gfw_bbox = box2d(geom);
 
 # CREATE TABLE public.geostore (gfw_geostore_id uuid, gfw_geojson text, gfw_area__ha numeric);
 # CREATE INDEX IF NOT EXISTS geostore_gfw_geostore_id_idx
@@ -119,3 +119,293 @@
 # from wdpa_protected_areas.v202003__raw w, gfw_grid_1x1 g where st_intersects(w.geom, g.geom) group by wdpaid limit 10
 # ) as t
 # where wdpa_protected_areas.v202003__raw.wdpaid = t.wdpaid;
+
+
+# create table metadata (
+# 	dataset text,
+# 	version text,
+# 	is_latest boolean,
+# 	has_tile_cache boolean,
+# 	has_geostore boolean,
+# 	has_feature_info boolean,
+# 	fields jsonb,
+# 	last_updated timestamp DEFAULT CURRENT_TIMESTAMP
+# )
+
+#
+# Insert into metadata(dataset, version, is_latest, has_tile_cache, has_geostore, has_feature_info, fields)
+# values('wdpa_protected_areas', 'v202003', true, true, true, true,
+#        '[{
+#        "name": "id",
+# "type": "integer",
+# "is_feature_info": true,
+# "is_filter": true
+# },
+#
+# {
+#     "name": "geom",
+#     "type": "geometry(MultiPolygon,4326)",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "objectid",
+#     "type": "bigint",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "wdpaid",
+#     "type": "double precision",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "wdpa_pid",
+#     "type": "character varying(50)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "pa_def",
+#     "type": "character varying(20)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "name",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "orig_name",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "desig",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "desig_eng",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "desig_type",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "iucn_cat",
+#     "type": "character varying(20)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "int_crit",
+#     "type": "character varying(100)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "marine",
+#     "type": "character varying(20)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "rep_m_area",
+#     "type": "double precision",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "gis_m_area",
+#     "type": "double precision",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "rep_area",
+#     "type": "double precision",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "gis_area",
+#     "type": "double precision",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "no_take",
+#     "type": "character varying(50)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "no_tk_area",
+#     "type": "double precision",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "status",
+#     "type": "character varying(100)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "status_yr",
+#     "type": "integer",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "gov_type",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "own_type",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "mang_auth",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "mang_plan",
+#     "type": "character varying(254)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "verif",
+#     "type": "character varying(20)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "metadataid",
+#     "type": "integer",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "sub_loc",
+#     "type": "character varying(100)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "parent_iso3",
+#     "type": "character varying(50)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "iso3",
+#     "type": "character varying(50)",
+#     "is_feature_info": true,
+#     "is_filter": true
+# },
+#
+# {
+#     "name": "shape_length",
+#     "type": "double precision",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "shape_area",
+#     "type": "double precision",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "gfw_grid",
+#     "type": "gfw_grid_type[]",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "geom_wm",
+#     "type": "geometry(MultiPolygon,3857)",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "gfw_area__ha",
+#     "type": "numeric",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "gfw_geostore_id",
+#     "type": "uuid",
+#     "is_feature_info": true,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "gfw_geojson",
+#     "type": "text",
+#     "is_feature_info": false,
+#     "is_filter": false
+# },
+#
+# {
+#     "name": "gfw_bbox",
+#     "type": "box2d",
+#     "is_feature_info": false,
+#     "is_filter": false
+# }
+# ]')
+#

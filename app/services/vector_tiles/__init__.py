@@ -9,7 +9,7 @@ from sqlalchemy import select, text, literal_column, table
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import get_pool
+from app import a_get_pool
 from app.utils.sql import compile_sql
 
 Geometry = Dict[str, Any]
@@ -57,7 +57,7 @@ async def get_aggregated_tile(
 
 
 async def _get_tile(query: Select) -> Response:
-    pool: Pool = await get_pool()
+    pool: Pool = await a_get_pool()
 
     query = compile_sql(query)
 

@@ -2,7 +2,7 @@ import logging
 from asyncpg.pool import Pool
 from sqlalchemy import table, select, literal_column
 
-from app import get_pool
+from app import a_get_pool
 
 
 LOGGER = logging.Logger(__name__)
@@ -10,7 +10,7 @@ LOGGER = logging.Logger(__name__)
 
 async def get_max_date(version):
 
-    pool: Pool = await get_pool()
+    pool: Pool = await a_get_pool()
     t = table(version)
     t.schema = "nasa_viirs_fire_alerts"
     sql = select(

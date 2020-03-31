@@ -21,5 +21,7 @@ setup(
         "async_lru==1.0.2",
         "geojson==2.5.0",
         "orjson==2.6.1",
+        "cachetools==4.0.0",
+        "psycopg2==2.8.4",
     ],
 )
