@@ -9,6 +9,7 @@
 # ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_area__ha NUMERIC;
 # ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_geostore_id UUID;
 # ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_geojson TEXT;
+# ALTER TABLE wdpa_protected_areas.v202003__raw ADD COLUMN gfw_bbox BOX2D;
 
 ## http://blog.cleverelephant.ca/2018/09/postgis-external-storage.html
 # ALTER TABLE wdpa_protected_areas.v202003__raw ALTER COLUMN geom SET STORAGE EXTERNAL;
@@ -20,6 +21,7 @@
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_area__ha = ST_area(geom::geography)/10000;
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_geostore_id = md5(ST_asgeojson(geom))::uuid;
 # UPDATE wdpa_protected_areas.v202003__raw SET gfw_geojson = ST_asgeojson(geom);
+# UPDATE wdpa_protected_areas.v202003__raw SET gfw_bbox = ST_box2d(geom);
 
 # CREATE TABLE public.geostore (gfw_geostore_id uuid, gfw_geojson text, gfw_area__ha numeric);
 # CREATE INDEX IF NOT EXISTS geostore_gfw_geostore_id_idx

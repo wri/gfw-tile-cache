@@ -4,6 +4,7 @@ from enum import Enum
 from fastapi import APIRouter, Path, Query
 from fastapi.responses import ORJSONResponse
 
+from app.models.geostore import Geostore
 from app.routers import VERSION_REGEX
 from app.services.features import (
     get_feature,
@@ -62,6 +63,7 @@ async def max_date(
 @router.get(
     "/{dataset}/{version}/geostore/{geostore_id}",
     response_class=ORJSONResponse,
+    response_model=Geostore,
     tags=["Geostore"],
 )
 async def get_geostore(
