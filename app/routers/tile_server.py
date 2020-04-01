@@ -3,9 +3,11 @@ from enum import Enum
 from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
-from fastapi import APIRouter, Path, Query, HTTPException, Response
+from asyncpg import Connection
+from fastapi import APIRouter, Path, Query, HTTPException, Response, Depends
 from sqlalchemy.sql import TableClause
 
+from app.database import a_get_db
 from app.routers import DATE_REGEX, VERSION_REGEX
 from app.services.vector_tiles import get_mvt_table, nasa_viirs_fire_alerts
 from app.utils.tiles import to_bbox
@@ -80,6 +82,7 @@ async def nasa_viirs_fire_alerts_tile(
     is__mangroves_2016: Optional[bool] = Query(None),
     is__intact_forest_landscapes_2016: Optional[bool] = Query(None),
     bra_biome__name: Optional[str] = Query(None),
+    db: Connection = Depends(a_get_db),
 ) -> Response:
     """
     Router for VIIRS fire data
@@ -123,9 +126,11 @@ async def nasa_viirs_fire_alerts_tile(
     filters = [f for f in filters if f is not None]
 
     if implementation == "default" and z >= 6:
-        return await nasa_viirs_fire_alerts.get_tile(version, bbox, *filters)
+        return await nasa_viirs_fire_alerts.get_tile(db, version, bbox, *filters)
     elif implementation == "default" and z < 6:
-        return await nasa_viirs_fire_alerts.get_aggregated_tile(version, bbox, *filters)
+        return await nasa_viirs_fire_alerts.get_aggregated_tile(
+            db, version, bbox, *filters
+        )
     else:
         raise HTTPException(
             status_code=400, detail=f"Unknown Implementation {implementation}."
@@ -146,6 +151,7 @@ async def tile(
     y: int = Path(..., title="Tile grid row", ge=0),
     z: int = Path(..., title="Zoom level", ge=0, le=22),
     geostore_id: Optional[str] = Query(None),
+    db: Connection = Depends(a_get_db),
 ) -> Response:
     """
     Generic router
@@ -164,7 +170,7 @@ async def tile(
     if implementation == "default":
         query, values = get_mvt_table(dataset, version, bbox, list(), *filters)
 
-        return await vector_tiles.get_tile(query)
+        return await vector_tiles.get_tile(db, query)
 
     raise HTTPException(
         status_code=400, detail=f"Unknown implementation {implementation}"

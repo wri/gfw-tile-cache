@@ -1,15 +1,13 @@
 import logging
 from typing import Dict, Any, List, Tuple
 
-from asyncpg.pool import Pool
+from asyncpg import Connection
 
 from fastapi import Response
-from shapely.geometry import box
 from sqlalchemy import select, text, literal_column, table
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
-from app import a_get_pool
 from app.utils.sql import compile_sql
 
 Geometry = Dict[str, Any]
@@ -34,16 +32,16 @@ def get_mvt_table(
     return _filter_mvt_table(query, *filters)
 
 
-async def get_tile(query: Select) -> Response:
+async def get_tile(db, query: Select) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
     query = _as_vector_tile(query)
-    return await _get_tile(query)
+    return await _get_tile(db, query)
 
 
 async def get_aggregated_tile(
-    query: Select, columns: List[ColumnClause], group_by_columns: List[ColumnClause]
+    db, query: Select, columns: List[ColumnClause], group_by_columns: List[ColumnClause]
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
@@ -53,17 +51,15 @@ async def get_aggregated_tile(
         "grouped_mvt_table"
     )
     query = _as_vector_tile(query)
-    return await _get_tile(query)
+    return await _get_tile(db, query)
 
 
-async def _get_tile(query: Select) -> Response:
-    pool: Pool = await a_get_pool()
+async def _get_tile(db: Connection, query: Select) -> Response:
 
     query = compile_sql(query)
 
-    async with pool.acquire() as conn:
-        tile = await conn.fetchval(query=str(query))
-        logging.debug(tile)
+    tile = await db.fetchval(query=str(query))
+    logging.debug(tile)
 
     return Response(
         content=tile,

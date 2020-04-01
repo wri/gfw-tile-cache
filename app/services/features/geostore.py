@@ -1,20 +1,18 @@
 import logging
 import re
 
-from asyncpg.pool import Pool
+from asyncpg import Connection
 from geojson import Feature, loads, FeatureCollection
 from sqlalchemy import table, select, column
 
-from app import a_get_pool
 from app.utils.filters import filter_eq
 from app.utils.sql import compile_sql
 
 LOGGER = logging.Logger(__name__)
 
 
-async def get_geostore(dataset, version, geostore_id):
+async def get_geostore(db: Connection, dataset, version, geostore_id):
 
-    pool: Pool = await a_get_pool()
     t = table(version)  # TODO validate version
     t.schema = dataset
 
@@ -29,9 +27,8 @@ async def get_geostore(dataset, version, geostore_id):
     )
     sql = compile_sql(sql)
 
-    async with pool.acquire() as conn:
-        sql = await conn.prepare(str(sql))
-        row = await sql.fetchrow(timeout=30)
+    sql = await db.prepare(str(sql))
+    row = await sql.fetchrow(timeout=30)
 
     response = dict()
     for field, value in row.items():

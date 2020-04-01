@@ -8,7 +8,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app import a_get_pool
+from app.database import a_get_pool
 from app.routers import tile_server, features
 
 app = FastAPI()

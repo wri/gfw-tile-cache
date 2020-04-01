@@ -1,10 +1,12 @@
 import logging
-from enum import Enum
+from typing import Type
 
-from fastapi import APIRouter, Path, Query
+from asyncpg import Connection
+from fastapi import APIRouter, Path, Query, Depends
 from fastapi.responses import ORJSONResponse
 
-from app.models.dataset import Dataset
+from app.database import a_get_db
+from app.models.dataset import get_dataset
 from app.models.geostore import Geostore
 from app.models.max_date import MaxDate
 from app.routers import VERSION_REGEX
@@ -24,13 +26,14 @@ LOGGER = logging.Logger(__name__)
 )
 async def features(
     *,
-    dataset: Dataset,
+    dataset: get_dataset(),  # type: ignore
     version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
     lat: float = Query(None, title="Latitude", ge=-90, le=90),
     lng: float = Query(None, title="Longitude", ge=-180, le=180),
     z: int = Query(None, title="Zoom level", ge=0, le=22),
+    db: Connection = Depends(a_get_db)
 ):
-    return await get_features_by_location(dataset, version, lat, lng, z)
+    return await get_features_by_location(db, dataset, version, lat, lng, z)
 
 
 @router.get(
@@ -40,11 +43,12 @@ async def features(
 )
 async def feature(
     *,
-    dataset: Dataset,
+    dataset: get_dataset(),  # type: ignore
     version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
     feature_id: int = Path(..., title="Feature ID", ge=0),
+    db: Connection = Depends(a_get_db)
 ):
-    return await get_feature(dataset, version, feature_id)
+    return await get_feature(db, dataset, version, feature_id)
 
 
 @router.get(
@@ -54,9 +58,11 @@ async def feature(
     tags=["Max date"],
 )
 async def max_date(
-    *, version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    *,
+    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    db: Connection = Depends(a_get_db)
 ):
-    return await nasa_viirs_fire_alerts.get_max_date(version)
+    return await nasa_viirs_fire_alerts.get_max_date(db, version)
 
 
 @router.get(
@@ -67,8 +73,9 @@ async def max_date(
 )
 async def get_geostore(
     *,
-    dataset: Dataset,
+    dataset: get_dataset(),  # type: ignore
     version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
     geostore_id: str = Path(..., title="geostore_id"),
+    db: Connection = Depends(a_get_db)
 ):
-    return await geostore.get_geostore(dataset, version, geostore_id)
+    return await geostore.get_geostore(db, dataset, version, geostore_id)

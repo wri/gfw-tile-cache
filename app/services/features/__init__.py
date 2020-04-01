@@ -1,18 +1,19 @@
 import logging
-from asyncpg.pool import Pool
-from sqlalchemy import table, select, literal_column
+
+from asyncpg import Connection
+from sqlalchemy import table, select, literal_column, column
 from geojson import Point, Polygon
 
-from app import a_get_pool
 from app.utils.filters import filter_eq, filter_intersects
 from app.utils.geostore import geodesic_point_buffer
+from app.utils.metadata import get_fields
 from app.utils.sql import compile_sql
 
 LOGGER = logging.Logger(__name__)
 
 
-async def get_feature(dataset, version, feature_id):
-    pool: Pool = await a_get_pool()
+async def get_feature(db: Connection, dataset, version, feature_id):
+
     t = table(version)  # TODO validate version
     t.schema = dataset
 
@@ -20,14 +21,14 @@ async def get_feature(dataset, version, feature_id):
     sql = select(columns).select_from(t).where(filter_eq("objectid", feature_id))
     sql = compile_sql(sql)
 
-    async with pool.acquire() as conn:
-        sql = await conn.prepare(str(sql))
-        feature = await sql.fetchrow(timeout=30)
+    sql = await db.prepare(str(sql))
+    feature = await sql.fetchrow(timeout=30)
+
     return feature
 
 
-async def get_features_by_location(dataset, version, lat, lng, zoom):
-    pool: Pool = await a_get_pool()
+async def get_features_by_location(db: Connection, dataset, version, lat, lng, zoom):
+    # pool: Pool = await a_get_pool()
     t = table(version)  # TODO validate version
     t.schema = dataset
 
@@ -37,13 +38,17 @@ async def get_features_by_location(dataset, version, lat, lng, zoom):
     else:
         geometry = Point((lat, lng))
 
-    columns = [literal_column("*")]
+    fields = get_fields(dataset, version)
+
+    columns = [column(field["name"]) for field in fields if field["is_feature_info"]]
+
     sql = select(columns).select_from(t).where(filter_intersects("geom", str(geometry)))
+    logging.info(str(sql))
     sql = compile_sql(sql)
 
-    async with pool.acquire() as conn:
-        sql = await conn.prepare(str(sql))
-        features = await sql.fetch(timeout=30)
+    sql = await db.prepare(str(sql))
+    features = await sql.fetch(timeout=30)
+
     return features
 
 
