@@ -8,7 +8,8 @@ setup(
     author="Thomas Maschler",
     license="MIT",
     install_requires=[
-        "aenum==2.2.3" "aiofiles==0.4.0",
+        "aenum==2.2.3",
+        "aiofiles==0.4.0",
         "asyncpg==0.20.1",
         "fastapi==0.52.0",
         "mercantile==1.1.2",
