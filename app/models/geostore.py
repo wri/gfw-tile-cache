@@ -1,4 +1,5 @@
-from typing import List, Any, Dict
+import uuid
+from typing import List, Any, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -16,12 +17,12 @@ class Feature(BaseModel):
 
 class FeatureCollection(BaseModel):
     features: List[Feature]
-    crs: Dict[str, Any]
+    crs: Optional[Dict[str, Any]]
     type: str
 
 
 class Geostore(BaseModel):
-    geostore_id: str
+    geostore_id: uuid.UUID
     geojson: FeatureCollection
     area__ha: float
     bbox: List[float]

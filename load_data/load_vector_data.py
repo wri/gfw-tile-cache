@@ -132,14 +132,14 @@
 # 	last_updated timestamp DEFAULT CURRENT_TIMESTAMP
 # )
 
-#
+# #
 # Insert into metadata(dataset, version, is_latest, has_tile_cache, has_geostore, has_feature_info, fields)
 # values('wdpa_protected_areas', 'v202003', true, true, true, true,
 #        '[{
 #        "name": "id",
 # "type": "integer",
-# "is_feature_info": true,
-# "is_filter": true
+# "is_feature_info": false,
+# "is_filter": false
 # },
 #
 # {
@@ -408,4 +408,3 @@
 #     "is_filter": false
 # }
 # ]')
-#
