@@ -408,3 +408,199 @@
 #     "is_filter": false
 # }
 # ]')
+
+#
+# Insert into metadata(dataset, version, is_latest, has_tile_cache, has_geostore, has_feature_info, fields)
+# values('nasa_viirs_fire_alerts', 'v202003', true, true, true, true,
+#
+#        '[{
+#            "name": "latitude",
+#            "type": "double precision",
+#            "is_feature_info": true,
+#            "is_filter": false
+#        },
+#
+#            {
+#                "name": "longitude",
+#                "type": "double precision",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#
+#            {
+#                "name": "alert__date",
+#                "type": "date",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#
+#            {
+#                "name": "alert__time_utc",
+#                "type": "text",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#
+#            {
+#                "name": "confidence__cat",
+#                "type": "text",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#
+#            {
+#                "name": "bright_ti4__k",
+#                "type": "double precision",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#            {
+#                "name": "bright_ti5__k",
+#                "type": "double precision",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#            {
+#                "name": "bright_ti5__k",
+#                "type": "double precision",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#
+#            {
+#                "name": "frp__mw",
+#                "type": "double precision",
+#                "is_feature_info": true,
+#                "is_filter": false
+#            },
+#
+#            {
+#                "name": "is__regional_primary_forest",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__alliance_for_zero_extinction_site",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__key_biodiversity_area",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#            {
+#                "name": "is__landmark",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "gfw_plantation__type",
+#                "type": "text",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__gfw_mining",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__gfw_logging",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "rspo_oil_palm__certification_status",
+#                "type": "text",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__gfw_wood_fiber",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__peat_land",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__idn_forest_moratorium",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__gfw_oil_palm",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "idn_forest_area__type",
+#                "type": "text",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__gfw_oil_gas",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__mangroves_2016",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#
+#            {
+#                "name": "is__intact_forest_landscapes_2016",
+#                "type": "boolean",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#            {
+#                "name": "bra_biome__bame",
+#                "type": "text",
+#                "is_feature_info": false,
+#                "is_filter": true
+#            },
+#            {
+#                "name": "geom",
+#                "type": "geometry(Point,4326)",
+#                "is_feature_info": false,
+#                "is_filter": false
+#            },
+#            {
+#                "name": "geom_wm",
+#                "type": "geometry(Point,3857)",
+#                "is_feature_info": false,
+#                "is_filter": false
+#            }
+#        ]
+# ');

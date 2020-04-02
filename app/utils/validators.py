@@ -15,16 +15,16 @@ def validate_version(dataset, version) -> None:
 
     if version == "latest":
         return
-    v = list()
+    existing_versions = list()
     versions = get_versions(dataset)
     for row in versions:
-        v.append(row.version)
+        existing_versions.append(row.version)
         if row.version == version:
             return
 
     raise HTTPException(
         status_code=400,
-        detail=f"Unknown version number. Dataset {dataset} has versions {v}",
+        detail=f"Unknown version number. Dataset {dataset} has versions {existing_versions}",
     )
 
 

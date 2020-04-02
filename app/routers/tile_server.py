@@ -74,7 +74,7 @@ async def nasa_viirs_fire_alerts_tile(
     fields = sanitize_fields(**fields)
     validate_field_types(**fields)
     validate_dates(start_date, end_date)
-    validate_version("dataset", version)
+    validate_version("nasa_viirs_fire_alerts", version)
 
     bbox = to_bbox(x, y, z)
     validate_bbox(*bbox)
@@ -169,7 +169,7 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     fields = sanitize_fields(**fields)
     validate_field_types(**fields)
     validate_dates(start_date, end_date)
-    validate_version("dataset", version)
+    validate_version("nasa_viirs_fire_alerts", version)
 
     fields["geostore_id"] = geostore_id
     fields["start_date"] = start_date
