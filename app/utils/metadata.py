@@ -6,6 +6,7 @@ from sqlalchemy.orm import Query
 from app.database import get_db
 from app.models.metadata import Metadata
 
+
 # memorize metadata for 15 min
 @cached(cache=TTLCache(maxsize=1, ttl=900))
 def get_metadata():
@@ -41,3 +42,17 @@ def get_versions(dataset):
         )
 
     return versions
+
+
+# memorize fields for 15 min
+@cached(cache=TTLCache(maxsize=15, ttl=900))
+def get_latest_version(dataset):
+    with get_db() as db:
+        metadata = (
+            Query(Metadata, db)
+            .filter(Metadata.dataset == dataset)
+            .filter(Metadata.is_latest is True)
+            .first()
+        )
+
+    return metadata.version
