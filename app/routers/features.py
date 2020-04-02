@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple
 
 from asyncpg import Connection
 from fastapi import APIRouter, Path, Query, Depends
@@ -15,6 +16,7 @@ from app.services.features import (
     geostore,
     get_features_by_location,
 )
+from app.utils.dependencies import dataset_version, nasa_viirs_fire_alerts_version
 from app.utils.validators import validate_version
 
 router = APIRouter()
@@ -26,8 +28,7 @@ LOGGER = logging.Logger(__name__)
 )
 async def features(
     *,
-    dataset: get_dataset(),  # type: ignore
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    dv: Tuple[str, str] = Depends(dataset_version),
     lat: float = Query(None, title="Latitude", ge=-90, le=90),
     lng: float = Query(None, title="Longitude", ge=-180, le=180),
     z: int = Query(None, title="Zoom level", ge=0, le=22),
@@ -37,7 +38,7 @@ async def features(
     Retrieve list of features for given lat/lng coordinate pair.
     Use together with ESRI JS API which does not allow to query vector tile attributes directly to retrieve feature info.
     """
-    validate_version(dataset, version)
+    dataset, version = dv
     return await get_features_by_location(db, dataset, version, lat, lng, z)
 
 
@@ -48,15 +49,14 @@ async def features(
 )
 async def feature(
     *,
-    dataset: get_dataset(),  # type: ignore
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    dv: Tuple[str, str] = Depends(dataset_version),
     feature_id: int = Path(..., title="Feature ID", ge=0),
     db: Connection = Depends(a_get_db)
 ):
     """
     Retrieve attribute values for a given feature
     """
-    validate_version(dataset, version)
+    dataset, version = dv
     return await get_feature(db, dataset, version, feature_id)
 
 
@@ -69,7 +69,7 @@ async def feature(
 )
 async def max_date(
     *,
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    version: str = Depends(nasa_viirs_fire_alerts_version),
     db: Connection = Depends(a_get_db)
 ):
     """
@@ -87,8 +87,7 @@ async def max_date(
 )
 async def get_geostore(
     *,
-    dataset: get_dataset(),  # type: ignore
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    dv: Tuple[str, str] = Depends(dataset_version),
     geostore_id: str = Path(..., title="geostore_id"),
     db: Connection = Depends(a_get_db)
 ):
@@ -96,5 +95,5 @@ async def get_geostore(
     Retrieve GeoJSON representation for a given geostore ID.
     Obtain geostore ID from feature attributes.
     """
-    validate_version(dataset, version)
+    dataset, version = dv
     return await geostore.get_geostore(db, dataset, version, geostore_id)

@@ -1,6 +1,7 @@
 from typing import Dict, Any, List
 
 from cachetools import cached, TTLCache
+from fastapi import HTTPException
 from sqlalchemy.orm import Query
 
 from app.database import get_db
@@ -51,8 +52,11 @@ def get_latest_version(dataset):
         metadata = (
             Query(Metadata, db)
             .filter(Metadata.dataset == dataset)
-            .filter(Metadata.is_latest is True)
+            .filter(Metadata.is_latest == True)  # noqa: E712
             .first()
         )
-
+    if not metadata:
+        raise HTTPException(
+            status_code=400, detail=f"Dataset {dataset} has no `latest` version.",
+        )
     return metadata.version

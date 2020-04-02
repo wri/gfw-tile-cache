@@ -7,12 +7,16 @@ from fastapi import APIRouter, Path, Query, HTTPException, Response, Depends
 from sqlalchemy.sql import TableClause
 
 from app.database import a_get_db
-from app.routers import DATE_REGEX, VERSION_REGEX
-from app.schemas.enumerators import ViirsVersion, Implementation, Dataset
+from app.routers import DATE_REGEX
+from app.schemas.enumerators import Implementation
 from app.schemas.esri import VectorTileService
 from app.services.vector_tiles import get_mvt_table, nasa_viirs_fire_alerts
 from app.services.vector_tiles.vector_tile_service import get_vector_tile_server
-from app.utils.dependencies import nasa_viirs_fire_alerts_filters
+from app.utils.dependencies import (
+    nasa_viirs_fire_alerts_filters,
+    nasa_viirs_fire_alerts_version,
+    dataset_version,
+)
 from app.utils.tiles import to_bbox
 from app.utils.filters import (
     geometry_filter,
@@ -25,7 +29,6 @@ from app.utils.validators import (
     validate_bbox,
     validate_field_types,
     sanitize_fields,
-    validate_version,
 )
 from app.services import vector_tiles
 
@@ -41,14 +44,13 @@ Bounds = Tuple[float, float, float, float]
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/tile/{implementation}/{z}/{x}/{y}.pbf",
+    "/nasa_viirs_fire_alerts/{version}/tile/default/{z}/{x}/{y}.pbf",
     response_class=Response,
     tags=["Tiles"],
     response_description="PBF Vector Tile",
 )
 async def nasa_viirs_fire_alerts_tile(
-    version: ViirsVersion,
-    implementation: Implementation,
+    version: str = Depends(nasa_viirs_fire_alerts_version),
     x: int = Path(..., title="Tile grid column", ge=0),
     y: int = Path(..., title="Tile grid row", ge=0),
     z: int = Path(..., title="Zoom level", ge=0, le=22),
@@ -74,7 +76,6 @@ async def nasa_viirs_fire_alerts_tile(
     fields = sanitize_fields(**fields)
     validate_field_types(**fields)
     validate_dates(start_date, end_date)
-    validate_version("nasa_viirs_fire_alerts", version)
 
     bbox = to_bbox(x, y, z)
     validate_bbox(*bbox)
@@ -87,15 +88,11 @@ async def nasa_viirs_fire_alerts_tile(
 
     filters = [f for f in filters if f is not None]
 
-    if implementation == "default" and z >= 6:
+    if z >= 6:
         return await nasa_viirs_fire_alerts.get_tile(db, version, bbox, *filters)
-    elif implementation == "default" and z < 6:
+    else:
         return await nasa_viirs_fire_alerts.get_aggregated_tile(
             db, version, bbox, *filters
-        )
-    else:
-        raise HTTPException(
-            status_code=400, detail=f"Unknown Implementation {implementation}."
         )
 
 
@@ -107,8 +104,7 @@ async def nasa_viirs_fire_alerts_tile(
 )
 async def tile(
     *,
-    dataset: Dataset,
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    dv: Tuple[str, str] = Depends(dataset_version),
     implementation: Implementation,
     x: int = Path(..., title="Tile grid column", ge=0),
     y: int = Path(..., title="Tile grid row", ge=0),
@@ -119,10 +115,9 @@ async def tile(
     """
     Generic vector tile
     """
-
+    dataset, version = dv
     bbox = to_bbox(x, y, z)
     validate_bbox(*bbox)
-    validate_version(dataset, version)
 
     filters: List[TableClause] = list()
 
@@ -142,15 +137,13 @@ async def tile(
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/tile/{implementation}/VectorTileServer",
+    "/nasa_viirs_fire_alerts/{version}/tile/default/VectorTileServer",
     tags=["Tiles"],
     response_model=VectorTileService,
 )
 async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     *,
-    dataset: Dataset,
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
-    implementation: Implementation,
+    version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
     geostore_id: Optional[str] = Query(None),
     start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
@@ -169,7 +162,6 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     fields = sanitize_fields(**fields)
     validate_field_types(**fields)
     validate_dates(start_date, end_date)
-    validate_version("nasa_viirs_fire_alerts", version)
 
     fields["geostore_id"] = geostore_id
     fields["start_date"] = start_date
@@ -180,7 +172,9 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
 
     query_params: str = "&".join(params)
 
-    return await get_vector_tile_server(dataset, version, implementation, query_params)
+    return await get_vector_tile_server(
+        "nasa_viirs_fire_alerts", version, "default", query_params
+    )
 
 
 @router.get(
@@ -190,8 +184,7 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
 )
 async def esri_vector_tile_service(
     *,
-    dataset: Dataset,
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    dv: Tuple[str, str] = Depends(dataset_version),
     implementation: Implementation,
     geostore_id: Optional[str] = Query(None),
 ):
@@ -200,7 +193,8 @@ async def esri_vector_tile_service(
     When using ESRI JS API, point your root.json to this URL.
     URL Parameters will be forwarded to tile cache.
     """
-    validate_version(dataset, version)
+
+    dataset, version = dv
     query_params: str = f"geostore_id={geostore_id}" if geostore_id else ""
 
     return await get_vector_tile_server(dataset, version, implementation, query_params)

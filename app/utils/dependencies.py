@@ -1,6 +1,12 @@
 from typing import Optional
 
-from fastapi import Query
+from fastapi import Query, Path
+
+from app.routers import VERSION_REGEX
+from app.schemas.dynamic_enumerators import get_dataset, get_viirs_version, Version
+from app.schemas.enumerators import Implementation
+from app.utils.metadata import get_latest_version
+from app.utils.validators import validate_version
 
 
 async def nasa_viirs_fire_alerts_filters(
@@ -43,3 +49,30 @@ async def nasa_viirs_fire_alerts_filters(
         "is__intact_forest_landscapes_2016": is__intact_forest_landscapes_2016,
         "bra_biome__name": bra_biome__name,
     }
+
+
+async def dataset_version(
+    *,
+    dataset: get_dataset(),  # type: ignore
+    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+):
+
+    if version != "latest":
+        validate_version(dataset, version)
+    else:
+        version = get_latest_version(dataset)
+
+    return dataset, version
+
+
+async def nasa_viirs_fire_alerts_version(
+    version: get_viirs_version(),  # type: ignore
+) -> Version:
+
+    dataset = "nasa_viirs_fire_alerts"
+    if version == "latest":
+        validate_version(dataset, version)
+    else:
+        version = get_latest_version(dataset)
+
+    return version
