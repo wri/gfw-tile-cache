@@ -31,7 +31,8 @@ async def geometry_filter(
 
 def confidence_filter(high_confidence_only: Optional[bool]) -> Optional[TextClause]:
     if high_confidence_only:
-        return text("confidence__cat = 'high'")
+        # TODO make sure fire data are normalized
+        return text("(confidence__cat = 'high' OR confidence__cat = 'h')")
     return None
 
 
