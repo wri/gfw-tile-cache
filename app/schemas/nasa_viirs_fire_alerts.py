@@ -36,4 +36,4 @@ class NasaViirsFireAlertsExtended(NasaViirsFireAlertsBase):
 
 
 class MaxDate(BaseModel):
-    max_date: str = Field(None, example="2020-01-01")
+    max_date: date = Field(None, example="2020-01-01")
