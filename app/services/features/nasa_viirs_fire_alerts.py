@@ -18,6 +18,6 @@ async def get_max_date(db: Connection, version):
 
     sql = compile_sql(sql)
 
-    sql = await db.prepare(sql)
-    max_date = await sql.fetchval(timeout=30)
+    query = await db.prepare(str(sql))
+    max_date = await query.fetchval(timeout=30)
     return {"max_date": max_date}
