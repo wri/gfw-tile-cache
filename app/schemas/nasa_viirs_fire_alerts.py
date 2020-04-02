@@ -1,6 +1,6 @@
 from datetime import date, time
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class NasaViirsFireAlertsBase(BaseModel):
@@ -33,3 +33,7 @@ class NasaViirsFireAlertsExtended(NasaViirsFireAlertsBase):
     is__mangroves_2016: bool
     is__intact_forest_landscapes_2016: bool
     bra_biome__name: str
+
+
+class MaxDate(BaseModel):
+    max_date: str = Field(None, example="2020-01-01")

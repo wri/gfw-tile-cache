@@ -5,9 +5,27 @@ import mercantile
 import pendulum
 from fastapi import HTTPException
 
-from app.models.nasa_viirs_fire_alerts import NasaViirsFireAlertsExtended
+from app.schemas.nasa_viirs_fire_alerts import NasaViirsFireAlertsExtended
+from app.utils.metadata import get_versions
 
 supported_fields = NasaViirsFireAlertsExtended.schema()["properties"]
+
+
+def validate_version(dataset, version) -> None:
+
+    if version == "latest":
+        return
+    v = list()
+    versions = get_versions(dataset)
+    for row in versions:
+        v.append(row.version)
+        if row.version == version:
+            return
+
+    raise HTTPException(
+        status_code=400,
+        detail=f"Unknown version number. Dataset {dataset} has versions {v}",
+    )
 
 
 def validate_dates(start_date: str, end_date: str) -> None:

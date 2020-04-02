@@ -1,25 +1,10 @@
 from typing import Dict, Any, List
 
 from cachetools import cached, TTLCache
-from fastapi import Depends
-from sqlalchemy import Boolean, Column, String
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query
 
-from app.database import get_db, Base
-
-
-class Metadata(Base):
-    __tablename__ = "metadata"
-
-    dataset = Column(String, primary_key=True)
-    version = Column(String, primary_key=True)
-    is_latest = Column(Boolean)
-    has_tile_cache = Column(Boolean)
-    has_geostore = Column(Boolean)
-    has_feature_info = Column(Boolean)
-    fields = Column(JSONB)
-
+from app.database import get_db
+from app.models.metadata import Metadata
 
 # memorize metadata for 15 min
 @cached(cache=TTLCache(maxsize=1, ttl=900))
@@ -42,3 +27,17 @@ def get_fields(dataset, version,) -> List[Dict[str, Any]]:
         )
 
     return metadata.fields
+
+
+# memorize fields for 15 min
+@cached(cache=TTLCache(maxsize=15, ttl=900))
+def get_versions(dataset):
+    with get_db() as db:
+        versions = (
+            Query(Metadata, db)
+            .with_entities(Metadata.version, Metadata.is_latest)
+            .filter(Metadata.dataset == dataset)
+            .all()
+        )
+
+    return versions

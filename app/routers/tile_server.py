@@ -1,5 +1,4 @@
 import logging
-from enum import Enum
 from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
@@ -9,7 +8,11 @@ from sqlalchemy.sql import TableClause
 
 from app.database import a_get_db
 from app.routers import DATE_REGEX, VERSION_REGEX
+from app.schemas.enumerators import ViirsVersion, Implementation, Dataset
+from app.schemas.esri import VectorTileService
 from app.services.vector_tiles import get_mvt_table, nasa_viirs_fire_alerts
+from app.services.vector_tiles.vector_tile_service import get_vector_tile_server
+from app.utils.dependencies import nasa_viirs_fire_alerts_filters
 from app.utils.tiles import to_bbox
 from app.utils.filters import (
     geometry_filter,
@@ -22,6 +25,7 @@ from app.utils.validators import (
     validate_bbox,
     validate_field_types,
     sanitize_fields,
+    validate_version,
 )
 from app.services import vector_tiles
 
@@ -36,23 +40,11 @@ Geometry = Dict[str, Any]
 Bounds = Tuple[float, float, float, float]
 
 
-class Dataset(str, Enum):
-    nasa_viirs_fire_alerts = "nasa_viirs_fire_alerts"
-
-
-class ViirsVersion(str, Enum):
-    v20200224 = "v202003"
-    latest = "latest"
-
-
-class Implementation(str, Enum):
-    default = "default"
-
-
 @router.get(
     "/nasa_viirs_fire_alerts/{version}/tile/{implementation}/{z}/{x}/{y}.pbf",
     response_class=Response,
     tags=["Tiles"],
+    response_description="PBF Vector Tile",
 )
 async def nasa_viirs_fire_alerts_tile(
     version: ViirsVersion,
@@ -64,55 +56,25 @@ async def nasa_viirs_fire_alerts_tile(
     start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
     high_confidence_only: Optional[bool] = Query(False),
-    is__regional_primary_forest: Optional[bool] = Query(None),
-    is__alliance_for_zero_extinction_site: Optional[bool] = Query(None),
-    is__key_biodiversity_area: Optional[bool] = Query(None),
-    is__landmark: Optional[bool] = Query(None),
-    gfw_plantation__type: Optional[str] = Query(None),
-    is__gfw_mining: Optional[bool] = Query(None),
-    is__gfw_logging: Optional[bool] = Query(None),
-    rspo_oil_palm__certification_status: Optional[str] = Query(None),
-    is__gfw_wood_fiber: Optional[bool] = Query(None),
-    is__peat_land: Optional[bool] = Query(None),
-    is__idn_forest_moratorium: Optional[bool] = Query(None),
-    is__gfw_oil_palm: Optional[bool] = Query(None),
-    idn_forest_area__type: Optional[str] = Query(None),
-    per_forest_concession__type: Optional[str] = Query(None),
-    is__gfw_oil_gas: Optional[bool] = Query(None),
-    is__mangroves_2016: Optional[bool] = Query(None),
-    is__intact_forest_landscapes_2016: Optional[bool] = Query(None),
-    bra_biome__name: Optional[str] = Query(None),
+    contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
     db: Connection = Depends(a_get_db),
 ) -> Response:
     """
-    Router for VIIRS fire data
+    NASA VIIRS fire alerts vector tiles.
+    This dataset holds the full archive of NASA VIIRS fire alerts, starting in 2012. Latest version is updated daily.
+    Check `Max Date` endpoint to retrieve latest date in dataset.
+    You can query fire alerts for any time period of up to 90 days. By default, the last 7 days are displayed.
+    Use additional query parameters to further filter alerts.
+    Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
 
     # TODO: There must be a better way!
-    fields: Dict[str, Any] = {
-        "is__regional_primary_forest": is__regional_primary_forest,
-        "is__alliance_for_zero_extinction_site": is__alliance_for_zero_extinction_site,
-        "is__key_biodiversity_area": is__key_biodiversity_area,
-        "is__landmark": is__landmark,
-        "gfw_plantation__type": gfw_plantation__type,
-        "is__gfw_mining": is__gfw_mining,
-        "is__gfw_logging": is__gfw_logging,
-        "rspo_oil_palm__certification_status": rspo_oil_palm__certification_status,
-        "is__gfw_wood_fiber": is__gfw_wood_fiber,
-        "is__peat_land": is__peat_land,
-        "is__idn_forest_moratorium": is__idn_forest_moratorium,
-        "is__gfw_oil_palm": is__gfw_oil_palm,
-        "idn_forest_area__type": idn_forest_area__type,
-        "per_forest_concession__type": per_forest_concession__type,
-        "is__gfw_oil_gas": is__gfw_oil_gas,
-        "is__mangroves_2016": is__mangroves_2016,
-        "is__intact_forest_landscapes_2016": is__intact_forest_landscapes_2016,
-        "bra_biome__name": bra_biome__name,
-    }
+    fields: Dict[str, Any] = contextual_filters
 
     fields = sanitize_fields(**fields)
     validate_field_types(**fields)
     validate_dates(start_date, end_date)
+    validate_version("dataset", version)
 
     bbox = to_bbox(x, y, z)
     validate_bbox(*bbox)
@@ -141,6 +103,7 @@ async def nasa_viirs_fire_alerts_tile(
     "/{dataset}/{version}/tile/{implementation}/{z}/{x}/{y}.pbf",
     response_class=Response,
     tags=["Tiles"],
+    response_description="PBF Vector Tile",
 )
 async def tile(
     *,
@@ -154,11 +117,12 @@ async def tile(
     db: Connection = Depends(a_get_db),
 ) -> Response:
     """
-    Generic router
+    Generic vector tile
     """
 
     bbox = to_bbox(x, y, z)
     validate_bbox(*bbox)
+    validate_version(dataset, version)
 
     filters: List[TableClause] = list()
 
@@ -178,9 +142,53 @@ async def tile(
 
 
 @router.get(
-    "/{dataset}/{version}/tile/{implementation}/VectorTileServer", tags=["Tiles"]
+    "/nasa_viirs_fire_alerts/{version}/tile/{implementation}/VectorTileServer",
+    tags=["Tiles"],
+    response_model=VectorTileService,
 )
-async def esri_vector_tile_server(
+async def nasa_viirs_fire_alerts_esri_vector_tile_service(
+    *,
+    dataset: Dataset,
+    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    implementation: Implementation,
+    geostore_id: Optional[str] = Query(None),
+    start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
+    end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
+    high_confidence_only: Optional[bool] = Query(False),
+    contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
+):
+    """
+    Mock ESRI Vector Tile Server for NASA VIIRS fire alerts.
+    When using ESRI JS API, point your root.json to this URL.
+    URL Parameters will be forwarded to tile cache.
+    """
+
+    # TODO: There must be a better way!
+    fields: Dict[str, Any] = contextual_filters
+
+    fields = sanitize_fields(**fields)
+    validate_field_types(**fields)
+    validate_dates(start_date, end_date)
+    validate_version("dataset", version)
+
+    fields["geostore_id"] = geostore_id
+    fields["start_date"] = start_date
+    fields["end_date"] = end_date
+    fields["high_confidence_only"] = high_confidence_only
+
+    params = [f"{key}={value}" for key, value in fields.items() if value is not None]
+
+    query_params: str = "&".join(params)
+
+    return await get_vector_tile_server(dataset, version, implementation, query_params)
+
+
+@router.get(
+    "/{dataset}/{version}/tile/{implementation}/VectorTileServer",
+    tags=["Tiles"],
+    response_model=VectorTileService,
+)
+async def esri_vector_tile_service(
     *,
     dataset: Dataset,
     version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
@@ -188,66 +196,11 @@ async def esri_vector_tile_server(
     geostore_id: Optional[str] = Query(None),
 ):
     """
-    Mocked ESRI Vector Tile Server
+    Generic Mock ESRI Vector Tile Server.
+    When using ESRI JS API, point your root.json to this URL.
+    URL Parameters will be forwarded to tile cache.
     """
+    validate_version(dataset, version)
+    query_params: str = f"geostore_id={geostore_id}" if geostore_id else ""
 
-    query_params: Optional[str] = f"geostore_id={geostore_id}" if geostore_id else None
-
-    resolution = 78271.51696401172
-    scale = 295829355.45453244
-
-    response = {
-        "currentVersion": 10.7,
-        "name": f"{dataset} - {implementation} - {version}",
-        "copyrightText": "",
-        "capabilities": "TilesOnly",
-        "type": "indexedVector",
-        "defaultStyles": "resources/styles",
-        "tiles": ["{z}/{x}/{y}.pbf" + (f"?{query_params}" if query_params else "")],
-        "exportTilesAllowed": False,
-        "initialExtent": {
-            "xmin": -20037508.342787,
-            "ymin": -20037508.342787,
-            "xmax": 20037508.342787,
-            "ymax": 20037508.342787,
-            "spatialReference": {"wkid": 102100, "latestWkid": 3857},
-        },
-        "fullExtent": {
-            "xmin": -20037508.342787,
-            "ymin": -20037508.342787,
-            "xmax": 20037508.342787,
-            "ymax": 20037508.342787,
-            "spatialReference": {"wkid": 102100, "latestWkid": 3857},
-        },
-        "minScale": 0,
-        "maxScale": 0,
-        "tileInfo": {
-            "rows": 512,
-            "cols": 512,
-            "dpi": 96,
-            "format": "pbf",
-            "origin": {"x": -20037508.342787, "y": 20037508.342787},
-            "spatialReference": {"wkid": 102100, "latestWkid": 3857},
-            "lods": [
-                {
-                    "level": i,
-                    "resolution": resolution / (2 ** i),
-                    "scale": scale / (2 ** i),
-                }
-                for i in range(0, 23)
-            ],
-        },
-        "maxzoom": 22,
-        "minLOD": 0,
-        "maxLOD": 16,
-        "resourceInfo": {
-            "styleVersion": 8,
-            "tileCompression": "gzip",
-            "cacheInfo": {
-                "storageInfo": {"packetSize": 128, "storageFormat": "compactV2"}
-            },
-        },
-        "serviceItemId": "274684d7a9d74ca4b87f529776feb3a2",
-        # "maxExportTilesCount": 10000
-    }
-    return response
+    return await get_vector_tile_server(dataset, version, implementation, query_params)
