@@ -1,12 +1,26 @@
-from typing import Optional
+from typing import Optional, Dict, Any, Tuple
 
 from fastapi import Query, Path
 
 from app.routers import VERSION_REGEX
 from app.schemas.dynamic_enumerators import get_dataset, get_viirs_version, Version
-from app.schemas.enumerators import Implementation
+from app.utils.filters import geometry_filter
 from app.utils.metadata import get_latest_version
-from app.utils.validators import validate_version
+from app.utils.tiles import to_bbox
+from app.utils.validators import validate_version, validate_bbox
+
+
+Bounds = Tuple[float, float, float, float]
+
+
+async def xyz(
+    x: int = Path(..., title="Tile grid column", ge=0),
+    y: int = Path(..., title="Tile grid row", ge=0),
+    z: int = Path(..., title="Zoom level", ge=0, le=22),
+) -> Tuple[Bounds, int]:
+    bbox: Bounds = to_bbox(x, y, z)
+    validate_bbox(*bbox)
+    return bbox, z
 
 
 async def nasa_viirs_fire_alerts_filters(
@@ -28,7 +42,7 @@ async def nasa_viirs_fire_alerts_filters(
     is__mangroves_2016: Optional[bool] = Query(None),
     is__intact_forest_landscapes_2016: Optional[bool] = Query(None),
     bra_biome__name: Optional[str] = Query(None),
-):
+) -> Dict[str, Any]:
     return {
         "is__regional_primary_forest": is__regional_primary_forest,
         "is__alliance_for_zero_extinction_site": is__alliance_for_zero_extinction_site,
@@ -56,7 +70,6 @@ async def dataset_version(
     dataset: get_dataset(),  # type: ignore
     version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
 ):
-
     if version != "latest":
         validate_version(dataset, version)
     else:
@@ -68,7 +81,6 @@ async def dataset_version(
 async def nasa_viirs_fire_alerts_version(
     version: get_viirs_version(),  # type: ignore
 ) -> Version:
-
     dataset = "nasa_viirs_fire_alerts"
     if version == "latest":
         validate_version(dataset, version)

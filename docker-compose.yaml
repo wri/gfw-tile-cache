@@ -11,5 +11,6 @@ services:
       - POSTGRES_PASSWORD
       - ENV
       - LOG_LEVEL
+      - GUNICORN_CONG=/app/app/gunicorn_conf.py
     ports:
       - "80:80"

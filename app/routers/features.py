@@ -6,10 +6,8 @@ from fastapi import APIRouter, Path, Query, Depends
 from fastapi.responses import ORJSONResponse
 
 from app.database import a_get_db
-from app.schemas.dynamic_enumerators import get_dataset
 from app.schemas.geostore import Geostore
 from app.schemas.nasa_viirs_fire_alerts import MaxDate
-from app.routers import VERSION_REGEX
 from app.services.features import (
     get_feature,
     nasa_viirs_fire_alerts,

@@ -16,20 +16,15 @@ from app.utils.dependencies import (
     nasa_viirs_fire_alerts_filters,
     nasa_viirs_fire_alerts_version,
     dataset_version,
+    xyz,
 )
-from app.utils.tiles import to_bbox
 from app.utils.filters import (
     geometry_filter,
     confidence_filter,
     date_filter,
     contextual_filter,
 )
-from app.utils.validators import (
-    validate_dates,
-    validate_bbox,
-    validate_field_types,
-    sanitize_fields,
-)
+from app.utils.validators import validate_dates
 from app.services import vector_tiles
 
 LOGGER = logging.Logger(__name__)
@@ -51,9 +46,7 @@ Bounds = Tuple[float, float, float, float]
 )
 async def nasa_viirs_fire_alerts_tile(
     version: str = Depends(nasa_viirs_fire_alerts_version),
-    x: int = Path(..., title="Tile grid column", ge=0),
-    y: int = Path(..., title="Tile grid row", ge=0),
-    z: int = Path(..., title="Zoom level", ge=0, le=22),
+    bbox_z: Tuple[Bounds, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(None),
     start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
@@ -69,22 +62,14 @@ async def nasa_viirs_fire_alerts_tile(
     Use additional query parameters to further filter alerts.
     Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
-
-    # TODO: There must be a better way!
-    fields: Dict[str, Any] = contextual_filters
-
-    fields = sanitize_fields(**fields)
-    validate_field_types(**fields)
+    bbox, z = bbox_z
     validate_dates(start_date, end_date)
-
-    bbox = to_bbox(x, y, z)
-    validate_bbox(*bbox)
 
     filters = [
         await geometry_filter(geostore_id, bbox),
         confidence_filter(high_confidence_only),
         date_filter(start_date, end_date),
-    ] + contextual_filter(**fields)
+    ] + contextual_filter(**contextual_filters)
 
     filters = [f for f in filters if f is not None]
 
@@ -106,9 +91,7 @@ async def tile(
     *,
     dv: Tuple[str, str] = Depends(dataset_version),
     implementation: Implementation,
-    x: int = Path(..., title="Tile grid column", ge=0),
-    y: int = Path(..., title="Tile grid row", ge=0),
-    z: int = Path(..., title="Zoom level", ge=0, le=22),
+    bbox_z: Tuple[Bounds, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(None),
     db: Connection = Depends(a_get_db),
 ) -> Response:
@@ -116,15 +99,14 @@ async def tile(
     Generic vector tile
     """
     dataset, version = dv
-    bbox = to_bbox(x, y, z)
-    validate_bbox(*bbox)
+    bbox, _ = bbox_z
 
     filters: List[TableClause] = list()
 
-    f = await geometry_filter(geostore_id, bbox)
+    geom_filter = await geometry_filter(geostore_id, bbox)
 
-    if f is not None:
-        filters.append(f)
+    if geom_filter is not None:
+        filters.append(geom_filter)
 
     if implementation == "default":
         query, values = get_mvt_table(dataset, version, bbox, list(), *filters)
@@ -159,8 +141,6 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     # TODO: There must be a better way!
     fields: Dict[str, Any] = contextual_filters
 
-    fields = sanitize_fields(**fields)
-    validate_field_types(**fields)
     validate_dates(start_date, end_date)
 
     fields["geostore_id"] = geostore_id

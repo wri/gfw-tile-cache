@@ -3,27 +3,20 @@
     "name": "${container_name}",
     "image": "${image}",
     "networkMode": "awsvpc",
+
     "environment": [
       {
-        "name": "POSTGRES_NAME",
-        "value": "${postgres_name}"
+        "name": "ENV",
+        "value": "${environment}"
       },
       {
-        "name": "POSTGRES_USERNAME",
-        "value": "${postgres_username}"
+        "name": "GUNICORN_CONF",
+        "value": "/app/app/gunicorn_conf.py"
       },
-      {
-        "name": "POSTGRES_PASSWORD",
-        "value": "${postgres_password}"
-      },
-      {
-        "name": "POSTGRES_HOST",
-        "value": "${postgres_host}"
-      },
-      {
-        "name": "POSTGRES_PORT",
-        "value": "${postgres_port}"
-      }
+      {"name": "LOG_LEVEL",
+      "value": "${log_level}"}
+
+
     ],
     "portMappings": [
       {

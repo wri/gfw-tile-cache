@@ -5,10 +5,10 @@ import mercantile
 import pendulum
 from fastapi import HTTPException
 
-from app.schemas.nasa_viirs_fire_alerts import NasaViirsFireAlertsExtended
+# from app.schemas.nasa_viirs_fire_alerts import NasaViirsFireAlertsExtended
 from app.utils.metadata import get_versions
 
-supported_fields = NasaViirsFireAlertsExtended.schema()["properties"]
+# supported_fields = NasaViirsFireAlertsExtended.schema()["properties"]
 
 
 def validate_version(dataset, version) -> None:
@@ -52,27 +52,27 @@ def validate_bbox(left: float, bottom: float, right: float, top: float) -> None:
         raise HTTPException(status_code=400, detail="Tile index is out of bounds")
 
 
-def validate_field_types(**fields: Any) -> None:
-    for field, value in fields.items():
-        if value is not None and type(value) not in _get_types(supported_fields[field]):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Field {field} must be of type {_get_types(supported_fields[field])}",
-            )
-
-
-def sanitize_fields(**fields: Any) -> Dict[str, Any]:
-    for field, value in fields.items():
-        if field not in supported_fields.keys():
-            fields.pop(field)
-    return fields
-
-
-def _get_types(value: Dict[str, Any]) -> List[Any]:
-    types: Dict[str, List[Any]] = {
-        "number": [int, float],
-        "string": [str, date, time],  # TODO find better way to validate data/time
-        "boolean": [bool],
-    }
-
-    return types[value["type"]]
+# def validate_field_types(**fields: Any) -> None:
+#     for field, value in fields.items():
+#         if value is not None and type(value) not in _get_types(supported_fields[field]):
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail=f"Field {field} must be of type {_get_types(supported_fields[field])}",
+#             )
+#
+#
+# def sanitize_fields(**fields: Any) -> Dict[str, Any]:
+#     for field, value in fields.items():
+#         if field not in supported_fields.keys():
+#             fields.pop(field)
+#     return fields
+#
+#
+# def _get_types(value: Dict[str, Any]) -> List[Any]:
+#     types: Dict[str, List[Any]] = {
+#         "number": [int, float],
+#         "string": [str, date, time],  # TODO find better way to validate data/time
+#         "boolean": [bool],
+#     }
+#
+#     return types[value["type"]]

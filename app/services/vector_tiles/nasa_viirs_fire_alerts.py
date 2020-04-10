@@ -1,7 +1,6 @@
 from typing import Dict, Any, List, Tuple
 
 from asyncpg import Connection
-from shapely.geometry import box
 from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 

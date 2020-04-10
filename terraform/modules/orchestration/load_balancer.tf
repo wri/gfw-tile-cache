@@ -3,24 +3,22 @@
 # NLB Resources
 #
 resource "aws_lb" "default" {
-  name = substr("${local.project}-loadbalancer${local.name_suffix}", 0, 32)
-  //  internal                         = true
-  //  load_balancer_type               = "network"
+  name                             = substr("${var.project}-loadbalancer${var.name_suffix}", 0, 32)
   enable_cross_zone_load_balancing = true
 
-  subnets         = data.terraform_remote_state.core.outputs.public_subnet_ids
+  subnets         = var.public_subnet_ids
   security_groups = [aws_security_group.lb.id]
 
   tags = merge(
     {
-      Job = local.project,
+      Job = var.project,
     },
-    local.tags
+    var.tags
   )
 }
 
 resource "aws_lb_target_group" "default" {
-  name = substr("${local.project}-TargetGroup${local.name_suffix}", 0, 32)
+  name = substr("${var.project}-TargetGroup${var.name_suffix}", 0, 32)
   //
   //  health_check {
   //    protocol          = "TCP"
@@ -30,26 +28,24 @@ resource "aws_lb_target_group" "default" {
   //    unhealthy_threshold = "3"
   //  }
 
-  port = "80"
-  //  protocol = "TCP"
+  port     = "80"
   protocol = "HTTP"
-  vpc_id   = data.terraform_remote_state.core.outputs.vpc_id
+  vpc_id   = var.vpc_id
 
   target_type = "ip"
 
   tags = merge(
     {
-      Job = local.project,
+      Job = var.project,
     },
-    local.tags
+    var.tags
   )
 }
 
 resource "aws_lb_listener" "default" {
   load_balancer_arn = aws_lb.default.id
   port              = "80"
-  //  protocol          = "TCP"
-  protocol = "HTTP"
+  protocol          = "HTTP"
   default_action {
     target_group_arn = aws_lb_target_group.default.id
     type             = "forward"
