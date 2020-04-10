@@ -38,7 +38,7 @@ module "orchestration" {
   repository_url = module.container_registry.repository_url
   container_name = "gfw-tile-cache"
   container_port = 80
-  desired_count  = 0
+  desired_count  = 1
 
   deployment_min_percent = 100
   deployment_max_percent = 200
@@ -49,11 +49,11 @@ module "orchestration" {
   auto_scaling_cooldown     = 300
   auto_scaling_max_capacity = 15
   auto_scaling_max_cpu_util = 75
-  auto_scaling_min_capacity = 0
+  auto_scaling_min_capacity = 1
 
   postgresql_security_group_id         = data.terraform_remote_state.core.outputs.postgresql_security_group_id
-  secrets_postgresql-reader_arn        = data.terraform_remote_state.core.outputs.secrets_postgresql-writer_arn
-  secrets_postgresql-reader_policy_arn = data.terraform_remote_state.core.outputs.secrets_postgresql-writer_policy_arn
+  secrets_postgresql-reader_name        = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_name
+  secrets_postgresql-reader_policy_arn = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn
 }
 
 

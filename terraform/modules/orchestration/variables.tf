@@ -92,6 +92,6 @@ variable "secrets_postgresql-reader_policy_arn" {
   type = string
 }
 
-variable "secrets_postgresql-reader_arn" {
+variable "secrets_postgresql-reader_name" {
   type = string
 }

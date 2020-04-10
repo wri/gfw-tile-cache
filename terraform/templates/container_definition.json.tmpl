@@ -1,36 +1,36 @@
-[
-  {
-    "name": "${container_name}",
-    "image": "${image}",
-    "networkMode": "awsvpc",
+[{
+  "name": "${container_name}",
+  "image": "${image}",
+  "networkMode": "awsvpc",
 
-    "environment": [
-      {
-        "name": "ENV",
-        "value": "${environment}"
-      },
-      {
-        "name": "GUNICORN_CONF",
-        "value": "/app/app/gunicorn_conf.py"
+  "environment": [
+    {
+    "name": "ENV",
+    "value": "${environment}"
+     },
+     {
+      "name": "GUNICORN_CONF",
+      "value": "/app/app/gunicorn_conf.py"
       },
       {"name": "LOG_LEVEL",
-      "value": "${log_level}"}
-
-
-    ],
-    "portMappings": [
+      "value": "${log_level}"
+      },
+      {"name": "SECRET_NAME",
+      "value": "${secret_name}"
+      }
+  ],
+  "portMappings": [
       {
         "containerPort": ${container_port},
-         "hostPort": ${container_port}
+        "hostPort": ${container_port}
       }
-    ],
-    "logConfiguration": {
+      ],
+  "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "${log_group}",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "${container_name}"
-      }
+      "awslogs-group": "${log_group}",
+      "awslogs-region": "${aws_region}",
+      "awslogs-stream-prefix": "${container_name}"
     }
   }
-]
+}]

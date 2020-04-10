@@ -1,4 +1,5 @@
 import json
+import os
 import urllib.parse
 from contextlib import contextmanager
 from typing import Iterator, Optional, AsyncIterator
@@ -58,7 +59,7 @@ def get_db() -> Iterator[Session]:
 
     if SessionLocal is None:
         secrets = get_secrets()
-        db_conn = f"postgresql://{secrets['username']}:{urllib.parse.quote_plus(secrets['username'])}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"  # pragma: allowlist secret
+        db_conn = f"postgresql://{secrets['username']}:{urllib.parse.quote_plus(secrets['password'])}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"  # pragma: allowlist secret
         engine = create_engine(db_conn, pool_size=5, max_overflow=0)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -73,5 +74,5 @@ def get_db() -> Iterator[Session]:
 
 def get_secrets():
     client = boto3.client("secretsmanager")
-    response = client.get_secret_value(SecretId="core-postgresql-writer-secret")
+    response = client.get_secret_value(SecretId=os.environ["SECRET_NAME"])
     return json.loads(response["SecretString"])

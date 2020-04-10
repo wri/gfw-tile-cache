@@ -33,7 +33,7 @@ data "template_file" "container_definition" {
 
     log_group = aws_cloudwatch_log_group.default.name
 
-    //    postgresql_secret_arn = var.secrets_postgresql-reader_arn
+    secret_name = var.secrets_postgresql-reader_name
     log_level   = var.log_level
     project     = var.project
     environment = var.environment
