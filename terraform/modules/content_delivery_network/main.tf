@@ -14,7 +14,7 @@ data "archive_file" "reset_response_header_caching" {
   output_path = "${path.module}/lambda_functions/reset_response_header_caching.zip"
 }
 
-//resource "aws_cloudfront_origin_access_identity" "tiles" {}
+resource "aws_cloudfront_origin_access_identity" "tiles" {}
 
 resource "aws_cloudfront_distribution" "tiles" {
 
@@ -79,29 +79,12 @@ resource "aws_cloudfront_distribution" "tiles" {
       ]
     }
   }
-  //  origin {
-  //    domain_name = "4khgyzteea.execute-api.us-east-1.amazonaws.com"
-  //    origin_id   = "Custom-4khgyzteea.execute-api.us-east-1.amazonaws.com/default"
-  //    origin_path = "/default"
-  //
-  //    custom_origin_config {
-  //      http_port                = 80
-  //      https_port               = 443
-  //      origin_keepalive_timeout = 5
-  //      origin_protocol_policy   = "https-only"
-  //      origin_read_timeout      = 30
-  //      origin_ssl_protocols = [
-  //        "TLSv1",
-  //        "TLSv1.1",
-  //        "TLSv1.2",
-  //      ]
-  //    }
-  //  }
+
 
   origin {
     domain_name = var.bucket_domain_name // "gfw-tiles.s3.amazonaws.com"
     origin_id   = "S3-gfw-tiles"
-    s3_origin_config { origin_access_identity = var.cloudfront_access_identity_path }
+    s3_origin_config { origin_access_identity = aws_cloudfront_origin_access_identity.tiles.cloudfront_access_identity_path}
     custom_header {
       name  = "X-Env"
       value = var.environment
@@ -193,66 +176,6 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  //  ordered_cache_behavior {
-  //    allowed_methods = [
-  //      "GET",
-  //      "HEAD",
-  //    ]
-  //    cached_methods = [
-  //      "GET",
-  //      "HEAD",
-  //    ]
-  //    compress               = false
-  //    default_ttl            = 86400
-  //    max_ttl                = 31536000
-  //    min_ttl                = 0
-  //    path_pattern           = "*/index.html"
-  //    smooth_streaming       = false
-  //    target_origin_id       = "Custom-4khgyzteea.execute-api.us-east-1.amazonaws.com/default"
-  //    trusted_signers        = []
-  //    viewer_protocol_policy = "redirect-to-https"
-  //
-  //    forwarded_values {
-  //      headers                 = []
-  //      query_string            = false
-  //      query_string_cache_keys = []
-  //
-  //      cookies {
-  //        forward           = "none"
-  //        whitelisted_names = []
-  //      }
-  //    }
-  //  }
-  //  ordered_cache_behavior {
-  //    allowed_methods = [
-  //      "GET",
-  //      "HEAD",
-  //    ]
-  //    cached_methods = [
-  //      "GET",
-  //      "HEAD",
-  //    ]
-  //    compress               = false
-  //    default_ttl            = 86400
-  //    max_ttl                = 31536000
-  //    min_ttl                = 0
-  //    path_pattern           = "index.html"
-  //    smooth_streaming       = false
-  //    target_origin_id       = "Custom-4khgyzteea.execute-api.us-east-1.amazonaws.com/default"
-  //    trusted_signers        = []
-  //    viewer_protocol_policy = "redirect-to-https"
-  //
-  //    forwarded_values {
-  //      headers                 = []
-  //      query_string            = false
-  //      query_string_cache_keys = []
-  //
-  //      cookies {
-  //        forward           = "none"
-  //        whitelisted_names = []
-  //      }
-  //    }
-  //  }
   ordered_cache_behavior {
     allowed_methods = [
       "GET",
@@ -321,7 +244,7 @@ resource "aws_lambda_function" "redirect_latest_tile_cache" {
   //  function_name    = "redirect_latest_tile_cache"
   filename         = data.archive_file.redirect_latest_tile_cache.output_path
   source_code_hash = data.archive_file.redirect_latest_tile_cache.output_base64sha256
-  role             = var.lambda_edge_cloudfront_iam_role_arn
+  role             = aws_iam_role.lambda_edge_cloudfront.arn
   runtime          = "nodejs10.x"
   handler          = "lambda_function.handler"
   memory_size      = 128
@@ -338,7 +261,7 @@ resource "aws_lambda_function" "reset_response_header_caching" {
   //  function_name    = "reset_response_header_caching"
   filename         = data.archive_file.reset_response_header_caching.output_path
   source_code_hash = data.archive_file.reset_response_header_caching.output_base64sha256
-  role             = var.lambda_edge_cloudfront_iam_role_arn
+  role             = aws_iam_role.lambda_edge_cloudfront.arn
   runtime          = "nodejs10.x"
   handler          = "lambda_function.handler"
   memory_size      = 128
@@ -348,3 +271,40 @@ resource "aws_lambda_function" "reset_response_header_caching" {
 
 }
 
+
+
+#
+# Lambda@Edge IAM resources
+#
+
+data "aws_iam_policy_document" "lambda_edge_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+      identifiers = [
+        "lambda.amazonaws.com",
+        "edgelambda.amazonaws.com"
+      ]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+
+resource "aws_iam_role" "lambda_edge_cloudfront" {
+  name               = "${var.project}-tile_cache-lambda_edge_cloudfront"
+  assume_role_policy = data.aws_iam_policy_document.lambda_edge_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_edge_basic_exec" {
+  role       = aws_iam_role.lambda_edge_cloudfront.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "s3_read_only" {
+  role       = aws_iam_role.lambda_edge_cloudfront.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}

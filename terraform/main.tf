@@ -59,13 +59,23 @@ module "orchestration" {
 
 module "content_delivery_network" {
   source                              = "./modules/content_delivery_network"
-  bucket_domain_name                  = data.terraform_remote_state.core.outputs.tiles_bucket_domain_name
+  bucket_domain_name                  = module.storage.tiles_bucket_domain_name
   certificate_arn                     = var.environment == "production" ? data.terraform_remote_state.core.outputs.acm_certificate : null
-  cloudfront_access_identity_path     = data.terraform_remote_state.core.outputs.cloudfront_access_identity_path
+//  cloudfront_access_identity_path     = data.terraform_remote_state.core.outputs.cloudfront_access_identity_path
   environment                         = var.environment
   project                             = local.project
   tags                                = local.tags
-  website_endpoint                    = data.terraform_remote_state.core.outputs.tiles_bucket_website_endpoint
-  lambda_edge_cloudfront_iam_role_arn = data.terraform_remote_state.core.outputs.lambda_edge_cloudfront_arn
+  website_endpoint                    = module.storage.tiles_bucket_website_endpoint
+//  lambda_edge_cloudfront_iam_role_arn = data.terraform_remote_state.core.outputs.lambda_edge_cloudfront_arn
   tile_cache_app_url                  = module.orchestration.lb_dns_name
+}
+
+module "storage" {
+  source = "./modules/storage"
+  bucket_suffix = local.bucket_suffix
+  cloudfront_access_identity_iam_arn = module.content_delivery_network.cloudfront_access_identity_iam_arn
+  environment = var.environment
+  lambda_edge_cloudfront_arn = module.content_delivery_network.lambda_edge_cloudfront_arn
+  tags = local.tags
+  project = local.project
 }
