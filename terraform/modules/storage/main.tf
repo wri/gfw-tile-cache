@@ -17,22 +17,7 @@ resource "aws_s3_bucket" "tiles" {
     expose_headers  = []
     max_age_seconds = 3000
   }
-  website {
-    index_document = "index.html"
-    routing_rules = jsonencode(
-      [
-        {
-          Condition = {
-            KeyPrefixEquals = "wdpa_protected_areas/latest/"
-          }
-          Redirect = {
-            HostName             = "tiles.globalforestwatch.org"
-            ReplaceKeyPrefixWith = "wdpa_protected_areas/v201909/"
-          }
-        },
-      ]
-    )
-  }
+
 }
 
 resource "aws_s3_bucket" "tiles-test" {
@@ -52,19 +37,19 @@ resource "aws_s3_bucket_policy" "tiles" {
 module "tiles_policy" {
   source = "git::https://github.com/cloudposse/terraform-aws-iam-policy-document-aggregator.git?ref=0.2.0"
   source_documents = [
-    data.template_file.tiles_bucket_policy_public.rendered,
+    //    data.template_file.tiles_bucket_policy_public.rendered,
     data.template_file.tiles_bucket_policy_cloudfront.rendered,
     data.template_file.tiles_bucket_policy_lambda.rendered
   ]
 }
 
 
-data "template_file" "tiles_bucket_policy_public" {
-  template = file("${path.root}/policies/bucket_policy_public_read.json.tpl")
-  vars = {
-    bucket_arn = aws_s3_bucket.tiles.arn
-  }
-}
+//data "template_file" "tiles_bucket_policy_public" {
+//  template = file("${path.root}/policies/bucket_policy_public_read.json.tpl")
+//  vars = {
+//    bucket_arn = aws_s3_bucket.tiles.arn
+//  }
+//}
 
 data "template_file" "tiles_bucket_policy_cloudfront" {
   template = file("${path.root}/policies/bucket_policy_role_read.json.tpl")

@@ -3,12 +3,11 @@ from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
 from asyncpg import Connection
-from fastapi import APIRouter, Path, Query, HTTPException, Response, Depends
+from fastapi import APIRouter, Query, Response, Depends, HTTPException
 from sqlalchemy.sql import TableClause
 
 from app.database import a_get_db
 from app.routers import DATE_REGEX
-from app.schemas.enumerators import Implementation
 from app.schemas.esri import VectorTileService
 from app.services.vector_tiles import get_mvt_table, nasa_viirs_fire_alerts
 from app.services.vector_tiles.vector_tile_service import get_vector_tile_server
@@ -39,9 +38,9 @@ Bounds = Tuple[float, float, float, float]
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/tile/default/{z}/{x}/{y}.pbf",
+    "/nasa_viirs_fire_alerts/{version}/dynamic/{z}/{x}/{y}.pbf",
     response_class=Response,
-    tags=["Tiles"],
+    tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
 )
 async def nasa_viirs_fire_alerts_tile(
@@ -71,6 +70,7 @@ async def nasa_viirs_fire_alerts_tile(
         date_filter(start_date, end_date),
     ] + contextual_filter(**contextual_filters)
 
+    # Remove empty filters
     filters = [f for f in filters if f is not None]
 
     if z >= 6:
@@ -82,21 +82,20 @@ async def nasa_viirs_fire_alerts_tile(
 
 
 @router.get(
-    "/{dataset}/{version}/tile/{implementation}/{z}/{x}/{y}.pbf",
+    "/{dataset}/{version}/dynamic/{z}/{x}/{y}.pbf",
     response_class=Response,
-    tags=["Tiles"],
+    tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
 )
-async def tile(
+async def dynamic_vector_tile(
     *,
     dv: Tuple[str, str] = Depends(dataset_version),
-    implementation: Implementation,
     bbox_z: Tuple[Bounds, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(None),
     db: Connection = Depends(a_get_db),
 ) -> Response:
     """
-    Generic vector tile
+    Dynamic vector tile
     """
     dataset, version = dv
     bbox, _ = bbox_z
@@ -108,19 +107,56 @@ async def tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    if implementation == "default":
-        query, values = get_mvt_table(dataset, version, bbox, list(), *filters)
+    query, values = get_mvt_table(dataset, version, bbox, list(), *filters)
 
-        return await vector_tiles.get_tile(db, query)
-
-    raise HTTPException(
-        status_code=400, detail=f"Unknown implementation {implementation}"
-    )
+    return await vector_tiles.get_tile(db, query)
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/tile/default/VectorTileServer",
-    tags=["Tiles"],
+    "/{dataset}/{version}/default/{z}/{x}/{y}.pbf",
+    response_class=Response,
+    tags=["Vector Tiles"],
+    response_description="PBF Vector Tile",
+)
+async def vector_tile(
+    *,
+    dv: Tuple[str, str] = Depends(dataset_version),
+    bbox_z: Tuple[Bounds, int] = Depends(xyz),
+) -> Response:
+    """
+    Generic vector tile
+    """
+    # This endpoint is not implemented and only exist for documentation purposes
+    # Default vector layers are stored on S3.
+    # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
+    # Hence, this function should never be called.
+    raise NotImplementedError
+
+
+@router.get(
+    "/{dataset}/{version}/default/{z}/{x}/{y}.png",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+)
+async def raster_tile(
+    *,
+    dv: Tuple[str, str] = Depends(dataset_version),
+    bbox_z: Tuple[Bounds, int] = Depends(xyz),
+) -> Response:
+    """
+    Generic raster tile
+    """
+    # This endpoint is not implemented and only exist for documentation purposes
+    # Default vector layers are stored on S3.
+    # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
+    # Hence, this function should never be called.
+    raise NotImplementedError
+
+
+@router.get(
+    "/nasa_viirs_fire_alerts/{version}/dynamic/VectorTileServer",
+    tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
 async def nasa_viirs_fire_alerts_esri_vector_tile_service(
@@ -158,14 +194,13 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
 
 
 @router.get(
-    "/{dataset}/{version}/tile/{implementation}/VectorTileServer",
-    tags=["Tiles"],
+    "/{dataset}/{version}/dynamic/VectorTileServer",
+    tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
-async def esri_vector_tile_service(
+async def dynamic_esri_vector_tile_service(
     *,
     dv: Tuple[str, str] = Depends(dataset_version),
-    implementation: Implementation,
     geostore_id: Optional[str] = Query(None),
 ):
     """
@@ -177,4 +212,24 @@ async def esri_vector_tile_service(
     dataset, version = dv
     query_params: str = f"geostore_id={geostore_id}" if geostore_id else ""
 
-    return await get_vector_tile_server(dataset, version, implementation, query_params)
+    return await get_vector_tile_server(dataset, version, "dynamic", query_params)
+
+
+@router.get(
+    "/{dataset}/{version}/default/VectorTileServer",
+    tags=["ESRI Vector Tile Service"],
+    response_model=VectorTileService,
+)
+async def esri_vector_tile_service(
+    *, dv: Tuple[str, str] = Depends(dataset_version),
+):
+    """
+    Generic Mock ESRI Vector Tile Server.
+    When using ESRI JS API, point your root.json to this URL.
+    URL Parameters will be forwarded to tile cache.
+    """
+    # This endpoint is not implemented and only exist for documentation purposes
+    # Default vector layers are stored on S3.
+    # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
+    # Hence, this function should never be called.
+    raise NotImplementedError

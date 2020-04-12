@@ -14,6 +14,24 @@ provider "aws" {
   version = "~> 2.56.0"
 }
 
+locals {
+  bucket_suffix   = var.environment == "production" ? "" : "-${var.environment}"
+  tf_state_bucket = "gfw-terraform${local.bucket_suffix}"
+  tags            = data.terraform_remote_state.core.outputs.tags
+  name_suffix     = terraform.workspace == "default" ? "" : "-${terraform.workspace}"
+  project         = "gfw-tile-cache"
+}
+
+
+data "terraform_remote_state" "core" {
+  backend = "s3"
+  config = {
+    bucket = local.tf_state_bucket
+    region = "us-east-1"
+    key    = "core.tfstate"
+  }
+}
+
 # Docker file for FastAPI app
 module "container_registry" {
   source     = "git::https://github.com/wri/gfw-terraform-modules.git//modules/container_registry?ref=v0.0.7"
@@ -52,30 +70,30 @@ module "orchestration" {
   auto_scaling_min_capacity = 1
 
   postgresql_security_group_id         = data.terraform_remote_state.core.outputs.postgresql_security_group_id
-  secrets_postgresql-reader_name        = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_name
+  secrets_postgresql-reader_name       = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_name
   secrets_postgresql-reader_policy_arn = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn
 }
 
 
 module "content_delivery_network" {
-  source                              = "./modules/content_delivery_network"
-  bucket_domain_name                  = module.storage.tiles_bucket_domain_name
-  certificate_arn                     = var.environment == "production" ? data.terraform_remote_state.core.outputs.acm_certificate : null
-//  cloudfront_access_identity_path     = data.terraform_remote_state.core.outputs.cloudfront_access_identity_path
-  environment                         = var.environment
-  project                             = local.project
-  tags                                = local.tags
-  website_endpoint                    = module.storage.tiles_bucket_website_endpoint
-//  lambda_edge_cloudfront_iam_role_arn = data.terraform_remote_state.core.outputs.lambda_edge_cloudfront_arn
-  tile_cache_app_url                  = module.orchestration.lb_dns_name
+  source             = "./modules/content_delivery_network"
+  bucket_domain_name = module.storage.tiles_bucket_domain_name
+  certificate_arn    = var.environment == "production" ? data.terraform_remote_state.core.outputs.acm_certificate : null
+  //  cloudfront_access_identity_path     = data.terraform_remote_state.core.outputs.cloudfront_access_identity_path
+  environment      = var.environment
+  project          = local.project
+  tags             = local.tags
+  website_endpoint = module.storage.tiles_bucket_website_endpoint
+  //  lambda_edge_cloudfront_iam_role_arn = data.terraform_remote_state.core.outputs.lambda_edge_cloudfront_arn
+  tile_cache_app_url = module.orchestration.lb_dns_name
 }
 
 module "storage" {
-  source = "./modules/storage"
-  bucket_suffix = local.bucket_suffix
+  source                             = "./modules/storage"
+  bucket_suffix                      = local.bucket_suffix
   cloudfront_access_identity_iam_arn = module.content_delivery_network.cloudfront_access_identity_iam_arn
-  environment = var.environment
-  lambda_edge_cloudfront_arn = module.content_delivery_network.lambda_edge_cloudfront_arn
-  tags = local.tags
-  project = local.project
+  environment                        = var.environment
+  lambda_edge_cloudfront_arn         = module.content_delivery_network.lambda_edge_cloudfront_arn
+  tags                               = local.tags
+  project                            = local.project
 }

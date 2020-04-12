@@ -46,7 +46,7 @@ def contextual_filter(**fields: Union[str, bool]) -> List[TextClause]:
     return filters
 
 
-def date_filter(start_date: str, end_date: str) -> Filter:
+def date_filter(start_date: str, end_date: str) -> TextClause:
     f = text(
         "alert__date BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
     )
