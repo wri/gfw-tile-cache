@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, Union
 
 from fastapi import Query, Path
 
@@ -15,12 +15,25 @@ Bounds = Tuple[float, float, float, float]
 
 async def xyz(
     x: int = Path(..., title="Tile grid column", ge=0),
-    y: int = Path(..., title="Tile grid row", ge=0),
+    y: str = Path(
+        ...,
+        title="Tile grid row and optional scale factor (either @2x or @0.5x)",
+        regex="^\d+(@(2|0.5)x)?$",
+    ),
     z: int = Path(..., title="Zoom level", ge=0, le=22),
-) -> Tuple[Bounds, int]:
-    bbox: Bounds = to_bbox(x, y, z)
+) -> Tuple[Bounds, int, int]:
+    if "@" in y:
+        __y, _scale = y.split("@")
+        _y: int = int(y)
+        scale: float = float(_scale[:-1])
+    else:
+        _y = int(y)
+        scale = 1.0
+
+    extent: int = int(4096 * scale)
+    bbox: Bounds = to_bbox(x, _y, z)
     validate_bbox(*bbox)
-    return bbox, z
+    return bbox, z, extent
 
 
 async def nasa_viirs_fire_alerts_filters(

@@ -12,5 +12,6 @@ services:
       - ENV
       - LOG_LEVEL
       - GUNICORN_CONG=/app/app/gunicorn_conf.py
+      - SECRET_NAME
     ports:
       - "80:80"

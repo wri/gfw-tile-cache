@@ -3,7 +3,7 @@ from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
 from asyncpg import Connection
-from fastapi import APIRouter, Query, Response, Depends, HTTPException
+from fastapi import APIRouter, Query, Response, Depends
 from sqlalchemy.sql import TableClause
 
 from app.database import a_get_db
@@ -45,7 +45,7 @@ Bounds = Tuple[float, float, float, float]
 )
 async def nasa_viirs_fire_alerts_tile(
     version: str = Depends(nasa_viirs_fire_alerts_version),
-    bbox_z: Tuple[Bounds, int] = Depends(xyz),
+    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(None),
     start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
@@ -61,7 +61,7 @@ async def nasa_viirs_fire_alerts_tile(
     Use additional query parameters to further filter alerts.
     Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
-    bbox, z = bbox_z
+    bbox, z, extent = bbox_z
     validate_dates(start_date, end_date)
 
     filters = [
@@ -74,7 +74,9 @@ async def nasa_viirs_fire_alerts_tile(
     filters = [f for f in filters if f is not None]
 
     if z >= 6:
-        return await nasa_viirs_fire_alerts.get_tile(db, version, bbox, *filters)
+        return await nasa_viirs_fire_alerts.get_tile(
+            db, version, bbox, extent, *filters
+        )
     else:
         return await nasa_viirs_fire_alerts.get_aggregated_tile(
             db, version, bbox, *filters
@@ -90,7 +92,7 @@ async def nasa_viirs_fire_alerts_tile(
 async def dynamic_vector_tile(
     *,
     dv: Tuple[str, str] = Depends(dataset_version),
-    bbox_z: Tuple[Bounds, int] = Depends(xyz),
+    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(None),
     db: Connection = Depends(a_get_db),
 ) -> Response:
@@ -98,7 +100,7 @@ async def dynamic_vector_tile(
     Dynamic vector tile
     """
     dataset, version = dv
-    bbox, _ = bbox_z
+    bbox, _, extent = bbox_z
 
     filters: List[TableClause] = list()
 
@@ -107,9 +109,9 @@ async def dynamic_vector_tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    query, values = get_mvt_table(dataset, version, bbox, list(), *filters)
+    query, values = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
 
-    return await vector_tiles.get_tile(db, query)
+    return await vector_tiles.get_tile(db, query, name=dataset, extent=extent)
 
 
 @router.get(

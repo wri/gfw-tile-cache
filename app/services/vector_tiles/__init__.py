@@ -20,6 +20,7 @@ def get_mvt_table(
     schema_name: str,
     table_name: str,
     bbox: Bounds,
+    extent: int,
     columns: List[ColumnClause],
     *filters: text,
 ) -> Select:
@@ -28,20 +29,25 @@ def get_mvt_table(
 
     bounds = _get_bounds(*bbox)
 
-    query: Select = _get_mvt_table(schema_name, table_name, bounds, *columns)
+    query: Select = _get_mvt_table(schema_name, table_name, bounds, extent, *columns)
     return _filter_mvt_table(query, *filters)
 
 
-async def get_tile(db, query: Select) -> Response:
+async def get_tile(db, query: Select, name: str, extent: int) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
-    query = _as_vector_tile(query)
+    query = _as_vector_tile(query, name, extent)
     return await _get_tile(db, query)
 
 
 async def get_aggregated_tile(
-    db, query: Select, columns: List[ColumnClause], group_by_columns: List[ColumnClause]
+    db,
+    query: Select,
+    columns: List[ColumnClause],
+    group_by_columns: List[ColumnClause],
+    name: str,
+    extent: int,
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
@@ -50,14 +56,13 @@ async def get_aggregated_tile(
     query = _group_mvt_table(query, columns, group_by_columns).alias(
         "grouped_mvt_table"
     )
-    query = _as_vector_tile(query)
+    query = _as_vector_tile(query, name, extent)
     return await _get_tile(db, query)
 
 
 async def _get_tile(db: Connection, query: Select) -> Response:
-
     query = compile_sql(query)
-
+    logging.debug(query)
     tile = await db.fetchval(query=str(query))
     logging.debug(tile)
 
@@ -88,13 +93,18 @@ def _get_bounds(left: float, bottom: float, right: float, top: float) -> Select:
 
 
 def _get_mvt_table(
-    schema_name: str, table_name: str, bounds: Select, *columns: ColumnClause
+    schema_name: str,
+    table_name: str,
+    bounds: Select,
+    extent: int,
+    *columns: ColumnClause,
 ) -> Select:
     """
     Create MVT Geom query
     """
+
     mvt_geom = literal_column(
-        "ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, 4096, 0,false)"
+        f"ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, {extent}, 0,false)"
     ).label("geom")
 
     src_table = table(table_name)
@@ -126,6 +136,8 @@ def _group_mvt_table(
     return query.alias("grouped_mvt")
 
 
-def _as_vector_tile(query: Select) -> Select:
+def _as_vector_tile(query: Select, name: str = "default", extent: int = 4096) -> Select:
     alias = query.name
-    return select([literal_column(f"ST_AsMVT({alias}.*)")]).select_from(query)
+    return select(
+        [literal_column(f"ST_AsMVT({alias}.*, '{name}', {extent})")]
+    ).select_from(query)

@@ -7,7 +7,8 @@ resource "aws_cloudfront_origin_access_identity" "tiles" {}
 
 resource "aws_cloudfront_distribution" "tiles" {
 
-  aliases = var.environment == "production" ? ["tiles.globalforestwatch.org"] : null
+  aliases = var.environment == "production" ? [
+  "tiles.globalforestwatch.org"] : null
 
   enabled         = true
   http_version    = "http2"
@@ -60,8 +61,10 @@ resource "aws_cloudfront_distribution" "tiles" {
   # GFW Tile Cache S3 Bucket
   origin {
     domain_name = var.bucket_domain_name
-    origin_id   = "default"
-    s3_origin_config { origin_access_identity = aws_cloudfront_origin_access_identity.tiles.cloudfront_access_identity_path }
+    origin_id   = "static"
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.tiles.cloudfront_access_identity_path
+    }
 
     # Tell Lambda@Edge function what environment we are in
     custom_header {
@@ -76,29 +79,34 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+  # send all uncached URIs to tile cache app
   default_cache_behavior {
-    allowed_methods  = ["HEAD", "GET"]
-    cached_methods   = ["HEAD", "GET"]
-    target_origin_id = "default"
-    compress         = true
+    allowed_methods = [
+      "GET",
+      "HEAD",
+    ]
+    cached_methods = [
+      "GET",
+      "HEAD",
+    ]
+    compress               = true
+    default_ttl            = 86400
+    max_ttl                = 86400
+    min_ttl                = 0
+    smooth_streaming       = false
+    target_origin_id       = "dynamic"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      query_string = false
+      headers                 = []
+      query_string            = true
+      query_string_cache_keys = []
 
       cookies {
-        forward = "none"
+        forward           = "none"
+        whitelisted_names = []
       }
-    }
-
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
-
-    lambda_function_association {
-      event_type   = "origin-response"
-      include_body = false
-      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
     }
   }
 
@@ -127,70 +135,6 @@ resource "aws_cloudfront_distribution" "tiles" {
     forwarded_values {
       headers                 = []
       query_string            = false
-      query_string_cache_keys = []
-
-      cookies {
-        forward           = "none"
-        whitelisted_names = []
-      }
-    }
-  }
-
-  # Documentation
-  ordered_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
-    compress               = true
-    default_ttl            = 86400
-    max_ttl                = 86400
-    min_ttl                = 0
-    path_pattern           = "redoc"
-    smooth_streaming       = false
-    target_origin_id       = "dynamic"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      headers                 = []
-      query_string            = true
-      query_string_cache_keys = []
-
-      cookies {
-        forward           = "none"
-        whitelisted_names = []
-      }
-    }
-  }
-
-  # Documentation
-  ordered_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
-    compress               = true
-    default_ttl            = 86400
-    max_ttl                = 86400
-    min_ttl                = 0
-    path_pattern           = "openapi.json"
-    smooth_streaming       = false
-    target_origin_id       = "dynamic"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      headers                 = []
-      query_string            = true
       query_string_cache_keys = []
 
       cookies {
@@ -248,7 +192,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     min_ttl                = 0
     path_pattern           = "*/latest/*"
     smooth_streaming       = false
-    target_origin_id       = "default"
+    target_origin_id       = "static"
     trusted_signers        = []
     viewer_protocol_policy = "redirect-to-https"
 
@@ -278,6 +222,38 @@ resource "aws_cloudfront_distribution" "tiles" {
       include_body = false
       lambda_arn   = aws_lambda_function.reset_response_header_caching.qualified_arn
     }
+  }
+
+  ordered_cache_behavior {
+    allowed_methods = [
+      "HEAD",
+    "GET"]
+    cached_methods = [
+      "HEAD",
+    "GET"]
+    target_origin_id = "static"
+    compress         = true
+    path_pattern     = "*/default/*"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 31536000
+
+    lambda_function_association {
+      event_type   = "origin-response"
+      include_body = false
+      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
+    }
+
   }
 
   restrictions {
@@ -325,7 +301,8 @@ resource "aws_lambda_function" "redirect_latest_tile_cache" {
   # TODO: need to give function the correct name
   # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
 
-  function_name = "core-tile_cache-redirect_latest_tile_cache" # "${var.project}-${local.module_name}-redirect_latest_tile_cache"
+  function_name = "core-tile_cache-redirect_latest_tile_cache"
+  # "${var.project}-${local.module_name}-redirect_latest_tile_cache"
   //  function_name    = "redirect_latest_tile_cache"
   filename         = data.archive_file.redirect_latest_tile_cache.output_path
   source_code_hash = data.archive_file.redirect_latest_tile_cache.output_base64sha256
@@ -342,7 +319,8 @@ resource "aws_lambda_function" "reset_response_header_caching" {
   # TODO: need to give function the correct name
   # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
 
-  function_name    = "core-tile_cache-reset_response_header_caching" # "${var.project}-${local.module_name}-reset_response_header_caching"
+  function_name = "core-tile_cache-reset_response_header_caching"
+  # "${var.project}-${local.module_name}-reset_response_header_caching"
   filename         = data.archive_file.reset_response_header_caching.output_path
   source_code_hash = data.archive_file.reset_response_header_caching.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
@@ -385,7 +363,8 @@ data "aws_iam_policy_document" "lambda_edge_assume_role" {
       ]
     }
 
-    actions = ["sts:AssumeRole"]
+    actions = [
+    "sts:AssumeRole"]
   }
 }
 

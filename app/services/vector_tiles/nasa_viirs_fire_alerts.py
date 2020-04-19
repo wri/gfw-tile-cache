@@ -18,23 +18,23 @@ COLUMNS: List[ColumnClause] = [
 
 
 async def get_tile(
-    db: Connection, version: str, bbox: Bounds, *filters: TextClause
+    db: Connection, version: str, bbox: Bounds, extent: int, *filters: TextClause
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
-    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, COLUMNS, *filters)
-    return await vector_tiles.get_tile(db, query)
+    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
+    return await vector_tiles.get_tile(db, query, SCHEMA, extent)
 
 
 async def get_aggregated_tile(
-    db: Connection, version: str, bbox: Bounds, *filters: TextClause
+    db: Connection, version: str, bbox: Bounds, extent, *filters: TextClause
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     This function makes a SQL query that aggregates point features based on proximity.
     """
-    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, COLUMNS, *filters)
+    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
 
     columns = [
         column("geom"),
@@ -48,4 +48,6 @@ async def get_aggregated_tile(
     ]
     group_by_columns = [column("geom")]
 
-    return await vector_tiles.get_aggregated_tile(db, query, columns, group_by_columns)
+    return await vector_tiles.get_aggregated_tile(
+        db, query, columns, group_by_columns, SCHEMA, extent
+    )
