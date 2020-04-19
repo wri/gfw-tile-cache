@@ -24,7 +24,7 @@ async def xyz(
 ) -> Tuple[Bounds, int, int]:
     if "@" in y:
         __y, _scale = y.split("@")
-        _y: int = int(y)
+        _y: int = int(__y)
         scale: float = float(_scale[:-1])
     else:
         _y = int(y)
