@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any, Tuple, Union
 
-from fastapi import Query, Path
+from fastapi import Query, Path, HTTPException
 
 from app.routers import VERSION_REGEX
 from app.schemas.dynamic_enumerators import get_dataset, get_viirs_version, Version
@@ -15,19 +15,23 @@ Bounds = Tuple[float, float, float, float]
 async def xyz(
     z: int = Path(..., title="Zoom level", ge=0, le=22),
     x: int = Path(..., title="Tile grid column", ge=0),
-    y: str = Path(
+    y: Union[int, str] = Path(
         ...,
         title="Tile grid row and optional scale factor (either @2x, @0.5x or @0.25x)",
         regex="^\d+(@(2|0.5|0.25)x)?$",
     ),
 ) -> Tuple[Bounds, int, int]:
-    if "@" in y:
+    if isinstance(y, str) and "@" in y:
         __y, _scale = y.split("@")
         _y: int = int(__y)
         scale: float = float(_scale[:-1])
-    else:
-        _y = int(y)
+    elif isinstance(y, int):
+        _y = y
         scale = 1.0
+    else:
+        raise HTTPException(
+            "Y value must be either integer of combination and integer and scale factor"
+        )
 
     extent: int = int(4096 * scale)
     bbox: Bounds = to_bbox(x, _y, z)
