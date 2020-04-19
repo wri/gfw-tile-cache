@@ -9,18 +9,17 @@ from app.utils.metadata import get_latest_version
 from app.utils.tiles import to_bbox
 from app.utils.validators import validate_version, validate_bbox
 
-
 Bounds = Tuple[float, float, float, float]
 
 
 async def xyz(
+    z: int = Path(..., title="Zoom level", ge=0, le=22),
     x: int = Path(..., title="Tile grid column", ge=0),
     y: str = Path(
         ...,
-        title="Tile grid row and optional scale factor (either @2x or @0.5x)",
+        title="Tile grid row and optional scale factor (either @2x, @0.5x or @0.25x)",
         regex="^\d+(@(2|0.5|0.25)x)?$",
     ),
-    z: int = Path(..., title="Zoom level", ge=0, le=22),
 ) -> Tuple[Bounds, int, int]:
     if "@" in y:
         __y, _scale = y.split("@")
