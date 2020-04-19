@@ -79,7 +79,7 @@ async def nasa_viirs_fire_alerts_tile(
         )
     else:
         return await nasa_viirs_fire_alerts.get_aggregated_tile(
-            db, version, bbox, *filters
+            db, version, bbox, extent, *filters
         )
 
 

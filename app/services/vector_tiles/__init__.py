@@ -56,7 +56,7 @@ async def get_aggregated_tile(
     query = _group_mvt_table(query, columns, group_by_columns).alias(
         "grouped_mvt_table"
     )
-    query = _as_vector_tile(query, name, extent)
+    query = _as_vector_tile(query, name=name, extent=extent)
     return await _get_tile(db, query)
 
 

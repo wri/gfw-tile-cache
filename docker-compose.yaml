@@ -12,6 +12,6 @@ services:
       - ENV
       - LOG_LEVEL
       - GUNICORN_CONG=/app/app/gunicorn_conf.py
-      - SECRET_NAME
+      - SECRET_NAME=core-postgresql-reader-secret
     ports:
       - "80:80"
