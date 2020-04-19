@@ -92,7 +92,7 @@
                 'nasa_viirs_fire_alerts': {
                     'type': 'vector',
                     'tiles': [
-                        "http://gfw-vector-tiles-loadbalancer-fe-1986924608.us-east-1.elb.amazonaws.com/nasa_viirs_fire_alerts/v202003/tile/default/{z}/{x}/{y}.pbf?start_date=2017-01-01&end_date=2017-02-01&high_confidence_only=False"
+                        "http://54.237.221.136/nasa_viirs_fire_alerts/v202003/dynamic/{z}/{x}/{y}@0.5x.pbf?start_date=2017-01-01&end_date=2017-02-01&high_confidence_only=False"
                     ]
                 }
 
@@ -108,7 +108,7 @@
                 'type': 'circle',
                 'source': 'nasa_viirs_fire_alerts',
                 // ST_AsMVT() uses 'default' as layer name
-                'source-layer': 'default',
+                'source-layer': 'nasa_viirs_fire_alerts',
                 'minzoom': 0,
                 'maxzoom': 6,
                 'paint': {
@@ -140,7 +140,7 @@
                     'type': 'circle',
                     'source': 'nasa_viirs_fire_alerts',
                     // ST_AsMVT() uses 'default' as layer name
-                    'source-layer': 'default',
+                    'source-layer': 'nasa_viirs_fire_alerts',
                     'minzoom': 6,
                     'maxzoom': 22,
                     'paint': {
@@ -228,7 +228,7 @@
         let startStr = startDate.toISOString().slice(0, 10);
         let endStr = endDate.toISOString().slice(0, 10);
 
-        let url = "http://gfw-vector-tiles-loadbalancer-fe-1986924608.us-east-1.elb.amazonaws.com/nasa_viirs_fire_alerts/v202003/tile/default/{z}/{x}/{y}.pbf?start_date=" + startStr + "&end_date=" + endStr + "&high_confidence_only=False"
+        let url = "http://54.237.221.136/nasa_viirs_fire_alerts/v202003/dynamic/{z}/{x}/{y}@0.5x.pbf?start_date=" + startStr + "&end_date=" + endStr + "&high_confidence_only=False"
 
         if (map.getSource('nasa_viirs_fire_alerts')) {
             map.removeLayer('viirs-points');
@@ -277,7 +277,7 @@
             'type': 'circle',
             'source': 'nasa_viirs_fire_alerts',
             // ST_AsMVT() uses 'default' as layer name
-            'source-layer': 'default',
+            'source-layer': 'nase_viirs_fire_alerts',
             'minzoom': 6,
             'maxzoom': 22,
             'paint': {

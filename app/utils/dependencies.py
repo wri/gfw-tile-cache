@@ -18,7 +18,7 @@ async def xyz(
     y: str = Path(
         ...,
         title="Tile grid row and optional scale factor (either @2x or @0.5x)",
-        regex="^\d+(@(2|0.5)x)?$",
+        regex="^\d+(@(2|0.5|0.25)x)?$",
     ),
     z: int = Path(..., title="Zoom level", ge=0, le=22),
 ) -> Tuple[Bounds, int, int]:
