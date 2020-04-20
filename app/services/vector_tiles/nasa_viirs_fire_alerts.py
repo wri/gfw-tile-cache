@@ -28,7 +28,12 @@ async def get_tile(
 
 
 async def get_aggregated_tile(
-    db: Connection, version: str, bbox: Bounds, extent, attributes, *filters: TextClause
+    db: Connection,
+    version: str,
+    bbox: Bounds,
+    extent: int,
+    attributes: List[str],
+    *filters: TextClause
 ) -> Response:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
