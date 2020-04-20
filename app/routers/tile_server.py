@@ -49,6 +49,7 @@ async def nasa_viirs_fire_alerts_tile(
     geostore_id: Optional[str] = Query(None),
     start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
+    force_date_range: Optional[bool] = Query(False),
     high_confidence_only: Optional[bool] = Query(False),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
     db: Connection = Depends(a_get_db),
@@ -62,7 +63,7 @@ async def nasa_viirs_fire_alerts_tile(
     Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
     bbox, z, extent = bbox_z
-    validate_dates(start_date, end_date)
+    validate_dates(start_date, end_date, force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox),
@@ -73,14 +74,17 @@ async def nasa_viirs_fire_alerts_tile(
     # Remove empty filters
     filters = [f for f in filters if f is not None]
 
-    if z >= 6:
-        return await nasa_viirs_fire_alerts.get_tile(
-            db, version, bbox, extent, *filters
-        )
-    else:
-        return await nasa_viirs_fire_alerts.get_aggregated_tile(
-            db, version, bbox, extent, *filters
-        )
+    # if z >= 6:
+    #     return await nasa_viirs_fire_alerts.get_tile(
+    #         db, version, bbox, extent, *filters
+    #     )
+    # else:
+    #     return await nasa_viirs_fire_alerts.get_aggregated_tile(
+    #         db, version, bbox, extent, *filters
+    #     )
+    return await nasa_viirs_fire_alerts.get_aggregated_tile(
+        db, version, bbox, extent, *filters
+    )
 
 
 @router.get(
@@ -168,6 +172,7 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
     high_confidence_only: Optional[bool] = Query(False),
+    force_date_range: Optional[bool] = Query(False),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
 ):
     """
@@ -176,20 +181,19 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     URL Parameters will be forwarded to tile cache.
     """
 
-    # TODO: There must be a better way!
     fields: Dict[str, Any] = contextual_filters
-
-    validate_dates(start_date, end_date)
 
     fields["geostore_id"] = geostore_id
     fields["start_date"] = start_date
     fields["end_date"] = end_date
     fields["high_confidence_only"] = high_confidence_only
+    fields["force_date_range"] = force_date_range
 
     params = [f"{key}={value}" for key, value in fields.items() if value is not None]
 
     query_params: str = "&".join(params)
 
+    # TODO: add scale factor to tile url
     return await get_vector_tile_server(
         "nasa_viirs_fire_alerts", version, "default", query_params
     )

@@ -28,7 +28,7 @@ def validate_version(dataset, version) -> None:
     )
 
 
-def validate_dates(start_date: str, end_date: str) -> None:
+def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
     _start_date = pendulum.from_format(start_date, "YYYY-MM-DD")
     _end_date = pendulum.from_format(end_date, "YYYY-MM-DD")
 
@@ -37,9 +37,12 @@ def validate_dates(start_date: str, end_date: str) -> None:
             status_code=403, detail="Start date must be smaller or equal to end date"
         )
 
-    diff = _end_date - _start_date
-    if diff.in_days() > 90:
-        raise HTTPException(status_code=403, detail="Date range cannot exceed 90 days")
+    if not force_date_range:
+        diff = _end_date - _start_date
+        if diff.in_days() > 90:
+            raise HTTPException(
+                status_code=403, detail="Date range cannot exceed 90 days"
+            )
 
 
 def validate_bbox(left: float, bottom: float, right: float, top: float) -> None:

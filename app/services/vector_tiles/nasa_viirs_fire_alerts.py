@@ -35,10 +35,11 @@ async def get_aggregated_tile(
     This function makes a SQL query that aggregates point features based on proximity.
     """
     query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
-
     columns = [
         column("geom"),
         literal_column("count(*)").label("count"),
+        literal_column("avg(latitude)").label("latitude"),
+        literal_column("avg(longitude)").label("longitude"),
         literal_column("mode() WITHIN GROUP (ORDER BY alert__date)").label(
             "alert__date"
         ),
