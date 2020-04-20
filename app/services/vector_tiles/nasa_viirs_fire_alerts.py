@@ -46,7 +46,7 @@ async def get_aggregated_tile(
         "alert__date": literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__date)"
         ).label("alert__date"),
-        "alert__time": literal_column(
+        "alert__time_utc": literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__time_utc)"
         ).label("alert__time_utc"),
         "confidence__cat": literal_column(
