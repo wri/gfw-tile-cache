@@ -67,7 +67,7 @@ async def get_aggregated_tile(
     ]
 
     for attribute in attributes:
-        column.append(col_dict[attribute])
+        columns.append(col_dict[attribute])
 
     group_by_columns = [column("geom")]
 
