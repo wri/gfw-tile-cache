@@ -8,6 +8,7 @@ from sqlalchemy import select, text, literal_column, table
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
 
+from app.responses import VectorTileResponse
 from app.utils.sql import compile_sql
 
 Geometry = Dict[str, Any]
@@ -66,14 +67,7 @@ async def _get_tile(db: Connection, query: Select) -> Response:
     tile = await db.fetchval(query=str(query))
     logging.debug(tile)
 
-    return Response(
-        content=tile,
-        status_code=200,
-        headers={
-            "Content-Type": "application/x-protobuf",
-            "Access-Control-Allow-Origin": "*",
-        },
-    )
+    return VectorTileResponse(content=tile, status_code=200,)
 
 
 def _get_bounds(left: float, bottom: float, right: float, top: float) -> Select:

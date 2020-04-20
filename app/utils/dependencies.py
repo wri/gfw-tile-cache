@@ -2,7 +2,8 @@ from typing import Optional, Dict, Any, Tuple, Union, List
 
 from fastapi import Query, Path, HTTPException
 
-from app.routers import VERSION_REGEX
+from app.routers import VERSION_REGEX, DATE_REGEX
+from app.routers.tile_server import DEFAULT_START, DEFAULT_END
 from app.schemas.dynamic_enumerators import get_dataset, get_viirs_version, Version
 from app.utils.filters import geometry_filter
 from app.utils.metadata import get_latest_version
@@ -27,7 +28,7 @@ async def xyz(
     x: int = Path(..., title="Tile grid column", ge=0),
     y: Union[int, str] = Path(
         ...,
-        title="Tile grid row and optional scale factor (either @2x, @0.5x or @0.25x)",
+        title="Tile grid row (integer >= 0) and optional scale factor (either @2x, @0.5x or @0.25x)",
         regex="^\d+(@(2|0.5|0.25)x)?$",
     ),
 ) -> Tuple[Bounds, int, int]:
@@ -51,7 +52,10 @@ async def xyz(
 
 
 async def include_attributes(
-    include_attribute: Optional[List[str]] = Query(ALLOWED_ATTRIBUTES),
+    include_attribute: Optional[List[str]] = Query(
+        ALLOWED_ATTRIBUTES,
+        title="Select which attributes to include in vector tile. Will always show attribute count.",
+    ),
 ) -> List[str]:
     attributes: List[str] = list()
     if include_attribute is not None:
@@ -62,24 +66,60 @@ async def include_attributes(
 
 
 async def nasa_viirs_fire_alerts_filters(
-    is__regional_primary_forest: Optional[bool] = Query(None),
-    is__alliance_for_zero_extinction_site: Optional[bool] = Query(None),
-    is__key_biodiversity_area: Optional[bool] = Query(None),
-    is__landmark: Optional[bool] = Query(None),
-    gfw_plantation__type: Optional[str] = Query(None),
-    is__gfw_mining: Optional[bool] = Query(None),
-    is__gfw_logging: Optional[bool] = Query(None),
-    rspo_oil_palm__certification_status: Optional[str] = Query(None),
-    is__gfw_wood_fiber: Optional[bool] = Query(None),
-    is__peat_land: Optional[bool] = Query(None),
-    is__idn_forest_moratorium: Optional[bool] = Query(None),
-    is__gfw_oil_palm: Optional[bool] = Query(None),
-    idn_forest_area__type: Optional[str] = Query(None),
-    per_forest_concession__type: Optional[str] = Query(None),
-    is__gfw_oil_gas: Optional[bool] = Query(None),
-    is__mangroves_2016: Optional[bool] = Query(None),
-    is__intact_forest_landscapes_2016: Optional[bool] = Query(None),
-    bra_biome__name: Optional[str] = Query(None),
+    is__regional_primary_forest: Optional[bool] = Query(
+        None, title="Only show alerts inside regional primary forests"
+    ),
+    is__alliance_for_zero_extinction_site: Optional[bool] = Query(
+        None, title="Only show alerts inside alliance for zero extinction sites"
+    ),
+    is__key_biodiversity_area: Optional[bool] = Query(
+        None, title="Only show alerts inside key biodiversity areas"
+    ),
+    is__landmark: Optional[bool] = Query(
+        None, title="Only show alerts inside landmark land right areas"
+    ),
+    gfw_plantation__type: Optional[str] = Query(
+        None, title="Only show alerts inside selected GFW plantation types"
+    ),
+    is__gfw_mining: Optional[bool] = Query(
+        None, title="Only show alerts inside mining permits"
+    ),
+    is__gfw_logging: Optional[bool] = Query(
+        None, title="Only show alerts inside managed forests"
+    ),
+    rspo_oil_palm__certification_status: Optional[str] = Query(
+        None, title="Only show alerts inside areas with selected rspo oil palm status"
+    ),
+    is__gfw_wood_fiber: Optional[bool] = Query(
+        None, title="Only show alerts inside wood fiber concessions"
+    ),
+    is__peat_land: Optional[bool] = Query(
+        None, title="Only show alerts inside peat land"
+    ),
+    is__idn_forest_moratorium: Optional[bool] = Query(
+        None, title="Only show alerts inside indonesia forest moratorium areas"
+    ),
+    is__gfw_oil_palm: Optional[bool] = Query(
+        None, title="Only show alerts inside oil palm concessions"
+    ),
+    idn_forest_area__type: Optional[str] = Query(
+        None, title="Only show alerts inside selected forest area type in Indonesia"
+    ),
+    per_forest_concession__type: Optional[str] = Query(
+        None, title="Only show alerts inside selected forest concessions type in Peru"
+    ),
+    is__gfw_oil_gas: Optional[bool] = Query(
+        None, title="Only show alerts inside oil and gas concessions"
+    ),
+    is__mangroves_2016: Optional[bool] = Query(
+        None, title="Only show alerts inside 2016 mangrove extent"
+    ),
+    is__intact_forest_landscapes_2016: Optional[bool] = Query(
+        None, title="Only show alerts inside 2016 intact forest landscape extent"
+    ),
+    bra_biome__name: Optional[str] = Query(
+        None, title="Only show alerts inside selected biome in Brazil"
+    ),
 ) -> Dict[str, Any]:
     return {
         "is__regional_primary_forest": is__regional_primary_forest,

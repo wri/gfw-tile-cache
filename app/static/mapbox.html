@@ -92,7 +92,7 @@
                 'nasa_viirs_fire_alerts': {
                     'type': 'vector',
                     'tiles': [
-                        "http://54.237.221.136/nasa_viirs_fire_alerts/v202003/dynamic/{z}/{x}/{y}@0.25x.pbf?start_date=2017-01-01&end_date=2017-02-01&high_confidence_only=False"
+                        "http://54.237.221.136/nasa_viirs_fire_alerts/v202003/dynamic/{z}/{x}/{y}@0.25x.pbf?start_date=2017-01-01&end_date=2017-02-01&high_confidence_only=False&include_attribute=frp__mw"
                     ]
                 }
 
@@ -228,7 +228,7 @@
         let startStr = startDate.toISOString().slice(0, 10);
         let endStr = endDate.toISOString().slice(0, 10);
 
-        let url = "http://54.237.221.136/nasa_viirs_fire_alerts/v202003/dynamic/{z}/{x}/{y}@0.25x.pbf?start_date=" + startStr + "&end_date=" + endStr + "&high_confidence_only=False"
+        let url = "http://54.237.221.136/nasa_viirs_fire_alerts/v202003/dynamic/{z}/{x}/{y}@0.25x.pbf?start_date=" + startStr + "&end_date=" + endStr + "&high_confidence_only=False&include_attribute=frp__mw"
 
         if (map.getSource('nasa_viirs_fire_alerts')) {
             map.removeLayer('viirs-points');

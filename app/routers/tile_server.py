@@ -47,11 +47,24 @@ Bounds = Tuple[float, float, float, float]
 async def nasa_viirs_fire_alerts_tile(
     version: str = Depends(nasa_viirs_fire_alerts_version),
     bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
-    geostore_id: Optional[str] = Query(None),
-    start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
-    end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
-    force_date_range: Optional[bool] = Query(False),
-    high_confidence_only: Optional[bool] = Query(False),
+    geostore_id: Optional[str] = Query(
+        None, title="Only show fire alerts within selected geostore area"
+    ),
+    start_date: str = Query(
+        DEFAULT_START,
+        regex=DATE_REGEX,
+        title="Only show alerts for given date and after",
+    ),
+    end_date: str = Query(
+        DEFAULT_END, regex=DATE_REGEX, title="Only show alerts until given date."
+    ),
+    force_date_range: Optional[bool] = Query(
+        False,
+        title="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
+    ),
+    high_confidence_only: Optional[bool] = Query(
+        False, title="Only show high confidence alerts"
+    ),
     include_attribute: List[str] = Depends(include_attributes),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
     db: Connection = Depends(a_get_db),
@@ -76,14 +89,6 @@ async def nasa_viirs_fire_alerts_tile(
     # Remove empty filters
     filters = [f for f in filters if f is not None]
 
-    # if z >= 6:
-    #     return await nasa_viirs_fire_alerts.get_tile(
-    #         db, version, bbox, extent, *filters
-    #     )
-    # else:
-    #     return await nasa_viirs_fire_alerts.get_aggregated_tile(
-    #         db, version, bbox, extent, *filters
-    #     )
     return await nasa_viirs_fire_alerts.get_aggregated_tile(
         db, version, bbox, extent, include_attribute, *filters
     )
@@ -99,7 +104,9 @@ async def dynamic_vector_tile(
     *,
     dv: Tuple[str, str] = Depends(dataset_version),
     bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
-    geostore_id: Optional[str] = Query(None),
+    geostore_id: Optional[str] = Query(
+        None, title="Only show fire alerts within selected geostore area"
+    ),
     db: Connection = Depends(a_get_db),
 ) -> Response:
     """
@@ -171,10 +178,22 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     *,
     version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
     geostore_id: Optional[str] = Query(None),
-    start_date: str = Query(DEFAULT_START, regex=DATE_REGEX),
-    end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
-    high_confidence_only: Optional[bool] = Query(False),
-    force_date_range: Optional[bool] = Query(False),
+    start_date: str = Query(
+        DEFAULT_START,
+        regex=DATE_REGEX,
+        title="Only show alerts for given date and after",
+    ),
+    end_date: str = Query(
+        DEFAULT_END, regex=DATE_REGEX, title="Only show alerts until given date."
+    ),
+    force_date_range: Optional[bool] = Query(
+        False,
+        title="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
+    ),
+    high_confidence_only: Optional[bool] = Query(
+        False, title="Only show high confidence alerts"
+    ),
+    include_attribute: List[str] = Depends(include_attributes),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
 ):
     """
@@ -190,6 +209,7 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     fields["end_date"] = end_date
     fields["high_confidence_only"] = high_confidence_only
     fields["force_date_range"] = force_date_range
+    fields["include_attribute"] = include_attribute
 
     params = [f"{key}={value}" for key, value in fields.items() if value is not None]
 
