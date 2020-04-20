@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Tuple, Union
+from typing import Optional, Dict, Any, Tuple, Union, List
 
 from fastapi import Query, Path, HTTPException
 
@@ -10,6 +10,16 @@ from app.utils.tiles import to_bbox
 from app.utils.validators import validate_version, validate_bbox
 
 Bounds = Tuple[float, float, float, float]
+ALLOWED_ATTRIBUTES: List[str] = [
+    "latitude",
+    "longitude",
+    "alert__date",
+    "alert__time_utc",
+    "confidence__cat",
+    "bright_ti4__k",
+    "bright_ti5__k",
+    "frp__mw",
+]
 
 
 async def xyz(
@@ -30,13 +40,25 @@ async def xyz(
         scale = 1.0
     else:
         raise HTTPException(
-            "Y value must be either integer of combination and integer and scale factor"
+            400,
+            detail="Y value must be either integer of combination and integer and scale factor",
         )
 
     extent: int = int(4096 * scale)
     bbox: Bounds = to_bbox(x, _y, z)
     validate_bbox(*bbox)
     return bbox, z, extent
+
+
+async def include_attributes(
+    include_attribute: Optional[List[str]] = Query(ALLOWED_ATTRIBUTES),
+) -> List[str]:
+    attributes: List[str] = list()
+    if include_attribute is not None:
+        for attribute in include_attribute:
+            if attribute in ALLOWED_ATTRIBUTES:
+                attributes.append(attribute)
+    return attributes
 
 
 async def nasa_viirs_fire_alerts_filters(

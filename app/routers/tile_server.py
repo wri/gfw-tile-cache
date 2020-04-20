@@ -12,6 +12,7 @@ from app.schemas.esri import VectorTileService
 from app.services.vector_tiles import get_mvt_table, nasa_viirs_fire_alerts
 from app.services.vector_tiles.vector_tile_service import get_vector_tile_server
 from app.utils.dependencies import (
+    include_attributes,
     nasa_viirs_fire_alerts_filters,
     nasa_viirs_fire_alerts_version,
     dataset_version,
@@ -51,6 +52,7 @@ async def nasa_viirs_fire_alerts_tile(
     end_date: str = Query(DEFAULT_END, regex=DATE_REGEX),
     force_date_range: Optional[bool] = Query(False),
     high_confidence_only: Optional[bool] = Query(False),
+    include_attribute: List[str] = Depends(include_attributes),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
     db: Connection = Depends(a_get_db),
 ) -> Response:
@@ -83,7 +85,7 @@ async def nasa_viirs_fire_alerts_tile(
     #         db, version, bbox, extent, *filters
     #     )
     return await nasa_viirs_fire_alerts.get_aggregated_tile(
-        db, version, bbox, extent, *filters
+        db, version, bbox, extent, include_attributes, *filters
     )
 
 
