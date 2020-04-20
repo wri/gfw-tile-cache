@@ -58,6 +58,7 @@ async def get_aggregated_tile(
         "bright_ti5__k": literal_column("round(avg(bright_ti5__k),3)").label(
             "bright_ti5__k"
         ),
+        "frp__mw": literal_column("sum(frp__mw)").label("frp__mw"),
     }
 
     query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
