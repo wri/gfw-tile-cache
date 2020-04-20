@@ -38,7 +38,7 @@ Bounds = Tuple[float, float, float, float]
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/dynamic/{z}/{x}/{y}.pbf",
+    "/nasa_viirs_fire_alerts/{version}/dynamic/{z}/{x}/{y}{scale_factor}.pbf",
     response_class=Response,
     tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
@@ -84,7 +84,7 @@ async def nasa_viirs_fire_alerts_tile(
 
 
 @router.get(
-    "/{dataset}/{version}/dynamic/{z}/{x}/{y}.pbf",
+    "/{dataset}/{version}/dynamic/{z}/{x}/{y}{scale_factor}.pbf",
     response_class=Response,
     tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
@@ -115,7 +115,7 @@ async def dynamic_vector_tile(
 
 
 @router.get(
-    "/{dataset}/{version}/default/{z}/{x}/{y}.pbf",
+    "/{dataset}/{version}/default/{z}/{x}/{y}{scale_factor}.pbf",
     response_class=Response,
     tags=["Vector Tiles"],
     response_description="PBF Vector Tile",
