@@ -15,38 +15,26 @@ Bounds = Tuple[float, float, float, float]
 async def xyz(
     z: int = Path(..., title="Zoom level", ge=0, le=22),
     x: int = Path(..., title="Tile grid column", ge=0),
-    y: int = Path(..., title="Tile grid row", ge=0),
-    # y: Union[int, str] = Path(
-    #     ...,
-    #     title="Tile grid row and optional scale factor (either @2x, @0.5x or @0.25x)",
-    #     regex="^\d+(@(2|0.5|0.25)x)?$",
-    # ),
-    scale_factor: str = Path(
-        None,
-        title="Pptional scale factor (either @2x, @0.5x or @0.25x)",
-        regex="^(@(2|0.5|0.25)x)?$",
+    y: Union[int, str] = Path(
+        ...,
+        title="Tile grid row and optional scale factor (either @2x, @0.5x or @0.25x)",
+        regex="^\d+(@(2|0.5|0.25)x)?$",
     ),
 ) -> Tuple[Bounds, int, int]:
-    extent = 4096
-    bbox: Bounds = to_bbox(x, y, z)
-    if scale_factor:
-        extent = int(extent * float(scale_factor[1:-1]))
+    if isinstance(y, str) and "@" in y:
+        __y, _scale = y.split("@")
+        _y: int = int(__y)
+        scale: float = float(_scale[:-1])
+    elif isinstance(y, int):
+        _y = y
+        scale = 1.0
+    else:
+        raise HTTPException(
+            "Y value must be either integer of combination and integer and scale factor"
+        )
 
-    # if isinstance(y, str) and "@" in y:
-    #     __y, _scale = y.split("@")
-    #     _y: int = int(__y)
-    #     scale: float = float(_scale[:-1])
-    # elif isinstance(y, int):
-    #     _y = y
-    #     scale = 1.0
-    # else:
-    #     raise HTTPException(
-    #         "Y value must be either integer of combination and integer and scale factor"
-    #     )
-    #
-    # extent: int = int(4096 * scale)
-    # bbox: Bounds = to_bbox(x, _y, z)
-
+    extent: int = int(4096 * scale)
+    bbox: Bounds = to_bbox(x, _y, z)
     validate_bbox(*bbox)
     return bbox, z, extent
 
