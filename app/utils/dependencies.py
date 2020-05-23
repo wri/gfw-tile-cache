@@ -3,7 +3,8 @@ from typing import Optional, Dict, Any, Tuple, Union, List
 from fastapi import Query, Path, HTTPException
 
 from app.routers import VERSION_REGEX, DATE_REGEX
-from app.routers.tile_server import DEFAULT_START, DEFAULT_END
+
+# from app.routers.tile_server import DEFAULT_START, DEFAULT_END
 from app.schemas.dynamic_enumerators import get_dataset, get_viirs_version, Version
 from app.utils.filters import geometry_filter
 from app.utils.metadata import get_latest_version
@@ -151,7 +152,7 @@ async def dataset_version(
     if version != "latest":
         validate_version(dataset, version)
     else:
-        version = get_latest_version(dataset)
+        version = "202003"  # TODO fix dependencies get_latest_version(dataset)
 
     return dataset, version
 
@@ -163,6 +164,6 @@ async def nasa_viirs_fire_alerts_version(
     if version == "latest":
         validate_version(dataset, version)
     else:
-        version = get_latest_version(dataset)
+        version = "202003"  # TODO fix dependencies get_latest_version(dataset)
 
     return version
