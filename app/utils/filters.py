@@ -1,4 +1,3 @@
-import logging
 from typing import Optional, Union, List, Any, Dict, Tuple
 
 from fastapi import HTTPException
@@ -10,8 +9,6 @@ from app.utils.geostore import get_geostore_geometry
 
 Filter = Tuple[TextClause, Dict[str, Any]]
 Bounds = Tuple[float, float, float, float]
-
-LOGGER = logging.Logger(__name__)
 
 
 async def geometry_filter(

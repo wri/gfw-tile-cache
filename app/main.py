@@ -5,12 +5,15 @@ from asyncpg.pool import Pool
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.logger import logger
 
 # from fastapi.staticfiles import StaticFiles
 
 from app.database import a_get_pool
 from app.routers import tile_server, features
 
+gunicorn_logger = logging.getLogger("gunicorn.error")
+logger.handlers = gunicorn_logger.handlers
 
 app = FastAPI(
     title="GFW Vector Tile Cache API",
@@ -43,8 +46,16 @@ async def shutdown():
 
 @app.get("/")
 async def read_root():
-    message = f"GFW Tile Cache API"
+    message = "GFW Tile Cache API"
     return {"message": message}
 
 
 # app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")
+
+if __name__ == "__main__":
+    import uvicorn
+
+    logger.setLevel(logging.DEBUG)
+    uvicorn.run(app, host="0.0.0.0", port=8888, log_level="info")
+else:
+    logger.setLevel(gunicorn_logger.level)

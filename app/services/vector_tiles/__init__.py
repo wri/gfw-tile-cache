@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Any, List, Tuple
 
 from asyncpg import Connection
@@ -7,14 +6,13 @@ from fastapi import Response
 from sqlalchemy import select, text, literal_column, table
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import TextClause, ColumnClause
+from fastapi.logger import logger
 
 from app.responses import VectorTileResponse
 from app.utils.sql import compile_sql
 
 Geometry = Dict[str, Any]
 Bounds = Tuple[float, float, float, float]
-
-LOGGER = logging.Logger(__name__)
 
 
 def get_mvt_table(
@@ -63,9 +61,9 @@ async def get_aggregated_tile(
 
 async def _get_tile(db: Connection, query: Select) -> Response:
     query = compile_sql(query)
-    logging.debug(query)
+    logger.debug(query)
     tile = await db.fetchval(query=str(query))
-    logging.debug(tile)
+    logger.debug(tile)
 
     return VectorTileResponse(content=tile, status_code=200,)
 

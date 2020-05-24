@@ -1,14 +1,12 @@
-import logging
 import re
 
 from asyncpg import Connection
 from geojson import Feature, loads, FeatureCollection
 from sqlalchemy import table, select, column
+from fastapi.logger import logger
 
 from app.utils.filters import filter_eq
 from app.utils.sql import compile_sql
-
-LOGGER = logging.Logger(__name__)
 
 
 async def get_geostore(db: Connection, dataset, version, geostore_id):

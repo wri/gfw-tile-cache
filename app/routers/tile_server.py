@@ -1,9 +1,9 @@
-import logging
 from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
 from asyncpg import Connection
 from fastapi import APIRouter, Query, Response, Depends
+from fastapi.logger import logger
 from sqlalchemy.sql import TableClause
 
 from app.database import a_get_db
@@ -27,7 +27,6 @@ from app.utils.filters import (
 from app.utils.validators import validate_dates
 from app.services import vector_tiles
 
-LOGGER = logging.Logger(__name__)
 router = APIRouter()
 NOW = pendulum.now()
 

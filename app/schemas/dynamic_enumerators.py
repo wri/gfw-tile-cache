@@ -40,5 +40,5 @@ def get_viirs_version() -> Type[Version]:
     # TODO: fix dependency
     #  Dependency currently broken
     version = Version
-    extend_enum(version, "202003", "202003")
+    extend_enum(version, "v202003", "v202003")
     return version

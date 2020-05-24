@@ -152,7 +152,7 @@ async def dataset_version(
     if version != "latest":
         validate_version(dataset, version)
     else:
-        version = "202003"  # TODO fix dependencies get_latest_version(dataset)
+        version = "v202003"  # TODO fix dependencies get_latest_version(dataset)
 
     return dataset, version
 
@@ -164,6 +164,6 @@ async def nasa_viirs_fire_alerts_version(
     if version == "latest":
         validate_version(dataset, version)
     else:
-        version = "202003"  # TODO fix dependencies get_latest_version(dataset)
+        version = "v202003"  # TODO fix dependencies get_latest_version(dataset)
 
     return version

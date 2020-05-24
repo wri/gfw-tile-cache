@@ -1,9 +1,9 @@
-import logging
 from typing import Tuple
 
 from asyncpg import Connection
 from fastapi import APIRouter, Path, Query, Depends
 from fastapi.responses import ORJSONResponse
+from fastapi.logger import logger
 
 from app.database import a_get_db
 from app.schemas.geostore import Geostore
@@ -18,7 +18,6 @@ from app.utils.dependencies import dataset_version, nasa_viirs_fire_alerts_versi
 from app.utils.validators import validate_version
 
 router = APIRouter()
-LOGGER = logging.Logger(__name__)
 
 
 @router.get(

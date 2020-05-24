@@ -1,4 +1,4 @@
-import logging
+from fastapi.logger import logger
 
 from sqlalchemy.dialects import postgresql
 
@@ -13,6 +13,6 @@ def compile_sql(query):
     query = query.compile(
         dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
     )
-    logging.debug(f"SQL: {query}")
+    logger.debug(f"SQL: {query}")
 
     return query

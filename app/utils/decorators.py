@@ -1,8 +1,6 @@
 import functools
 import logging
 
-LOGGER = logging.Logger(__name__)
-
 
 class LogDecorator(object):
     def __init__(self):

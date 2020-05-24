@@ -1,5 +1,4 @@
 from functools import partial
-import logging
 from typing import Tuple, Dict, Any
 
 import pyproj
@@ -12,7 +11,6 @@ from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 
 
-LOGGER = logging.Logger(__name__)
 Geometry = Dict[str, Any]
 
 

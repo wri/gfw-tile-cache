@@ -1,11 +1,8 @@
-import logging
-
 from asyncpg import Connection
 from sqlalchemy import table, select, literal_column
+from fastapi.logger import logger
 
 from app.utils.sql import compile_sql
-
-LOGGER = logging.Logger(__name__)
 
 
 async def get_max_date(db: Connection, version):
