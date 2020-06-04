@@ -20,15 +20,25 @@ def get_metadata():
 # memorize fields for 15 min
 @cached(cache=TTLCache(maxsize=15, ttl=900))
 def get_fields(dataset, version,) -> List[Dict[str, Any]]:
-    with get_db() as db:
-        metadata = (
-            Query(Metadata, db)
-            .filter(Metadata.dataset == dataset)
-            .filter(Metadata.version == version)
-            .first()
-        )
-
-    return metadata.fields
+    # with get_db() as db:
+    #     metadata = (
+    #         Query(Metadata, db)
+    #         .filter(Metadata.dataset == dataset)
+    #         .filter(Metadata.version == version)
+    #         .first()
+    #     )
+    #
+    # return metadata.fields
+    return [
+        {"name": "latitude", "is_feature_info": True},
+        {"name": "longitude", "is_feature_info": True},
+        {"name": "alert__date", "is_feature_info": True},
+        {"name": "alert__time_utc", "is_feature_info": True},
+        {"name": "confidence__cat", "is_feature_info": True},
+        {"name": "bright_ti4__k", "is_feature_info": True},
+        {"name": "bright_ti5__k", "is_feature_info": True},
+        {"name": "frp__mw", "is_feature_info": True},
+    ]
 
 
 # memorize fields for 15 min

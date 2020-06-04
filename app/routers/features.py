@@ -51,9 +51,8 @@ async def viirs_features(
     Retrieve list of features for given lat/lng coordinate pair.
     Use together with ESRI JS API which does not allow to query vector tile attributes directly to retrieve feature info.
     """
-    dataset = "nase_viirs_fire_alerts"
+    dataset = "nasa_viirs_fire_alerts"
     validate_dates(start_date, end_date, force_date_range)
-
     return await get_features_by_location(
         db, dataset, version, lat, lng, z, start_date, end_date
     )

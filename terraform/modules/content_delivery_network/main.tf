@@ -2,6 +2,10 @@
 ## Cloud Front Distribution
 ############################
 
+locals {
+  methods = ["GET", "HEAD", "OPTIONS"]
+  headers = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+}
 
 resource "aws_cloudfront_origin_access_identity" "tiles" {}
 
@@ -81,14 +85,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # send all uncached URIs to tile cache app
   default_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
     compress               = true
     default_ttl            = 86400
     max_ttl                = 86400
@@ -99,7 +97,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      headers                 = []
+      headers                 = local.headers
       query_string            = true
       query_string_cache_keys = []
 
@@ -114,14 +112,8 @@ resource "aws_cloudfront_distribution" "tiles" {
   # Legacy behavior
   # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
   ordered_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
     compress               = false
     default_ttl            = 86400
     max_ttl                = 86400
@@ -133,7 +125,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      headers                 = []
+      headers                 = local.headers
       query_string            = false
       query_string_cache_keys = []
 
@@ -146,14 +138,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # Dynamic tile will always come from Tile Cache app
   ordered_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
     compress               = true
     default_ttl            = 86400
     max_ttl                = 86400
@@ -165,7 +151,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      headers                 = []
+      headers                 = local.headers
       query_string            = true
       query_string_cache_keys = []
 
@@ -179,26 +165,20 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # Dynamic tile will always come from Tile Cache app
   ordered_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
     compress               = true
     default_ttl            = 86400
     max_ttl                = 86400
     min_ttl                = 0
-    path_pattern           = "*/features/*"
+    path_pattern           = "*/features*"
     smooth_streaming       = false
     target_origin_id       = "dynamic"
     trusted_signers        = []
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      headers                 = []
+      headers                 = local.headers
       query_string            = true
       query_string_cache_keys = []
 
@@ -211,14 +191,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # Latest default layers need to be rerouted and cache headers need to be rewritten
   ordered_cache_behavior {
-    allowed_methods = [
-      "GET",
-      "HEAD",
-    ]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
     compress               = false
     default_ttl            = 0
     max_ttl                = 31536000
@@ -230,7 +204,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      headers                 = []
+      headers                 = local.headers
       query_string            = false
       query_string_cache_keys = []
 
@@ -258,19 +232,15 @@ resource "aws_cloudfront_distribution" "tiles" {
   }
 
   ordered_cache_behavior {
-    allowed_methods = [
-      "HEAD",
-    "GET"]
-    cached_methods = [
-      "HEAD",
-    "GET"]
+    allowed_methods  = local.methods
+    cached_methods   = local.methods
     target_origin_id = "static"
     compress         = true
     path_pattern     = "*/default/*"
 
     forwarded_values {
       query_string = false
-
+      headers      = local.headers
       cookies {
         forward = "none"
       }

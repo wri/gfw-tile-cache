@@ -51,7 +51,7 @@ async def get_features_by_location(
 
     sql = select(columns).select_from(t).where(filter_intersects("geom", str(geometry)))
     if start_date and end_date:
-        sql.where(date_filter(start_date, end_date))
+        sql = sql.where(date_filter(start_date, end_date))
 
     logger.info(str(sql))
     sql = compile_sql(sql)
