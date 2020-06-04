@@ -2,7 +2,7 @@ from typing import Optional, Any, Dict, List, Tuple
 
 import pendulum
 from asyncpg import Connection
-from fastapi import APIRouter, Query, Response, Depends
+from fastapi import APIRouter, Query, Response, Depends, Path
 from fastapi.logger import logger
 from sqlalchemy.sql import TableClause
 
@@ -169,6 +169,59 @@ async def raster_tile(
 
 
 @router.get(
+    "/nasa_viirs_fire_alerts/{version}/dynamic/{start_date}/{end_date}/VectorTileServer",
+    tags=["ESRI Vector Tile Service"],
+    response_model=VectorTileService,
+)
+async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
+    *,
+    version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
+    start_date: str = Path(
+        ..., regex=DATE_REGEX, title="Only show alerts for given date and after",
+    ),
+    end_date: str = Path(
+        ..., regex=DATE_REGEX, title="Only show alerts until given date."
+    ),
+    geostore_id: Optional[str] = Query(None),
+    force_date_range: Optional[bool] = Query(
+        False,
+        title="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
+    ),
+    high_confidence_only: Optional[bool] = Query(
+        False, title="Only show high confidence alerts"
+    ),
+    include_attribute: List[str] = Depends(include_attributes),
+    contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
+):
+    """
+    Mock ESRI Vector Tile Server for NASA VIIRS fire alerts.
+    When using ESRI JS API, point your root.json to this URL.
+    URL Parameters will be forwarded to tile cache.
+    """
+
+    fields: Dict[str, Any] = contextual_filters
+
+    fields["geostore_id"] = geostore_id
+    fields["start_date"] = start_date
+    fields["end_date"] = end_date
+    fields["high_confidence_only"] = high_confidence_only
+    fields["force_date_range"] = force_date_range
+    # fields["include_attribute"] = include_attribute
+
+    params = [f"{key}={value}" for key, value in fields.items() if value is not None]
+
+    for attribute in include_attribute:
+        params.append(f"include_attribute={attribute}")
+
+    query_params: str = "&".join(params)
+
+    # TODO: add scale factor to tile url
+    return await get_vector_tile_server(
+        "nasa_viirs_fire_alerts", version, "default", query_params, levels=3
+    )
+
+
+@router.get(
     "/nasa_viirs_fire_alerts/{version}/dynamic/VectorTileServer",
     tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
@@ -208,9 +261,12 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     fields["end_date"] = end_date
     fields["high_confidence_only"] = high_confidence_only
     fields["force_date_range"] = force_date_range
-    fields["include_attribute"] = include_attribute
+    # fields["include_attribute"] = include_attribute
 
     params = [f"{key}={value}" for key, value in fields.items() if value is not None]
+
+    for attribute in include_attribute:
+        params.append(f"include_attribute={attribute}")
 
     query_params: str = "&".join(params)
 

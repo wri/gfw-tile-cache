@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 from asyncpg import Connection
 from fastapi import APIRouter, Path, Query, Depends
@@ -6,6 +6,8 @@ from fastapi.responses import ORJSONResponse
 from fastapi.logger import logger
 
 from app.database import a_get_db
+from app.routers import DATE_REGEX
+from app.routers.tile_server import DEFAULT_START, DEFAULT_END
 from app.schemas.geostore import Geostore
 from app.schemas.nasa_viirs_fire_alerts import MaxDate
 from app.services.features import (
@@ -15,9 +17,46 @@ from app.services.features import (
     get_features_by_location,
 )
 from app.utils.dependencies import dataset_version, nasa_viirs_fire_alerts_version
-from app.utils.validators import validate_version
+from app.utils.validators import validate_version, validate_dates
 
 router = APIRouter()
+
+
+@router.get(
+    "/nasa_viirs_fire_alerts/{version}/features",
+    response_class=ORJSONResponse,
+    tags=["Features"],
+)
+async def viirs_features(
+    *,
+    version: str = Depends(nasa_viirs_fire_alerts_version),
+    lat: float = Query(None, title="Latitude", ge=-90, le=90),
+    lng: float = Query(None, title="Longitude", ge=-180, le=180),
+    z: int = Query(None, title="Zoom level", ge=0, le=22),
+    start_date: str = Query(
+        DEFAULT_START,
+        regex=DATE_REGEX,
+        title="Only show alerts for given date and after",
+    ),
+    end_date: str = Query(
+        DEFAULT_END, regex=DATE_REGEX, title="Only show alerts until given date."
+    ),
+    force_date_range: Optional[bool] = Query(
+        False,
+        title="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
+    ),
+    db: Connection = Depends(a_get_db)
+):
+    """
+    Retrieve list of features for given lat/lng coordinate pair.
+    Use together with ESRI JS API which does not allow to query vector tile attributes directly to retrieve feature info.
+    """
+    dataset = "nase_viirs_fire_alerts"
+    validate_dates(start_date, end_date, force_date_range)
+
+    return await get_features_by_location(
+        db, dataset, version, lat, lng, z, start_date, end_date
+    )
 
 
 @router.get(

@@ -1,16 +1,17 @@
+from typing import Optional
+
 from asyncpg import Connection
 from sqlalchemy import table, select, literal_column, column
 from geojson import Point, Polygon
 from fastapi.logger import logger
 
-from app.utils.filters import filter_eq, filter_intersects
+from app.utils.filters import filter_eq, filter_intersects, date_filter
 from app.utils.geostore import geodesic_point_buffer
 from app.utils.metadata import get_fields
 from app.utils.sql import compile_sql
 
 
 async def get_feature(db: Connection, dataset, version, feature_id):
-
     t = table(version)  # TODO validate version
     t.schema = dataset
 
@@ -24,7 +25,16 @@ async def get_feature(db: Connection, dataset, version, feature_id):
     return feature
 
 
-async def get_features_by_location(db: Connection, dataset, version, lat, lng, zoom):
+async def get_features_by_location(
+    db: Connection,
+    dataset: str,
+    version: str,
+    lat: float,
+    lng: float,
+    zoom: int,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+):
     # pool: Pool = await a_get_pool()
     t = table(version)  # TODO validate version
     t.schema = dataset
@@ -40,6 +50,9 @@ async def get_features_by_location(db: Connection, dataset, version, lat, lng, z
     columns = [column(field["name"]) for field in fields if field["is_feature_info"]]
 
     sql = select(columns).select_from(t).where(filter_intersects("geom", str(geometry)))
+    if start_date and end_date:
+        sql.where(date_filter(start_date, end_date))
+
     logger.info(str(sql))
     sql = compile_sql(sql)
 

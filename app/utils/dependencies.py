@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional, Dict, Any, Tuple, Union, List
 
 from fastapi import Query, Path, HTTPException
@@ -12,16 +13,29 @@ from app.utils.tiles import to_bbox
 from app.utils.validators import validate_version, validate_bbox
 
 Bounds = Tuple[float, float, float, float]
-ALLOWED_ATTRIBUTES: List[str] = [
-    "latitude",
-    "longitude",
-    "alert__date",
-    "alert__time_utc",
-    "confidence__cat",
-    "bright_ti4__k",
-    "bright_ti5__k",
-    "frp__mw",
-]
+
+
+class ViirsAttribute(str, Enum):
+    latitude = "latitude"
+    longitude = "longitude"
+    alert__date = "alert__date"
+    alert__time_utc = "alert__time_utc"
+    confidence__cat = "confidence__cat"
+    bright_ti4__k = "bright_ti4__k"
+    bright_ti5__k = "bright_ti5__k"
+    frp__mw = "frp__mw"
+
+
+# ALLOWED_ATTRIBUTES: List[str] = [
+#     "latitude",
+#     "longitude",
+#     "alert__date",
+#     "alert__time_utc",
+#     "confidence__cat",
+#     "bright_ti4__k",
+#     "bright_ti5__k",
+#     "frp__mw",
+# ]
 
 
 async def xyz(
@@ -53,16 +67,15 @@ async def xyz(
 
 
 async def include_attributes(
-    include_attribute: Optional[List[str]] = Query(
-        ALLOWED_ATTRIBUTES,
+    include_attribute: Optional[List[ViirsAttribute]] = Query(
+        ["frp__mw"],
         title="Select which attributes to include in vector tile. Will always show attribute count.",
     ),
 ) -> List[str]:
     attributes: List[str] = list()
-    if include_attribute is not None:
+    if include_attribute:
         for attribute in include_attribute:
-            if attribute in ALLOWED_ATTRIBUTES:
-                attributes.append(attribute)
+            attributes.append(attribute.value)
     return attributes
 
 
@@ -160,9 +173,9 @@ async def dataset_version(
 async def nasa_viirs_fire_alerts_version(
     version: get_viirs_version(),  # type: ignore
 ) -> Version:
-    dataset = "nasa_viirs_fire_alerts"
+    # dataset = "nasa_viirs_fire_alerts"
     if version == "latest":
-        validate_version(dataset, version)
+        version = "v202003"  # validate_version(dataset, version)
     else:
         version = "v202003"  # TODO fix dependencies get_latest_version(dataset)
 

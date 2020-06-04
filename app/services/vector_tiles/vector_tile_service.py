@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 
 async def get_vector_tile_server(
-    dataset: str, implementation: str, version: str, query_params: str
+    dataset: str, implementation: str, version: str, query_params: str, levels=1
 ) -> Dict[str, Any]:
     resolution = 78271.51696401172
     scale = 295829355.45453244
@@ -19,6 +19,12 @@ async def get_vector_tile_server(
     }
     name = f"{dataset} - {implementation} - {version}"
 
+    levels_down = list()
+    for i in range(levels):
+        levels_down.append("..")
+
+    prefix = "/".join(levels_down)
+
     response = {
         "currentVersion": 10.7,
         "name": name,
@@ -26,7 +32,11 @@ async def get_vector_tile_server(
         "capabilities": "TilesOnly",
         "type": "indexedVector",
         "defaultStyles": "resources/styles",
-        "tiles": ["{z}/{x}/{y}.pbf" + (f"?{query_params}" if query_params else "")],
+        "tiles": [
+            prefix
+            + "/{z}/{x}/{y}@0.25x.pbf"
+            + (f"?{query_params}" if query_params else "")
+        ],
         "exportTilesAllowed": False,
         "initialExtent": extent,
         "fullExtent": extent,

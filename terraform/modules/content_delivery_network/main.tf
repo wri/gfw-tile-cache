@@ -176,6 +176,39 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+
+  # Dynamic tile will always come from Tile Cache app
+  ordered_cache_behavior {
+    allowed_methods = [
+      "GET",
+      "HEAD",
+    ]
+    cached_methods = [
+      "GET",
+      "HEAD",
+    ]
+    compress               = true
+    default_ttl            = 86400
+    max_ttl                = 86400
+    min_ttl                = 0
+    path_pattern           = "*/features/*"
+    smooth_streaming       = false
+    target_origin_id       = "dynamic"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = []
+      query_string            = true
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
   # Latest default layers need to be rerouted and cache headers need to be rewritten
   ordered_cache_behavior {
     allowed_methods = [
