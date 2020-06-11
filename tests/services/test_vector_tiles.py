@@ -1,11 +1,7 @@
 from shapely.geometry import box
-from sqlalchemy import column, text, select, table, literal_column
+from sqlalchemy import column, literal_column, select, table, text
 
-from app.services.vector_tiles import (
-    get_mvt_table,
-    _as_vector_tile,
-    _group_mvt_table,
-)
+from app.services.vector_tiles import _as_vector_tile, _group_mvt_table, get_mvt_table
 
 
 def test_get_mvt_table():

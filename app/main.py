@@ -1,47 +1,51 @@
 import logging
-from typing import Optional
 
-from asyncpg.pool import Pool
-from fastapi import FastAPI
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.logger import logger
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
-# from fastapi.staticfiles import StaticFiles
-
-from app.database import a_get_pool
-from app.routers import tile_server, features
+from .application import app
+from .middleware import redirect_latest
+from .routes import (
+    esri_vector_tile_server,
+    nasa_viirs_fire_alerts,
+    raster_tiles,
+    vector_tiles,
+)
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
 
-app = FastAPI(
-    title="GFW Vector Tile Cache API",
-    description="This API allows to request vector tiles for selected GFW data layers.",
-    version="0.1.0",
+
+####################
+## Routers
+####################
+
+ROUTERS = (
+    nasa_viirs_fire_alerts.router,
+    vector_tiles.router,
+    raster_tiles.router,
+    esri_vector_tile_server.router,
 )
-A_POOL: Optional[Pool] = None
+
+for r in ROUTERS:
+    app.include_router(r)
+
+
+#####################
+## Middleware
+#####################
+
+MIDDLEWARE = (redirect_latest,)
+
+for m in MIDDLEWARE:
+    app.add_middleware(BaseHTTPMiddleware, dispatch=m)
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
-
-app.include_router(tile_server.router)
-app.include_router(features.router)
-
-
-@app.on_event("startup")
-async def startup():
-    global A_POOL
-    logging.debug("TEST TEST TEST")
-    A_POOL = await a_get_pool()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    global A_POOL
-    A_POOL.terminate()
 
 
 @app.get("/")

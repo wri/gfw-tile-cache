@@ -1,15 +1,13 @@
 from functools import partial
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 import pyproj
 import requests
-
 from async_lru import alru_cache
 from fastapi import HTTPException
-from shapely.geometry import shape, Point
+from shapely.geometry import Point, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
-
 
 Geometry = Dict[str, Any]
 

@@ -1,7 +1,7 @@
-from fastapi.logger import logger
 from typing import Tuple
 
 import mercantile
+from fastapi.logger import logger
 from shapely.geometry import box
 
 Bounds = Tuple[float, float, float, float]
