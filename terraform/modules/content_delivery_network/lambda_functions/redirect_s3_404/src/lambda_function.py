@@ -1,17 +1,4 @@
-import logging
-
-
 def handler(event, context):
-    print(event["Records"][0]["cf"])
-
-    response = event["Records"][0]["cf"]["response"]
-    request = event["Records"][0]["cf"]["request"]
-
-    # if S3 returns a 404 sets custom origin properties
-    # custom origin is tile cache app. URL is passed via custom header set in cloud front
-    # (env variables are not support for Lambda@Edge)
-
-    print("Check response status")
     """
     This function updates the HTTP status code in the response to 302, to redirect to another
     path (cache behavior) that has a different origin configured. Note the following:
@@ -19,6 +6,12 @@ def handler(event, context):
     2. The response status from the origin server is an error status code (404)
     """
 
+    response = event["Records"][0]["cf"]["response"]
+    request = event["Records"][0]["cf"]["request"]
+
+    # if S3 returns a 404 sets custom origin properties
+    # custom origin is tile cache app. URL is passed via custom header set in cloud front
+    # (env variables are not support for Lambda@Edge)
     if int(response["status"]) == 404 and "default" in request["uri"]:
         redirect_path = request["uri"].replace("default", "dynamic")
 

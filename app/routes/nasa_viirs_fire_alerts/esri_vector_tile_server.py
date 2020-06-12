@@ -1,6 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path
 
 from app.models.pydantic.esri import VectorTileService
 from app.routes import DATE_REGEX

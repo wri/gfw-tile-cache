@@ -1,6 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-import pendulum
 from fastapi import APIRouter, Depends, Query, Response
 
 from app.crud.vector_tiles.filters import (
@@ -12,17 +11,17 @@ from app.crud.vector_tiles.filters import (
 
 from ...crud.vector_tiles import nasa_viirs_fire_alerts
 from ...models.pydantic.dynamic_enumerators import Versions, get_dynamic_versions
-from ...routes import DATE_REGEX, validate_dates, xyz
+from ...routes import (
+    DATE_REGEX,
+    DEFAULT_END,
+    DEFAULT_START,
+    Bounds,
+    validate_dates,
+    xyz,
+)
 from . import include_attributes, nasa_viirs_fire_alerts_filters
 
 router = APIRouter()
-NOW = pendulum.now()
-
-DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
-DEFAULT_END = NOW.to_date_string()
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 
 async def nasa_viirs_fire_alerts_version(

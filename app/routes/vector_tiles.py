@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional, Text, Tuple
 
-import pendulum
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.sql import Select, TableClause
 
@@ -8,16 +7,9 @@ from app.crud.vector_tiles.filters import geometry_filter
 
 from ..crud import vector_tiles
 from ..crud.vector_tiles import get_mvt_table
-from . import dynamic_version_dependency, static_version_dependency, xyz
+from . import Bounds, dynamic_version_dependency, static_version_dependency, xyz
 
 router = APIRouter()
-NOW = pendulum.now()
-
-DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
-DEFAULT_END = NOW.to_date_string()
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 
 @router.get(

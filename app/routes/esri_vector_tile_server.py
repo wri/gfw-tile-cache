@@ -1,20 +1,12 @@
 import hashlib
 from typing import Any, Dict, Optional, Tuple
 
-import pendulum
 from fastapi import APIRouter, Depends, Query
 
 from ..models.pydantic.esri import VectorTileService
 from . import dynamic_version_dependency, static_version_dependency
 
 router = APIRouter()
-NOW = pendulum.now()
-
-DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
-DEFAULT_END = NOW.to_date_string()
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 
 @router.get(

@@ -1,5 +1,5 @@
-const aws = require('aws-sdk');
-const s3 = new aws.S3({region: 'us-east-1'});
+const aws = require("aws-sdk");
+const s3 = new aws.S3({region: "us-east-1"});
 
 let bucket = {
     "production": "gfw-tiles",
@@ -14,14 +14,14 @@ async function fetchRedirectionsFromS3(env) {
 
     const s3Params = {
         Bucket: bucket[env],
-        Key: 'latest',
+        Key: "latest",
     };
 
     console.log("Bucket: " + s3Params.Bucket);
     console.log("Key: " + s3Params.Key);
 
     const response = await s3.getObject(s3Params).promise();
-    return JSON.parse(response.Body.toString('utf-8')).map(
+    return JSON.parse(response.Body.toString("utf-8")).map(
         ({name, latest_version}) => ({
             name: new RegExp(name),
             latest_version,
@@ -48,7 +48,7 @@ exports.handler = async event => {
     const customHeaders = request.origin.s3.customHeaders;
     const env = customHeaders["x-env"][0].value;
     console.log("REQUEST URI:" + request.uri);
-    var elements = request.uri.split('/');
+    var elements = request.uri.split("/");
     const dataset = elements[1];
     console.log("DATASET: " + dataset);
 
@@ -67,7 +67,7 @@ exports.handler = async event => {
                     }
                 });
 
-                request.uri = elements.join('/');
+                request.uri = elements.join("/");
 
                 return request;
             }
