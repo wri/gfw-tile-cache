@@ -1,4 +1,5 @@
 variable "project" {}
+variable "name_suffix" {}
 variable "tags" {}
 variable "environment" {}
 variable "certificate_arn" {}

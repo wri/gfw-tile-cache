@@ -304,9 +304,7 @@ resource "aws_lambda_function" "redirect_latest_tile_cache" {
   # TODO: need to give function the correct name
   # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
 
-  function_name = "core-tile_cache-redirect_latest_tile_cache"
-  # "${var.project}-${local.module_name}-redirect_latest_tile_cache"
-  //  function_name    = "redirect_latest_tile_cache"
+  function_name    = "${var.project}-redirect_latest_tile_cache${var.name_suffix}"
   filename         = data.archive_file.redirect_latest_tile_cache.output_path
   source_code_hash = data.archive_file.redirect_latest_tile_cache.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
@@ -322,8 +320,7 @@ resource "aws_lambda_function" "reset_response_header_caching" {
   # TODO: need to give function the correct name
   # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
 
-  function_name = "core-tile_cache-reset_response_header_caching"
-  # "${var.project}-${local.module_name}-reset_response_header_caching"
+  function_name    = "${var.project}-reset_response_header_caching${var.name_suffix}"
   filename         = data.archive_file.reset_response_header_caching.output_path
   source_code_hash = data.archive_file.reset_response_header_caching.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
@@ -338,7 +335,7 @@ resource "aws_lambda_function" "reset_response_header_caching" {
 
 resource "aws_lambda_function" "redirect_s3_404" {
 
-  function_name    = "${var.project}-redirect_s3_404"
+  function_name    = "${var.project}-redirect_s3_404${var.name_suffix}"
   filename         = data.archive_file.redirect_s3_404.output_path
   source_code_hash = data.archive_file.redirect_s3_404.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
@@ -373,7 +370,7 @@ data "aws_iam_policy_document" "lambda_edge_assume_role" {
 
 
 resource "aws_iam_role" "lambda_edge_cloudfront" {
-  name               = "${var.project}-tile_cache-lambda_edge_cloudfront"
+  name               = "${var.project}-tile_cache-lambda_edge_cloudfront${var.name_suffix}"
   assume_role_policy = data.aws_iam_policy_document.lambda_edge_assume_role.json
 }
 

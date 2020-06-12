@@ -23,7 +23,7 @@ data "template_file" "container_definition" {
     reader_secret_arn = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_arn
     log_level         = var.log_level
     project           = local.project
-    env               = var.environment
+    environment       = var.environment
     aws_region        = var.region
 
   }

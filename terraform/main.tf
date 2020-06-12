@@ -59,12 +59,11 @@ module "content_delivery_network" {
   source             = "./modules/content_delivery_network"
   bucket_domain_name = module.storage.tiles_bucket_domain_name
   certificate_arn    = var.environment == "production" ? data.terraform_remote_state.core.outputs.acm_certificate : null
-  //  cloudfront_access_identity_path     = data.terraform_remote_state.core.outputs.cloudfront_access_identity_path
-  environment      = var.environment
-  project          = local.project
-  tags             = local.tags
-  website_endpoint = module.storage.tiles_bucket_website_endpoint
-  //  lambda_edge_cloudfront_iam_role_arn = data.terraform_remote_state.core.outputs.lambda_edge_cloudfront_arn
+  environment        = var.environment
+  name_suffix        = local.name_suffix
+  project            = local.project
+  tags               = local.tags
+  website_endpoint   = module.storage.tiles_bucket_website_endpoint
   tile_cache_app_url = module.orchestration.lb_dns_name
 }
 
