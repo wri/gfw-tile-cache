@@ -16,7 +16,7 @@ provider "aws" {
 
 locals {
   name_suffix     = terraform.workspace == "default" ? "" : "-${terraform.workspace}"
-  bucket_suffix   = var.environment == "production" ? "" : "-${var.environment}${local.name_suffix}"
+  bucket_suffix   = var.environment == "production" ? "" : "-${var.environment}"
   tf_state_bucket = "gfw-terraform${local.bucket_suffix}"
   tags            = data.terraform_remote_state.core.outputs.tags
   project         = "gfw-tile-cache"
@@ -70,7 +70,7 @@ module "content_delivery_network" {
 
 module "storage" {
   source                             = "./modules/storage"
-  bucket_suffix                      = local.bucket_suffix
+  bucket_suffix                      = "${local.bucket_suffix}${local.name_suffix}"
   name_suffix                        = local.name_suffix
   cloudfront_access_identity_iam_arn = module.content_delivery_network.cloudfront_access_identity_iam_arn
   environment                        = var.environment
