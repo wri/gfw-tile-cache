@@ -76,7 +76,7 @@ data "template_file" "s3_write_tiles" {
 }
 
 resource "aws_iam_policy" "s3_write_tiles" {
-  name   = "${var.project}-s3_write_tiles"
+  name   = "${var.project}-s3_write_tiles${var.name_suffix}"
   policy = data.template_file.s3_write_tiles.rendered
 
 }
