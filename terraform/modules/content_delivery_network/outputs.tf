@@ -1,3 +1,7 @@
+output "cloudfront_distribution_domain_name" {
+  value = aws_cloudfront_distribution.tiles.domain_name
+}
+
 output "cloudfront_access_identity_path" {
   value       = aws_cloudfront_origin_access_identity.tiles.cloudfront_access_identity_path
   description = "Path of Cloud Front Origin Access Identity"

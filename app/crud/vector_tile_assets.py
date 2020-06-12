@@ -1,10 +1,10 @@
+import json
 from typing import Any, Dict, List, Tuple
 
 from cachetools import TTLCache, cached
 from fastapi import HTTPException
-from sqlalchemy.sql import text
 
-from app.application import get_synchronous_db
+from ..application import get_synchronous_db
 
 static_asset = "Static vector tile cache"
 dynamic_asset = "Dynamic vector tile cache"
@@ -23,7 +23,8 @@ def dataset_constructor(asset_type):
                 {"asset_type": asset_type},
             )
 
-        return [row.dataset for row in rows]
+        datasets = rows.fetchall()
+        return [row[0] for row in datasets]
 
     return get_datasets
 
@@ -47,12 +48,15 @@ def version_constructor(asset_type):
                 {"dataset": dataset, "asset_type": asset_type},
             )
 
-        if not rows:
+        versions = rows.fetchall()
+
+        if not versions:
             raise HTTPException(
-                status_code=400, detail=f"Dataset {dataset} has no dynamic tile cache.",
+                status_code=400,
+                detail=f"Dataset `{dataset}` has no dynamic tile cache.",
             )
 
-        return [row.version for row in rows]
+        return [row[0] for row in versions]
 
     return get_versions
 
@@ -66,13 +70,13 @@ def latest_version_constructor(asset_type):
     @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_latest_version(dataset: str) -> str:
         with get_synchronous_db() as db:
-            latest = db.scalar(
+            rows = db.execute(
                 """SELECT DISTINCT
                     versions.version
                    FROM versions
                     JOIN assets
                     ON versions.dataset = assets.dataset
-                        AND versions.version = assets.asset
+                        AND versions.version = assets.version
                    WHERE assets.asset_type = :asset_type
                     AND assets.status = 'saved'
                     AND versions.is_latest = true
@@ -80,12 +84,14 @@ def latest_version_constructor(asset_type):
                 {"dataset": dataset, "asset_type": asset_type},
             )
 
+        latest = rows.fetchone()
+
         if not latest:
             raise HTTPException(
-                status_code=400, detail=f"Dataset {dataset} has no `latest` version.",
+                status_code=400, detail=f"Dataset `{dataset}` has no `latest` version.",
             )
 
-        return latest
+        return latest[0]
 
     return get_latest_version
 
@@ -98,9 +104,9 @@ def field_constructor(asset_type):
     @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_fields(dataset: str, version: str) -> List[Dict[str, Any]]:
         with get_synchronous_db() as db:
-            fields = db.scalar(
+            rows = db.execute(
                 """SELECT DISTINCT
-                    metadata->>'fields_'
+                    metadata->>'fields_' as fields
                    FROM assets
                    WHERE asset_type = :asset_type
                     AND status = 'saved'
@@ -109,12 +115,17 @@ def field_constructor(asset_type):
                 {"dataset": dataset, "version": version, "asset_type": asset_type},
             )
 
+        fields = rows.fetchone()
+
         if not fields:
             raise HTTPException(
                 status_code=400,
-                detail=f"Dataset {dataset}.{version} has no fields specified.",
+                detail=f"Dataset `{dataset}.{version}` has no fields specified.",
             )
-        return fields
+
+        return json.loads(fields[0])
+
+    return get_fields
 
 
 get_static_fields = field_constructor(static_asset)

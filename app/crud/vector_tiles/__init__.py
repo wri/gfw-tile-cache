@@ -55,7 +55,7 @@ async def get_aggregated_tile(
     return await _get_tile(query)
 
 
-async def _get_tile(query: Select) -> Response:
+async def _get_tile(query: Select) -> VectorTileResponse:
 
     logger.debug(query)
     tile = await db.scalar(query)

@@ -1,7 +1,16 @@
+import pytest
 from shapely.geometry import box
 from sqlalchemy import column, literal_column, select, table, text
 
-from app.services.vector_tiles import _as_vector_tile, _group_mvt_table, get_mvt_table
+from app.crud.vector_tiles import (
+    _as_vector_tile,
+    _filter_mvt_table,
+    _get_tile,
+    _group_mvt_table,
+    get_aggregated_tile,
+    get_mvt_table,
+)
+from app.responses import VectorTileResponse
 
 
 def test_get_mvt_table():
@@ -37,3 +46,30 @@ def test__group_mvt_table():
     expected_sql = "SELECT sum(column1) FROM (SELECT column1, column2 FROM my_table) GROUP BY column2"
 
     assert str(sql).replace("\n", "") == expected_sql
+
+
+def test__filter_mvt_tabe():
+    query = select([column("column1"), column("column2")]).select_from(
+        table("my_table")
+    )
+    filters = [text("column1 = 1"), text("column2 = 2")]
+
+    sql = _filter_mvt_table(query, *filters)
+    expected_sql = (
+        "SELECT column1, column2 FROM my_table WHERE column1 = 1 AND column2 = 2"
+    )
+
+    assert str(sql).replace("\n", "") == expected_sql
+
+
+@pytest.mark.asyncio
+async def test__get_tile():
+    query = (
+        select([column("is_latest")])
+        .select_from(table("versions"))
+        .where(text("dataset='nasa_fire_alerts' and 'version' = 'v202003'"))
+    )
+    response: VectorTileResponse = await _get_tile(query)
+
+    assert response.status_code == 200
+    assert response.media_type == "application/x-protobuf"

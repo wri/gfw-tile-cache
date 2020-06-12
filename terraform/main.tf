@@ -1,6 +1,6 @@
-# Require TF version to be same as or greater than 0.12.13
+# Require TF version to be same as or greater than 0.12.26
 terraform {
-  required_version = ">=0.12.19"
+  required_version = ">=0.12.26"
   backend "s3" {
     region  = "us-east-1"
     key     = "wri__gfw_fire-vector-tiles.tfstate"
@@ -8,10 +8,10 @@ terraform {
   }
 }
 
-# Download any stable version in AWS provider of 2.36.0 or higher in 2.36 train
+# Download any stable version in AWS provider of 2.65.0 or higher in 2.65 train
 provider "aws" {
   region  = "us-east-1"
-  version = "~> 2.56.0"
+  version = "~> 2.65.0"
 }
 
 locals {
@@ -23,55 +23,35 @@ locals {
 }
 
 
-data "terraform_remote_state" "core" {
-  backend = "s3"
-  config = {
-    bucket = local.tf_state_bucket
-    region = "us-east-1"
-    key    = "core.tfstate"
-  }
-}
-
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//modules/container_registry?ref=v0.0.7"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//modules/container_registry?ref=v0.1.5"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
 }
 
 
 module "orchestration" {
-  source = "./modules/orchestration"
-
-  environment = var.environment
-  region      = var.region
-  project     = local.project
-  name_suffix = local.name_suffix
-  tags        = local.tags
-
-  vpc_id             = data.terraform_remote_state.core.outputs.vpc_id
-  private_subnet_ids = data.terraform_remote_state.core.outputs.private_subnet_ids
-  public_subnet_ids  = data.terraform_remote_state.core.outputs.public_subnet_ids
-
-  repository_url = module.container_registry.repository_url
-  container_name = "gfw-tile-cache"
-  container_port = 80
-  desired_count  = 1
-
-  deployment_min_percent = 100
-  deployment_max_percent = 200
-  fargate_cpu            = 256
-  fargate_memory         = 2048
-  log_level              = var.log_level
-
-  auto_scaling_cooldown     = 300
-  auto_scaling_max_capacity = 15
-  auto_scaling_max_cpu_util = 75
-  auto_scaling_min_capacity = 1
-
-  postgresql_security_group_id         = data.terraform_remote_state.core.outputs.postgresql_security_group_id
-  secrets_postgresql-reader_name       = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_name
-  secrets_postgresql-reader_policy_arn = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//modules/fargate_autoscaling?ref=v0.1.5"
+  project                      = local.project
+  name_suffix                  = local.name_suffix
+  tags                         = local.tags
+  vpc_id                       = data.terraform_remote_state.core.outputs.vpc_id
+  private_subnet_ids           = data.terraform_remote_state.core.outputs.private_subnet_ids
+  public_subnet_ids            = data.terraform_remote_state.core.outputs.public_subnet_ids
+  container_name               = var.container_name
+  container_port               = var.container_port
+  desired_count                = var.desired_count
+  fargate_cpu                  = 256
+  fargate_memory               = 2048
+  auto_scaling_cooldown        = 300
+  auto_scaling_max_capacity    = 15
+  auto_scaling_max_cpu_util    = 75
+  auto_scaling_min_capacity    = 1
+  security_group_ids           = [data.terraform_remote_state.core.outputs.postgresql_security_group_id]
+  task_role_policies           = []
+  task_execution_role_policies = [data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn]
+  container_definition         = data.template_file.container_definition.rendered
 }
 
 

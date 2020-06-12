@@ -1,8 +1,8 @@
-from typing import List, Optional, Tuple, Union
+from typing import Tuple, Union
 
 import mercantile
 import pendulum
-from fastapi import Depends, HTTPException, Path, Query
+from fastapi import Depends, HTTPException, Path
 from fastapi.logger import logger
 from shapely.geometry import box
 
@@ -11,7 +11,6 @@ from ..models.pydantic.dynamic_enumerators import (
     get_dynamic_datasets,
     get_static_datasets,
 )
-from ..models.pydantic.enumerators import ViirsAttribute
 
 DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"  # mypy: ignore
 VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
@@ -52,19 +51,6 @@ async def xyz(
     bbox: Bounds = to_bbox(x, _y, z)
     validate_bbox(*bbox)
     return bbox, z, extent
-
-
-async def include_attributes(
-    include_attribute: Optional[List[ViirsAttribute]] = Query(
-        ["frp__mw"],
-        title="Select which attributes to include in vector tile. Will always show attribute count.",
-    ),
-) -> List[str]:
-    attributes: List[str] = list()
-    if include_attribute:
-        for attribute in include_attribute:
-            attributes.append(attribute.value)
-    return attributes
 
 
 async def dynamic_dataset_dependency(dataset: get_dynamic_datasets()) -> str:  # type: ignore

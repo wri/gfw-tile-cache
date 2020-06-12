@@ -1,5 +1,36 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
+
+from app.application import get_synchronous_db
+
+
+def pytest_sessionstart(session):
+    """
+    Called after the Session object has been created and
+    before performing collection and entering the run test loop.
+    """
+
+    with get_synchronous_db() as db:
+        sql_file = f"{os.path.dirname(__file__)}/fixtures/session_start.sql"
+        with open(sql_file) as f:
+            sql = f.read()
+
+        db.execute(sql)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Called after whole test run finished, right before
+    returning the exit status to the system.
+    """
+    with get_synchronous_db() as db:
+        sql_file = f"{os.path.dirname(__file__)}/fixtures/session_end.sql"
+        with open(sql_file) as f:
+            sql = f.read()
+
+        db.execute(sql)
 
 
 @pytest.fixture(autouse=True)

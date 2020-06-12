@@ -1,28 +1,30 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import pendulum
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import Query
 
-from app.crud.vector_tiles.filters import (
-    confidence_filter,
-    contextual_filter,
-    date_filter,
-    geometry_filter,
-)
+from app.crud.vector_tile_assets import get_latest_dynamic_version
+from app.models.pydantic.dynamic_enumerators import get_attributes
 
-from ..crud.vector_tiles import nasa_viirs_fire_alerts
-from ..models.pydantic.dynamic_enumerators import Versions, get_dynamic_versions
-from ..routes import DATE_REGEX
-from . import include_attributes, validate_dates, xyz
+dataset_name = "nasa_viirs_fire_alerts"
+IncludedAttributes = Optional[  # type: ignore
+    List[get_attributes(dataset_name, get_latest_dynamic_version(dataset_name))]  # type: ignore
+]
 
-router = APIRouter()
-NOW = pendulum.now()
 
-DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
-DEFAULT_END = NOW.to_date_string()
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
+async def include_attributes(
+    include_attribute: IncludedAttributes = Query(  # type: ignore
+        ["frp__mw"],
+        title="Included Attributes",
+        description="Select which attributes to include in vector tile. Will always show attribute count. "
+        "Documentation list available attributes of latest version. For legacy version "
+        "please check data-api for available attribute values.",
+    ),
+) -> List[str]:
+    attributes: List[str] = list()
+    if include_attribute:
+        for attribute in include_attribute:  # type: ignore
+            attributes.append(attribute.value)
+    return attributes
 
 
 async def nasa_viirs_fire_alerts_filters(
@@ -101,65 +103,3 @@ async def nasa_viirs_fire_alerts_filters(
         "is__intact_forest_landscapes_2016": is__intact_forest_landscapes_2016,
         "bra_biome__name": bra_biome__name,
     }
-
-
-async def nasa_viirs_fire_alerts_version(
-    version: get_dynamic_versions("nasa_viirs_fire_alerts"),  # type: ignore
-) -> Versions:
-
-    return version
-
-
-@router.get(
-    "/nasa_viirs_fire_alerts/{version}/dynamic/{z}/{x}/{y}.pbf",
-    response_class=Response,
-    tags=["Dynamic Vector Tiles"],
-    response_description="PBF Vector Tile",
-)
-async def nasa_viirs_fire_alerts_tile(
-    version: str = Depends(nasa_viirs_fire_alerts_version),
-    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
-    geostore_id: Optional[str] = Query(
-        None, title="Only show fire alerts within selected geostore area"
-    ),
-    start_date: str = Query(
-        DEFAULT_START,
-        regex=DATE_REGEX,
-        title="Only show alerts for given date and after",
-    ),
-    end_date: str = Query(
-        DEFAULT_END, regex=DATE_REGEX, title="Only show alerts until given date."
-    ),
-    force_date_range: Optional[bool] = Query(
-        False,
-        title="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
-    ),
-    high_confidence_only: Optional[bool] = Query(
-        False, title="Only show high confidence alerts"
-    ),
-    include_attribute: List[str] = Depends(include_attributes),
-    contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
-) -> Response:
-    """
-    NASA VIIRS fire alerts vector tiles.
-    This dataset holds the full archive of NASA VIIRS fire alerts, starting in 2012. Latest version is updated daily.
-    Check `Max Date` endpoint to retrieve latest date in dataset.
-    You can query fire alerts for any time period of up to 90 days. By default, the last 7 days are displayed.
-    Use additional query parameters to further filter alerts.
-    Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
-    """
-    bbox, z, extent = bbox_z
-    validate_dates(start_date, end_date, force_date_range)
-
-    filters = [
-        await geometry_filter(geostore_id, bbox),
-        confidence_filter(high_confidence_only),
-        date_filter(start_date, end_date),
-    ] + contextual_filter(**contextual_filters)
-
-    # Remove empty filters
-    filters = [f for f in filters if f is not None]
-
-    return await nasa_viirs_fire_alerts.get_aggregated_tile(
-        version, bbox, extent, include_attribute, *filters
-    )

@@ -3,6 +3,7 @@ from typing import Type
 from aenum import Enum, extend_enum
 
 from ...crud.vector_tile_assets import get_dynamic_datasets as get_d_datasets
+from ...crud.vector_tile_assets import get_dynamic_fields
 from ...crud.vector_tile_assets import get_dynamic_versions as get_d_versions
 from ...crud.vector_tile_assets import get_static_datasets as get_s_datasets
 from ...crud.vector_tile_assets import get_static_versions as get_s_versions
@@ -14,6 +15,10 @@ class Datasets(str, Enum):
 
 class Versions(str, Enum):
     latest = "latest"
+
+
+class Attributes(str, Enum):
+    pass
 
 
 def get_dynamic_datasets() -> Type[Datasets]:
@@ -50,3 +55,12 @@ def get_static_versions(dataset) -> Type[Versions]:
     for version in versions:
         extend_enum(static_versions, version, version)
     return static_versions
+
+
+def get_attributes(dataset, version):
+    attributes = Attributes
+    fields = get_dynamic_fields(dataset, version)
+    for field in fields:
+        if field["is_feature_info"]:
+            extend_enum(attributes, field["field_name_"], field["field_name_"])
+    return attributes
