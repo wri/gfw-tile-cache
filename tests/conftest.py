@@ -18,6 +18,7 @@ def pytest_sessionstart(session):
             sql = f.read()
 
         db.execute(sql)
+        db.commit()
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -31,6 +32,7 @@ def pytest_sessionfinish(session, exitstatus):
             sql = f.read()
 
         db.execute(sql)
+        db.commit()
 
 
 @pytest.fixture(autouse=True)
