@@ -1,8 +1,8 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Text, Tuple
 
 import pendulum
 from fastapi import APIRouter, Depends, Query, Response
-from sqlalchemy.sql import TableClause
+from sqlalchemy.sql import Select, TableClause
 
 from app.crud.vector_tiles.filters import geometry_filter
 
@@ -42,12 +42,12 @@ async def dynamic_vector_tile(
 
     filters: List[TableClause] = list()
 
-    geom_filter = await geometry_filter(geostore_id, bbox)
+    geom_filter: TableClause = await geometry_filter(geostore_id, bbox)
 
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    query, values = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
+    query: Select = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
 
     return await vector_tiles.get_tile(query, name=dataset, extent=extent)
 
