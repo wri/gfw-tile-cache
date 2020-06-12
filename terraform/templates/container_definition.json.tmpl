@@ -2,23 +2,22 @@
   "name": "${container_name}",
   "image": "${image}",
   "networkMode": "awsvpc",
-
   "environment": [
     {
-    "name": "ENV",
-    "value": "${environment}"
-     },
-     {
-      "name": "GUNICORN_CONF",
-      "value": "/app/app/gunicorn_conf.py"
-      },
-      {"name": "LOG_LEVEL",
+      "name": "ENV",
+      "value": "${environment}"
+    },
+    {
+      "name": "LOG_LEVEL",
       "value": "${log_level}"
-      },
-      {"name": "SECRET_NAME",
-      "value": "${secret_name}"
-      }
+    }
   ],
+  "secrets": [
+      {
+        "name": "DB_READER_SECRET",
+        "valueFrom": "${reader_secret_arn}"
+      }
+    ],
   "portMappings": [
       {
         "containerPort": ${container_port},
