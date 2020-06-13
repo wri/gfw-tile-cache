@@ -69,7 +69,7 @@ async def nasa_viirs_fire_alerts_tile(
     Use additional query parameters to further filter alerts.
     Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
-    bbox, z, extent = bbox_z
+    bbox, _, extent = bbox_z
     validate_dates(start_date, end_date, force_date_range)
 
     filters = [

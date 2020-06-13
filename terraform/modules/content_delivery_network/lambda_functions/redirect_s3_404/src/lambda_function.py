@@ -1,6 +1,9 @@
+# mypy: ignore-errors
+
+
 def handler(event, context):
     """
-    This function updates the HTTP status code in the response to 302, to redirect to another
+    This function updates the HTTP status code in the response to 307, to redirect to another
     path (cache behavior) that has a different origin configured. Note the following:
     1. The function is triggered in an origin response
     2. The response status from the origin server is an error status code (404)
@@ -15,8 +18,8 @@ def handler(event, context):
     if int(response["status"]) == 404 and "default" in request["uri"]:
         redirect_path = request["uri"].replace("default", "dynamic")
 
-        response["status"] = 302
-        response["statusDescription"] = "Found"
+        response["status"] = 307
+        response["statusDescription"] = "Temporary Redirect"
 
         # Drop the body as it is not required for redirects
         response["body"] = ""

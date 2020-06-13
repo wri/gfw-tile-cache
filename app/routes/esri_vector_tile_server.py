@@ -56,14 +56,14 @@ async def get_vector_tile_server(
 ) -> Dict[str, Any]:
     resolution = 78271.51696401172
     scale = 295829355.45453244
-    min = -20037508.342787
-    max = 20037508.342787
+    _min = -20037508.342787
+    _max = 20037508.342787
     spatial_reference = {"wkid": 102100, "latestWkid": 3857}
     extent = {
-        "xmin": min,
-        "ymin": min,
-        "xmax": max,
-        "ymax": max,
+        "xmin": _min,
+        "ymin": _min,
+        "xmax": _max,
+        "ymax": _max,
         "spatialReference": spatial_reference,
     }
     name = f"{dataset} - {implementation} - {version}"
@@ -96,7 +96,7 @@ async def get_vector_tile_server(
             "cols": 512,
             "dpi": 96,
             "format": "pbf",
-            "origin": {"x": min, "y": max},
+            "origin": {"x": _min, "y": _max},
             "spatialReference": spatial_reference,
             "lods": [
                 {

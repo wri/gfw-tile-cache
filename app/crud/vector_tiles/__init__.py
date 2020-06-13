@@ -20,8 +20,8 @@ def get_mvt_table(
     columns: List[ColumnClause],
     *filters: TextClause,
 ) -> Select:
+
     bounds: Select
-    bound_values: Dict[str, Any]
 
     bounds = _get_bounds(*bbox)
 

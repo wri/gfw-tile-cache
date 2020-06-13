@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Text, Tuple
+from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.sql import Select, TableClause

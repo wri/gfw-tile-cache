@@ -136,66 +136,15 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  # Dynamic tile will always come from Tile Cache app
-  ordered_cache_behavior {
-    allowed_methods        = local.methods
-    cached_methods         = local.methods
-    compress               = true
-    default_ttl            = 86400
-    max_ttl                = 86400
-    min_ttl                = 0
-    path_pattern           = "*/dynamic/*"
-    smooth_streaming       = false
-    target_origin_id       = "dynamic"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
 
-    forwarded_values {
-      headers                 = local.headers
-      query_string            = true
-      query_string_cache_keys = []
-
-      cookies {
-        forward           = "none"
-        whitelisted_names = []
-      }
-    }
-  }
-
-
-  # Dynamic tile will always come from Tile Cache app
-  ordered_cache_behavior {
-    allowed_methods        = local.methods
-    cached_methods         = local.methods
-    compress               = true
-    default_ttl            = 86400
-    max_ttl                = 86400
-    min_ttl                = 0
-    path_pattern           = "*/features*"
-    smooth_streaming       = false
-    target_origin_id       = "dynamic"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      headers                 = local.headers
-      query_string            = true
-      query_string_cache_keys = []
-
-      cookies {
-        forward           = "none"
-        whitelisted_names = []
-      }
-    }
-  }
 
   # Latest default layers need to be rerouted and cache headers need to be rewritten
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 0
-    max_ttl                = 31536000
+    default_ttl            = 86400
+    max_ttl                = 86400
     min_ttl                = 0
     path_pattern           = "*/latest/*"
     smooth_streaming       = false
@@ -215,20 +164,11 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
 
     lambda_function_association {
-      event_type   = "origin-request"
+      event_type   = "viewer-request"
       include_body = false
       lambda_arn   = aws_lambda_function.redirect_latest_tile_cache.qualified_arn
     }
-    lambda_function_association {
-      event_type   = "origin-response"
-      include_body = false
-      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
-    }
-    lambda_function_association {
-      event_type   = "viewer-response"
-      include_body = false
-      lambda_arn   = aws_lambda_function.reset_response_header_caching.qualified_arn
-    }
+
   }
 
   ordered_cache_behavior {
@@ -301,36 +241,18 @@ data "archive_file" "redirect_s3_404" {
 }
 
 resource "aws_lambda_function" "redirect_latest_tile_cache" {
-  # TODO: need to give function the correct name
   # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
 
   function_name    = "${var.project}-redirect_latest_tile_cache${var.name_suffix}"
   filename         = data.archive_file.redirect_latest_tile_cache.output_path
   source_code_hash = data.archive_file.redirect_latest_tile_cache.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
-  runtime          = "nodejs10.x"
+  runtime          = "python3.8"
   handler          = "lambda_function.handler"
   memory_size      = 128
   timeout          = 3
   publish          = true
   tags             = var.tags
-}
-
-resource "aws_lambda_function" "reset_response_header_caching" {
-  # TODO: need to give function the correct name
-  # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
-
-  function_name    = "${var.project}-reset_response_header_caching${var.name_suffix}"
-  filename         = data.archive_file.reset_response_header_caching.output_path
-  source_code_hash = data.archive_file.reset_response_header_caching.output_base64sha256
-  role             = aws_iam_role.lambda_edge_cloudfront.arn
-  runtime          = "nodejs10.x"
-  handler          = "lambda_function.handler"
-  memory_size      = 128
-  timeout          = 1
-  publish          = true
-  tags             = var.tags
-
 }
 
 resource "aws_lambda_function" "redirect_s3_404" {
@@ -339,7 +261,7 @@ resource "aws_lambda_function" "redirect_s3_404" {
   filename         = data.archive_file.redirect_s3_404.output_path
   source_code_hash = data.archive_file.redirect_s3_404.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
-  runtime          = "python3.7"
+  runtime          = "python3.8"
   handler          = "lambda_function.handler"
   memory_size      = 128
   timeout          = 3
