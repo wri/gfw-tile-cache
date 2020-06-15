@@ -1,52 +1,24 @@
-from typing import List, Optional, Tuple
+"""
+Static vector tiles are pre-rendered for faster access. While performance for this tiles will be better,
+you will not be able to filter data or change tile resolution.
+Any of this operations will have to happen on the frontend.
+If tiles for a given zoom level are not present for a selected dataset,
+the server will redirect the request to the dynamic service and will attempt to generate it here
+"""
 
-from fastapi import APIRouter, Depends, Query, Response
-from sqlalchemy.sql import Select, TableClause
+from typing import Tuple
 
-from app.crud.vector_tiles.filters import geometry_filter
+from fastapi import APIRouter, Depends
 
-from ..crud import vector_tiles
-from ..crud.vector_tiles import get_mvt_table
-from . import Bounds, dynamic_version_dependency, static_version_dependency, xyz
+from ..responses import VectorTileResponse
+from . import Bounds, static_version_dependency, xyz
 
 router = APIRouter()
 
 
 @router.get(
-    "/{dataset}/{version}/dynamic/{z}/{x}/{y}.pbf",
-    response_class=Response,
-    tags=["Dynamic Vector Tiles"],
-    response_description="PBF Vector Tile",
-)
-async def dynamic_vector_tile(
-    *,
-    dv: Tuple[str, str] = Depends(dynamic_version_dependency),
-    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
-    geostore_id: Optional[str] = Query(
-        None, title="Only show fire alerts within selected geostore area"
-    ),
-) -> Response:
-    """
-    Dynamic vector tile
-    """
-    dataset, version = dv
-    bbox, _, extent = bbox_z
-
-    filters: List[TableClause] = list()
-
-    geom_filter: TableClause = await geometry_filter(geostore_id, bbox)
-
-    if geom_filter is not None:
-        filters.append(geom_filter)
-
-    query: Select = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
-
-    return await vector_tiles.get_tile(query, name=dataset, extent=extent)
-
-
-@router.get(
     "/{dataset}/{version}/default/{z}/{x}/{y}.pbf",
-    response_class=Response,
+    response_class=VectorTileResponse,
     tags=["Vector Tiles"],
     response_description="PBF Vector Tile",
 )
@@ -54,7 +26,7 @@ async def vector_tile(
     *,
     dv: Tuple[str, str] = Depends(static_version_dependency),
     bbox_z: Tuple[Bounds, int] = Depends(xyz),
-) -> Response:
+) -> VectorTileResponse:
     """
     Generic vector tile
     """

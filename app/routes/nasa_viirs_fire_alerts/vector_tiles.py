@@ -11,6 +11,7 @@ from app.crud.vector_tiles.filters import (
 
 from ...crud.vector_tiles import nasa_viirs_fire_alerts
 from ...models.pydantic.dynamic_enumerators import Versions, get_dynamic_versions
+from ...responses import VectorTileResponse
 from ...routes import (
     DATE_REGEX,
     DEFAULT_END,
@@ -33,7 +34,7 @@ async def nasa_viirs_fire_alerts_version(
 
 @router.get(
     "/nasa_viirs_fire_alerts/{version}/dynamic/{z}/{x}/{y}.pbf",
-    response_class=Response,
+    response_class=VectorTileResponse,
     tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
 )
@@ -60,7 +61,7 @@ async def nasa_viirs_fire_alerts_tile(
     ),
     include_attribute: List[str] = Depends(include_attributes),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
-) -> Response:
+) -> VectorTileResponse:
     """
     NASA VIIRS fire alerts vector tiles.
     This dataset holds the full archive of NASA VIIRS fire alerts, starting in 2012. Latest version is updated daily.

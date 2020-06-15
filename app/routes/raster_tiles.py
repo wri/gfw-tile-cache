@@ -1,3 +1,11 @@
+"""
+Static raster tiles are pre-rendered for faster access. While performance for this tiles will be better,
+you will not be able to filter data or change tile resolution.
+Any of this operations will have to happen on the frontend.
+If tiles for a given zoom level are not present for a selected dataset,
+the server will redirect the request to the dynamic service and will attempt to generate it here
+"""
+
 from typing import Any, Dict, Tuple
 
 from fastapi import APIRouter, Depends, Response

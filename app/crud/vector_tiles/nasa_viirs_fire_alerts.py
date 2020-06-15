@@ -1,11 +1,11 @@
 from typing import Any, Dict, List, Tuple
 
-from fastapi import Response
 from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from app.crud import vector_tiles
 from app.models.pydantic.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
+from app.responses import VectorTileResponse
 
 Geometry = Dict[str, Any]
 Bounds = Tuple[float, float, float, float]
@@ -18,7 +18,7 @@ COLUMNS: List[ColumnClause] = [
 
 async def get_tile(
     version: str, bbox: Bounds, extent: int, *filters: TextClause
-) -> Response:
+) -> VectorTileResponse:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
@@ -28,7 +28,7 @@ async def get_tile(
 
 async def get_aggregated_tile(
     version: str, bbox: Bounds, extent: int, attributes: List[str], *filters: TextClause
-) -> Response:
+) -> VectorTileResponse:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     This function makes a SQL query that aggregates point features based on proximity.

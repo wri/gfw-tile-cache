@@ -29,7 +29,7 @@ def get_mvt_table(
     return _filter_mvt_table(query, *filters)
 
 
-async def get_tile(query: Select, name: str, extent: int) -> Response:
+async def get_tile(query: Select, name: str, extent: int) -> VectorTileResponse:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
@@ -43,7 +43,7 @@ async def get_aggregated_tile(
     group_by_columns: List[ColumnClause],
     name: str,
     extent: int,
-) -> Response:
+) -> VectorTileResponse:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     This function makes a SQL query that aggregates point features based on proximity.
