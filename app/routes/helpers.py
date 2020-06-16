@@ -8,7 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
 
 from ..crud.versions import get_latest_versions
-from ..models.pydantic.versions import LatestVersion
+from ..models.pydantic.versions import LatestVersionResponse
 
 router = APIRouter()
 
@@ -16,12 +16,12 @@ router = APIRouter()
 @router.get(
     "/_latest",
     response_class=ORJSONResponse,
-    response_model=List[LatestVersion],
+    response_model=LatestVersionResponse,
     include_in_schema=False,
 )
-async def _latest() -> List[LatestVersion]:
+async def _latest() -> LatestVersionResponse:
     """
     Queries API to get list of latest dataset version
     """
 
-    return get_latest_versions()
+    return LatestVersionResponse(data=get_latest_versions())

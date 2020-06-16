@@ -1,14 +1,13 @@
-from typing import List
+from typing import Dict, List
 
 from cachetools import TTLCache, cached
 from fastapi import HTTPException
 
 from app.application import get_synchronous_db
-from app.models.pydantic.versions import LatestVersion
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=900))
-def get_latest_versions() -> List[LatestVersion]:
+def get_latest_versions() -> List[Dict[str, str]]:
     with get_synchronous_db() as db:
         rows = db.execute(
             """SELECT DISTINCT
@@ -26,4 +25,4 @@ def get_latest_versions() -> List[LatestVersion]:
             detail="There are no latest versions registered with the API.",
         )
 
-    return [LatestVersion(dataset=row[0], version=row[1]) for row in latest_versions]
+    return [{"dataset": row[0], "version": row[1]} for row in latest_versions]
