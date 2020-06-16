@@ -22,35 +22,6 @@ from .routes.nasa_viirs_fire_alerts import (
 )
 from .routes.nasa_viirs_fire_alerts import vector_tiles as viirs_vector_tiles
 
-tags_metadata = [
-    {"name": "Dynamic Vector Tiles", "description": dynamic_vector_tiles.__doc__},
-    {"name": "Vector Tiles", "description": vector_tiles.__doc__},
-    {"name": "Raster Tiles", "description": raster_tiles.__doc__},
-    {
-        "name": "ESRI Vector Tile Service",
-        "description": esri_vector_tile_server.__doc__,
-    },
-]
-
-
-def custom_openapi(openapi_prefix: str = ""):
-    if app.openapi_schema:
-        return app.openapi_schema
-
-    openapi_schema = get_openapi(
-        title="GFW Data API",
-        version="0.1.0",
-        description="Use GFW Data API to manage and access GFW Data.",
-        routes=app.routes,
-        openapi_prefix=openapi_prefix,
-    )
-
-    openapi_schema["tags"] = tags_metadata
-
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
 
@@ -77,26 +48,48 @@ for r in ROUTERS:
 ## Middleware
 #####################
 
-# MIDDLEWARE = (redirect_latest,)
-#
-# for m in MIDDLEWARE:
-#     app.add_middleware(BaseHTTPMiddleware, dispatch=m)
-
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
 
-#################
+#####################
+## OpenAPI
+#####################
+
+# Trying to add metadata tags directly to app causes a circular import. Hence this monkey patch.
+
+tags_metadata = [
+    {"name": "Dynamic Vector Tiles", "description": dynamic_vector_tiles.__doc__},
+    {"name": "Vector Tiles", "description": vector_tiles.__doc__},
+    {"name": "Raster Tiles", "description": raster_tiles.__doc__},
+    {
+        "name": "ESRI Vector Tile Service",
+        "description": esri_vector_tile_server.__doc__,
+    },
+]
+
+
+def custom_openapi(openapi_prefix: str = ""):
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title="GFW Tile Cache API",
+        version="0.1.0",
+        description="Use GFW Tile Cache to retrieve vector and raster tiles.",
+        routes=app.routes,
+        openapi_prefix=openapi_prefix,
+    )
+
+    openapi_schema["tags"] = tags_metadata
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
 
 app.openapi = custom_openapi
-
-
-@app.get("/")
-async def read_root():
-    message = "GFW Tile Cache API"
-    return {"message": message}
 
 
 if __name__ == "__main__":

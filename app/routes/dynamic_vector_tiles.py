@@ -32,7 +32,7 @@ async def dynamic_vector_tile(
     ),
 ) -> VectorTileResponse:
     """
-    Dynamic vector tile
+    Generic dynamic vector tile
     """
     dataset, version = dv
     bbox, _, extent = bbox_z

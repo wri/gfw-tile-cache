@@ -13,7 +13,7 @@ READ_ENGINE: Optional[GinoEngine] = None
 SessionLocal: Optional[Session] = None
 Base = declarative_base()
 
-app = FastAPI()
+app = FastAPI(title="GFW Tile Cache API", redoc_url="/")
 
 
 db = Gino(
