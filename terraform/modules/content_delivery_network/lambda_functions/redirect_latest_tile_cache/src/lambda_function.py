@@ -48,6 +48,8 @@ def handler(event, context):
             path_items[2] = latest_version["version"]
 
             redirect_path = request["uri"].replace("latest", latest_version["version"])
+            if request["querystring"]:
+                redirect_path += f"?{request['querystring']}"
 
             response = {
                 "status": "307",

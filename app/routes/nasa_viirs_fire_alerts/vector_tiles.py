@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from app.crud.vector_tiles.filters import (
     confidence_filter,
@@ -28,7 +28,11 @@ router = APIRouter()
 async def nasa_viirs_fire_alerts_version(
     version: get_dynamic_versions("nasa_viirs_fire_alerts"),  # type: ignore
 ) -> Versions:
-
+    if version == "latest":
+        raise HTTPException(
+            status_code=400,
+            detail="You must list version name explicitly for this operation.",
+        )
     return version
 
 

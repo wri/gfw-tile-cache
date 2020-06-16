@@ -299,3 +299,27 @@ resource "aws_iam_role_policy_attachment" "s3_read_only" {
   role       = aws_iam_role.lambda_edge_cloudfront.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
+
+##################
+## Logging
+##################
+
+
+data "aws_regions" "current" {
+  all_regions = true
+}
+
+
+resource "aws_cloudwatch_log_group" "lambda_redirect_latest" {
+  count = length(tolist(data.aws_regions.current.names))
+
+  name = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_latest_tile_cache${var.name_suffix}"
+  retention_in_days = var.log_retention
+}
+
+resource "aws_cloudwatch_log_group" "redirect_s3_404" {
+  count = length(tolist(data.aws_regions.current.names))
+
+  name = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_s3_404${var.name_suffix}"
+  retention_in_days = var.log_retention
+}
