@@ -9,10 +9,8 @@ from typing import List, Optional, Tuple
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.sql import Select, TableClause
 
-from app.crud.vector_tiles.filters import geometry_filter
-
-from ..crud import vector_tiles
-from ..crud.vector_tiles import get_mvt_table
+from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
+from ..crud.async_db.vector_tiles.filters import geometry_filter
 from ..responses import VectorTileResponse
 from . import Bounds, dynamic_version_dependency, xyz
 
@@ -48,4 +46,4 @@ async def dynamic_vector_tile(
 
     query: Select = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
 
-    return await vector_tiles.get_tile(query, name=dataset, extent=extent)
+    return await get_tile(query, name=dataset, extent=extent)

@@ -4,8 +4,8 @@ from fastapi import HTTPException
 from shapely.geometry import box
 from sqlalchemy.sql.elements import TextClause
 
-from app.application import db
-from app.utils.geostore import get_geostore_geometry
+from ....application import db
+from ....utils.geostore import get_geostore_geometry
 
 Filter = Tuple[TextClause, Dict[str, Any]]
 Bounds = Tuple[float, float, float, float]

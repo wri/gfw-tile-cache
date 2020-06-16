@@ -3,9 +3,10 @@ from typing import Any, Dict, List, Tuple
 from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
-from app.crud import vector_tiles
-from app.models.pydantic.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
-from app.responses import VectorTileResponse
+from ....models.pydantic.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
+from ....responses import VectorTileResponse
+from ...async_db import vector_tiles
+from . import get_mvt_table
 
 Geometry = Dict[str, Any]
 Bounds = Tuple[float, float, float, float]
@@ -22,7 +23,7 @@ async def get_tile(
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
-    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
+    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
     return await vector_tiles.get_tile(query, SCHEMA, extent)
 
 
@@ -55,7 +56,7 @@ async def get_aggregated_tile(
         "frp__mw": literal_column("sum(frp__mw)").label("frp__mw"),
     }
 
-    query = vector_tiles.get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
+    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
     columns = [
         column("geom"),
         literal_column("count(*)").label("count"),

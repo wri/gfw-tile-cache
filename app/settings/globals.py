@@ -5,7 +5,7 @@ from typing import Optional
 from starlette.config import Config
 from starlette.datastructures import Secret
 
-from app.models.pydantic.database import DatabaseURL
+from ..models.pydantic.database import DatabaseURL
 
 # Read .env file, if exists
 p: Path = Path(__file__).parents[2] / ".env"

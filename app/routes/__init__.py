@@ -6,8 +6,8 @@ from fastapi import Depends, HTTPException, Path
 from fastapi.logger import logger
 from shapely.geometry import box
 
-from ..crud.vector_tile_assets import get_dynamic_versions, get_static_versions
-from ..models.pydantic.dynamic_enumerators import (
+from ..crud.sync_db.vector_tile_assets import get_dynamic_versions, get_static_versions
+from ..models.enumerators.dynamic_enumerators import (
     get_dynamic_datasets,
     get_static_datasets,
 )

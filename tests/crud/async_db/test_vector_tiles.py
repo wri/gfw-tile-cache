@@ -2,12 +2,11 @@ import pytest
 from shapely.geometry import box
 from sqlalchemy import column, literal_column, select, table, text
 
-from app.crud.vector_tiles import (
+from app.crud.async_db.vector_tiles import (
     _as_vector_tile,
     _filter_mvt_table,
     _get_tile,
     _group_mvt_table,
-    get_aggregated_tile,
     get_mvt_table,
 )
 from app.responses import VectorTileResponse

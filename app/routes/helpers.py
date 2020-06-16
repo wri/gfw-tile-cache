@@ -2,12 +2,11 @@
 A set of internal (undocumented) endpoints.
 Endpoints listed here are for internal use only.
 """
-from typing import List
 
 from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
 
-from ..crud.versions import get_latest_versions
+from ..crud.sync_db.versions import get_latest_versions
 from ..models.pydantic.versions import LatestVersionResponse
 
 router = APIRouter()

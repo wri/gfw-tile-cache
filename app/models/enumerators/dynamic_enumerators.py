@@ -2,11 +2,11 @@ from typing import Type
 
 from aenum import Enum, extend_enum
 
-from ...crud.vector_tile_assets import get_dynamic_datasets as get_d_datasets
-from ...crud.vector_tile_assets import get_dynamic_fields
-from ...crud.vector_tile_assets import get_dynamic_versions as get_d_versions
-from ...crud.vector_tile_assets import get_static_datasets as get_s_datasets
-from ...crud.vector_tile_assets import get_static_versions as get_s_versions
+from ...crud.sync_db.vector_tile_assets import get_dynamic_datasets as get_d_datasets
+from ...crud.sync_db.vector_tile_assets import get_dynamic_fields
+from ...crud.sync_db.vector_tile_assets import get_dynamic_versions as get_d_versions
+from ...crud.sync_db.vector_tile_assets import get_static_datasets as get_s_datasets
+from ...crud.sync_db.vector_tile_assets import get_static_versions as get_s_versions
 
 
 class Datasets(str, Enum):

@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from app.crud.vector_tile_assets import (
+from app.crud.sync_db.vector_tile_assets import (
     get_dynamic_datasets,
     get_dynamic_fields,
     get_dynamic_versions,

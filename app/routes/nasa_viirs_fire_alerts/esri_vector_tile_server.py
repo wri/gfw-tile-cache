@@ -2,12 +2,10 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Path
 
-from app.models.pydantic.esri import VectorTileService
-from app.routes import DATE_REGEX
-from app.routes.esri_vector_tile_server import get_vector_tile_server
-from app.routes.nasa_viirs_fire_alerts.vector_tiles import (
-    nasa_viirs_fire_alerts_version,
-)
+from ...models.pydantic.esri import VectorTileService
+from ...routes import DATE_REGEX
+from ...routes.esri_vector_tile_server import get_vector_tile_server
+from ...routes.nasa_viirs_fire_alerts.vector_tiles import nasa_viirs_fire_alerts_version
 
 router = APIRouter()
 

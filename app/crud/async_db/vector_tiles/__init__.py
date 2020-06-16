@@ -4,8 +4,8 @@ from fastapi.logger import logger
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
-from ...application import db
-from ...responses import VectorTileResponse
+from ....application import db
+from ....responses import VectorTileResponse
 
 Geometry = Dict[str, Any]
 Bounds = Tuple[float, float, float, float]

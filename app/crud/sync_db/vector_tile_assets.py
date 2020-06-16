@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Tuple
 from cachetools import TTLCache, cached
 from fastapi import HTTPException
 
-from ..application import get_synchronous_db
+from app.application import get_synchronous_db
 
 static_asset = "Static vector tile cache"
 dynamic_asset = "Dynamic vector tile cache"

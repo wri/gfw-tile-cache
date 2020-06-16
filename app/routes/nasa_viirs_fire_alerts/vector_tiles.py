@@ -2,15 +2,14 @@ from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.crud.vector_tiles.filters import (
+from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
+from ...crud.async_db.vector_tiles.filters import (
     confidence_filter,
     contextual_filter,
     date_filter,
     geometry_filter,
 )
-
-from ...crud.vector_tiles import nasa_viirs_fire_alerts
-from ...models.pydantic.dynamic_enumerators import Versions, get_dynamic_versions
+from ...models.enumerators.dynamic_enumerators import Versions, get_dynamic_versions
 from ...responses import VectorTileResponse
 from ...routes import (
     DATE_REGEX,

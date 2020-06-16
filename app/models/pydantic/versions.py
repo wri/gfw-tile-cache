@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic.main import BaseModel
 
-from app.models.pydantic.responses import Response
+from .responses import Response
 
 
 class LatestVersion(BaseModel):

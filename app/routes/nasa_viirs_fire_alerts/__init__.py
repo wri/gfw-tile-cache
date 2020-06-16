@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import Query
 
-from app.crud.vector_tile_assets import get_latest_dynamic_version
-from app.models.pydantic.dynamic_enumerators import get_attributes
+from ...crud.sync_db.vector_tile_assets import get_latest_dynamic_version
+from ...models.enumerators.dynamic_enumerators import get_attributes
 
 dataset_name = "nasa_viirs_fire_alerts"
 IncludedAttributes = Optional[  # type: ignore

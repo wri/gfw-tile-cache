@@ -3,7 +3,7 @@ from typing import Dict, List
 from cachetools import TTLCache, cached
 from fastapi import HTTPException
 
-from app.application import get_synchronous_db
+from ...application import get_synchronous_db
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=900))
