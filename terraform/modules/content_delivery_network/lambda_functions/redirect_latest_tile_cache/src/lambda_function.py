@@ -33,18 +33,18 @@ def handler(event, context):
 
     request = event["Records"][0]["cf"]["request"]
     host = event["Records"][0]["cf"]["config"]["distributionDomainName"]
-    print("REQUEST URI:" + request["uri"])
+    # print("REQUEST URI:" + request["uri"])
 
     path_items = request["uri"].split("/")
     dataset = path_items[1]
 
-    print("DATASET: " + dataset)
+    # print("DATASET: " + dataset)
 
     latest_versions = get_latest_versions(f"https://{host}/_latest")
 
     for latest_version in latest_versions:
         if latest_version["dataset"] == dataset:
-            print("LATEST VERSION: " + latest_version["version"])
+            # print("LATEST VERSION: " + latest_version["version"])
             path_items[2] = latest_version["version"]
 
             redirect_path = request["uri"].replace("latest", latest_version["version"])
@@ -59,7 +59,7 @@ def handler(event, context):
 
             return response
 
-    print(f"No `latest` version found for dataset {dataset}")
+    # print(f"No `latest` version found for dataset {dataset}")
 
     response = {
         "status": "404",
