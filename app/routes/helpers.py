@@ -8,7 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
 
 from ..crud.versions import get_latest_versions
-from ..models.pydantic.versions import LatestVersion, LatestVersionResponse
+from ..models.pydantic.versions import LatestVersion
 
 router = APIRouter()
 

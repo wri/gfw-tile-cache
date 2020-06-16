@@ -4,7 +4,7 @@ from cachetools import TTLCache, cached
 from fastapi import HTTPException
 
 from app.application import get_synchronous_db
-from app.models.pydantic.versions import LatestVersion, LatestVersionResponse
+from app.models.pydantic.versions import LatestVersion
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=900))

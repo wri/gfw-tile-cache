@@ -17,6 +17,8 @@ def handler(event, context):
     # (env variables are not support for Lambda@Edge)
     if int(response["status"]) == 404 and "default" in request["uri"]:
         redirect_path = request["uri"].replace("default", "dynamic")
+        if request["querystring"]:
+            redirect_path += f"?{request['querystring']}"
 
         response["status"] = 307
         response["statusDescription"] = "Temporary Redirect"

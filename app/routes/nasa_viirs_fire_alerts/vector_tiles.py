@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.crud.vector_tiles.filters import (
     confidence_filter,

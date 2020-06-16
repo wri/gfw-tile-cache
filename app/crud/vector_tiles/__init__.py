@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Tuple
 
-from fastapi import Response
 from fastapi.logger import logger
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import ColumnClause, TextClause
