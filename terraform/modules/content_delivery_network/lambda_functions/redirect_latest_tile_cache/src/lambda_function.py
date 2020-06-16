@@ -18,7 +18,6 @@ def get_latest_versions(url):
     global LATEST_VERSIONS
 
     if not LATEST_VERSIONS:
-
         with urllib.request.urlopen(url) as response:
             LATEST_VERSIONS = json.loads(response.read())
 
@@ -34,9 +33,9 @@ def handler(event, context):
 
     request = event["Records"][0]["cf"]["request"]
     host = event["Records"][0]["cf"]["config"]["distributionDomainName"]
-    print("REQUEST URI:" + request.uri)
+    print("REQUEST URI:" + request["uri"])
 
-    path_items = request["URI"].split("/")
+    path_items = request["uri"].split("/")
     dataset = path_items[1]
 
     print("DATASET: " + dataset)
