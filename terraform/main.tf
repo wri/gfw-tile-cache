@@ -59,7 +59,7 @@ module "orchestration" {
 module "content_delivery_network" {
   source             = "./modules/content_delivery_network"
   bucket_domain_name = module.storage.tiles_bucket_domain_name
-  certificate_arn    = var.environment == "production" ? data.terraform_remote_state.core.outputs.acm_certificate : null
+  certificate_arn    = var.environment == "dev" ? null : data.terraform_remote_state.core.outputs.acm_certificate
   environment        = var.environment
   name_suffix        = local.name_suffix
   project            = local.project

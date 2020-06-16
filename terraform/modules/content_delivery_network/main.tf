@@ -5,22 +5,21 @@
 locals {
   methods = ["GET", "HEAD", "OPTIONS"]
   headers = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+  suffix  = var.environment == "production" ? "" : "-${var.environment}"
 }
 
 resource "aws_cloudfront_origin_access_identity" "tiles" {}
 
 resource "aws_cloudfront_distribution" "tiles" {
 
-  aliases = var.environment == "production" ? [
-  "tiles.globalforestwatch.org"] : null
+  aliases = var.environment == "dev" ? null : [
+  "tiles${local.suffix}.globalforestwatch.org"]
 
   enabled         = true
   http_version    = "http2"
   is_ipv6_enabled = true
-  comment         = "tiles.globalforestwatch.org"
-  //  default_root_object = "index.html"
-
-  price_class = "PriceClass_All"
+  comment         = "tiles${local.suffix}.globalforestwatch.org"
+  price_class     = "PriceClass_All"
 
 
   // not managed by terraform b/c other account
@@ -207,9 +206,9 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   viewer_certificate {
     acm_certificate_arn            = var.certificate_arn
-    cloudfront_default_certificate = var.environment == "production" ? false : true
-    minimum_protocol_version       = var.environment == "production" ? "TLSv1.1_2016" : "TLSv1"
-    ssl_support_method             = var.environment == "production" ? "sni-only" : null
+    cloudfront_default_certificate = var.environment == "dev" ? true : false
+    minimum_protocol_version       = var.environment == "dev" ? "TLSv1" : "TLSv1.1_2016"
+    ssl_support_method             = var.environment == "dev" ? null : "sni-only"
   }
 
 
@@ -313,13 +312,13 @@ data "aws_regions" "current" {
 resource "aws_cloudwatch_log_group" "lambda_redirect_latest" {
   count = length(tolist(data.aws_regions.current.names))
 
-  name = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_latest_tile_cache${var.name_suffix}"
+  name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_latest_tile_cache${var.name_suffix}"
   retention_in_days = var.log_retention
 }
 
 resource "aws_cloudwatch_log_group" "redirect_s3_404" {
   count = length(tolist(data.aws_regions.current.names))
 
-  name = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_s3_404${var.name_suffix}"
+  name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_s3_404${var.name_suffix}"
   retention_in_days = var.log_retention
 }
