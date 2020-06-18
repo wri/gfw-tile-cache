@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 import pyproj
 import requests

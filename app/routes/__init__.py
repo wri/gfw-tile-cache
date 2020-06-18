@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Union
+from typing import Tuple, Union
 
 import mercantile
 import pendulum

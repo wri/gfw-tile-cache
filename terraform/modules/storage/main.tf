@@ -37,19 +37,11 @@ resource "aws_s3_bucket_policy" "tiles" {
 module "tiles_policy" {
   source = "git::https://github.com/cloudposse/terraform-aws-iam-policy-document-aggregator.git?ref=0.2.0"
   source_documents = [
-    //    data.template_file.tiles_bucket_policy_public.rendered,
     data.template_file.tiles_bucket_policy_cloudfront.rendered,
     data.template_file.tiles_bucket_policy_lambda.rendered
   ]
 }
 
-
-//data "template_file" "tiles_bucket_policy_public" {
-//  template = file("${path.root}/policies/bucket_policy_public_read.json.tpl")
-//  vars = {
-//    bucket_arn = aws_s3_bucket.tiles.arn
-//  }
-//}
 
 data "template_file" "tiles_bucket_policy_cloudfront" {
   template = file("${path.root}/policies/bucket_policy_role_read.json.tpl")
@@ -59,7 +51,6 @@ data "template_file" "tiles_bucket_policy_cloudfront" {
   }
 }
 
-7R
 
 data "template_file" "tiles_bucket_policy_lambda" {
   template = file("${path.root}/policies/bucket_policy_role_read.json.tpl")
