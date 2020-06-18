@@ -15,3 +15,8 @@ output "cloudfront_access_identity_iam_arn" {
 output "lambda_edge_cloudfront_arn" {
   value = aws_iam_role.lambda_edge_cloudfront.arn
 }
+
+
+output "cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.tiles.id
+}

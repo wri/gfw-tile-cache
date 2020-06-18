@@ -1,14 +1,12 @@
-from typing import Any, Dict, List, Tuple
+from typing import List
 
 from fastapi.logger import logger
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
+from ....models.types import Bounds
 from ....responses import VectorTileResponse
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 
 def get_mvt_table(

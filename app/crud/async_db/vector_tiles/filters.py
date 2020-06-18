@@ -1,14 +1,12 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import HTTPException
 from shapely.geometry import box
 from sqlalchemy.sql.elements import TextClause
 
 from ....application import db
+from ....models.types import Bounds
 from ....utils.geostore import get_geostore_geometry
-
-Filter = Tuple[TextClause, Dict[str, Any]]
-Bounds = Tuple[float, float, float, float]
 
 
 async def geometry_filter(
@@ -26,13 +24,6 @@ async def geometry_filter(
     return None
 
 
-def confidence_filter(high_confidence_only: Optional[bool]) -> Optional[TextClause]:
-    if high_confidence_only:
-        # TODO make sure fire data are normalized
-        return db.text("(confidence__cat = 'high' OR confidence__cat = 'h')")
-    return None
-
-
 def contextual_filter(**fields: Union[str, bool]) -> List[TextClause]:
     filters: List[TextClause] = list()
     for field, value in fields.items():
@@ -43,9 +34,9 @@ def contextual_filter(**fields: Union[str, bool]) -> List[TextClause]:
     return filters
 
 
-def date_filter(start_date: str, end_date: str) -> TextClause:
+def date_filter(date_field: str, start_date: str, end_date: str) -> TextClause:
     f: TextClause = db.text(
-        "alert__date BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
+        f"{date_field} BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
     )
     values: Dict[str, Any] = {"start_date": start_date, "end_date": end_date}
     f = f.bindparams(**values)

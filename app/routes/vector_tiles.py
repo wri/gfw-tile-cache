@@ -10,8 +10,9 @@ from typing import Tuple
 
 from fastapi import APIRouter, Depends
 
+from ..models.types import Bounds
 from ..responses import VectorTileResponse
-from . import Bounds, static_version_dependency, xyz
+from . import static_version_dependency, xyz
 
 router = APIRouter()
 

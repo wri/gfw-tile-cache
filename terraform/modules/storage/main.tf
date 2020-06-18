@@ -59,6 +59,7 @@ data "template_file" "tiles_bucket_policy_cloudfront" {
   }
 }
 
+7R
 
 data "template_file" "tiles_bucket_policy_lambda" {
   template = file("${path.root}/policies/bucket_policy_role_read.json.tpl")

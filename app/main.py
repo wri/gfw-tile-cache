@@ -84,6 +84,12 @@ def custom_openapi(openapi_prefix: str = ""):
     )
 
     openapi_schema["tags"] = tags_metadata
+    # openapi_schema["info"]["x-logo"] = {"url": "/static/gfw-data-api.png"}
+    openapi_schema["x-tagGroups"] = [
+        {"name": "Vector Tiles API", "tags": ["Dynamic Vector Tiles", "Vector Tiles"]},
+        {"name": "Raster Tiles API", "tags": ["Raster Tiles"]},
+        {"name": "ESRI Vector Tile Server API", "tags": ["ESRI Vector Tile Service"]},
+    ]
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema

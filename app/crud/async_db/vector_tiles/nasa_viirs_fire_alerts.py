@@ -1,15 +1,14 @@
-from typing import Any, Dict, List, Tuple
+from typing import List, Optional
 
 from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
+from ....application import db
 from ....models.pydantic.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
+from ....models.types import Bounds
 from ....responses import VectorTileResponse
 from ...async_db import vector_tiles
 from . import get_mvt_table
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 SCHEMA = "nasa_viirs_fire_alerts"
 COLUMNS: List[ColumnClause] = [
@@ -70,3 +69,11 @@ async def get_aggregated_tile(
     return await vector_tiles.get_aggregated_tile(
         query, columns, group_by_columns, SCHEMA, extent
     )
+
+
+# TODO can be replaced with generic contextual filter
+#  once we made sure that fire data are normalized
+def confidence_filter(high_confidence_only: Optional[bool]) -> Optional[TextClause]:
+    if high_confidence_only:
+        return db.text("(confidence__cat = 'high' OR confidence__cat = 'h')")
+    return None

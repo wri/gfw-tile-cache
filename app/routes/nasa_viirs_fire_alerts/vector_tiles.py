@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
 from ...crud.async_db.vector_tiles.filters import (
-    confidence_filter,
     contextual_filter,
     date_filter,
     geometry_filter,
@@ -78,8 +77,8 @@ async def nasa_viirs_fire_alerts_tile(
 
     filters = [
         await geometry_filter(geostore_id, bbox),
-        confidence_filter(high_confidence_only),
-        date_filter(start_date, end_date),
+        nasa_viirs_fire_alerts.confidence_filter(high_confidence_only),
+        date_filter("alert__date", start_date, end_date),
     ] + contextual_filter(**contextual_filters)
 
     # Remove empty filters

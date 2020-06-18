@@ -11,8 +11,9 @@ from sqlalchemy.sql import Select, TableClause
 
 from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ..crud.async_db.vector_tiles.filters import geometry_filter
+from ..models.types import Bounds
 from ..responses import VectorTileResponse
-from . import Bounds, dynamic_version_dependency, xyz
+from . import dynamic_version_dependency, xyz
 
 router = APIRouter()
 

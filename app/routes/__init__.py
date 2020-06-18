@@ -11,15 +11,13 @@ from ..models.enumerators.dynamic_enumerators import (
     get_dynamic_datasets,
     get_static_datasets,
 )
+from ..models.types import Bounds
 
 DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"  # mypy: ignore
 VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
 NOW = pendulum.now()
 DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
 DEFAULT_END = NOW.to_date_string()
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:

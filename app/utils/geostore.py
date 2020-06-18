@@ -9,7 +9,7 @@ from shapely.geometry import Point, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 
-Geometry = Dict[str, Any]
+from app.models.types import Geometry
 
 
 @alru_cache(maxsize=128)

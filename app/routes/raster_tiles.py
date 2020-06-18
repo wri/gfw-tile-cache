@@ -6,16 +6,14 @@ If tiles for a given zoom level are not present for a selected dataset,
 the server will redirect the request to the dynamic service and will attempt to generate it here
 """
 
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 from fastapi import APIRouter, Depends, Response
 
+from ..models.types import Bounds
 from . import static_version_dependency, xyz
 
 router = APIRouter()
-
-Geometry = Dict[str, Any]
-Bounds = Tuple[float, float, float, float]
 
 
 @router.get(
