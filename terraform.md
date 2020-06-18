@@ -30,4 +30,6 @@
 | Name | Description |
 |------|-------------|
 | cloudfront\_distribution\_domain\_name | n/a |
+| cloudfront\_distribution\_id | n/a |
+| tile\_cache\_bucket\_name | n/a |
 
