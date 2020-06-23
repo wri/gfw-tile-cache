@@ -42,6 +42,27 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+
+  // not managed by terraform b/c other account
+  // used for tiles generated in GEE
+  origin {
+    domain_name = "storage.googleapis.com"
+    origin_id   = "google-tiles"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_keepalive_timeout = 5
+      origin_protocol_policy   = "https-only"
+      origin_read_timeout      = 30
+      origin_ssl_protocols = [
+        "TLSv1",
+        "TLSv1.1",
+        "TLSv1.2",
+      ]
+    }
+  }
+
   // Tile Cache App hosted on AWS Fargage with Load Balancer
   origin {
     domain_name = var.tile_cache_app_url
@@ -108,35 +129,6 @@ resource "aws_cloudfront_distribution" "tiles" {
   }
 
 
-  # Legacy behavior
-  # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
-  ordered_cache_behavior {
-    allowed_methods        = local.methods
-    cached_methods         = local.methods
-    compress               = false
-    default_ttl            = 86400
-    max_ttl                = 86400
-    min_ttl                = 0
-    path_pattern           = "glad_prod/*"
-    smooth_streaming       = false
-    target_origin_id       = "wri-tiles"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      headers                 = local.headers
-      query_string            = false
-      query_string_cache_keys = []
-
-      cookies {
-        forward           = "none"
-        whitelisted_names = []
-      }
-    }
-  }
-
-
-
   # Latest default layers need to be rerouted and cache headers need to be rewritten
   ordered_cache_behavior {
     allowed_methods        = local.methods
@@ -169,6 +161,63 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
 
   }
+
+
+  # Legacy behavior
+  # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    compress               = false
+    default_ttl            = 86400
+    max_ttl                = 86400
+    min_ttl                = 0
+    path_pattern           = "glad_prod/*"
+    smooth_streaming       = false
+    target_origin_id       = "wri-tiles"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = false
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
+
+  # Legacy behavior
+  # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    compress               = true
+    default_ttl            = 31536000
+    max_ttl                = 31536000
+    min_ttl                = 0
+    path_pattern           = "umd_tree_cover_loss/v1.7/*"
+    smooth_streaming       = false
+    target_origin_id       = "google-tiles"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = false
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
 
   ordered_cache_behavior {
     allowed_methods  = local.methods
