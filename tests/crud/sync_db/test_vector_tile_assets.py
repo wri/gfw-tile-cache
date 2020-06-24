@@ -33,15 +33,8 @@ def test_get_dynamic_versions():
 
 
 def test_get_non_existing_versions():
-    response = ""
-    status_code = "200"
-    try:
-        get_static_versions("fails")
-    except HTTPException as e:
-        response = str(e.detail)
-        status_code = str(e.status_code)
-    assert response == "Dataset `fails` has no dynamic tile cache."
-    assert status_code == "400"
+    result = []
+    assert result == get_static_versions("fails")
 
 
 def test_get_latest_static_version():

@@ -50,12 +50,6 @@ def version_constructor(asset_type):
 
         versions = rows.fetchall()
 
-        if not versions:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Dataset `{dataset}` has no dynamic tile cache.",
-            )
-
         return [row[0] for row in versions]
 
     return get_versions
