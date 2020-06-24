@@ -57,7 +57,7 @@ def get_static_versions(dataset) -> Type[Versions]:
     return static_versions
 
 
-def get_attributes(dataset, version):
+def get_attributes(dataset, version) -> Type[Attributes]:
     attributes = Attributes
     fields = get_dynamic_fields(dataset, version)
     for field in fields:

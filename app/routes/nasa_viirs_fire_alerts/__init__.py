@@ -1,19 +1,33 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
-from fastapi import Query
+from aenum import extend_enum
+from fastapi import HTTPException, Query
 
 from ...crud.sync_db.vector_tile_assets import get_latest_dynamic_version
-from ...models.enumerators.dynamic_enumerators import get_attributes
+from ...models.enumerators.dynamic_enumerators import Attributes, get_attributes
 
 dataset_name = "nasa_viirs_fire_alerts"
-IncludedAttributes = Optional[  # type: ignore
-    List[get_attributes(dataset_name, get_latest_dynamic_version(dataset_name))]  # type: ignore
-]
+default_attributes = ["frp__mw"]
+
+
+# In case there is no latest version of the dataset we will need to return something
+try:
+    latest_version = get_latest_dynamic_version(dataset_name)
+    included_attribute_type: Type[Attributes] = get_attributes(
+        dataset_name, latest_version
+    )
+except HTTPException:
+    included_attribute_type = Attributes
+    for field in default_attributes:
+        extend_enum(included_attribute_type, field, field)
+
+
+IncludedAttributes = Optional[List[included_attribute_type]]  # type: ignore
 
 
 async def include_attributes(
     include_attribute: IncludedAttributes = Query(  # type: ignore
-        ["frp__mw"],
+        default_attributes,
         title="Included Attributes",
         description="Select which attributes to include in vector tile. Will always show attribute count. "
         "Documentation list available attributes of latest version. For legacy version "
@@ -22,8 +36,8 @@ async def include_attributes(
 ) -> List[str]:
     attributes: List[str] = list()
     if include_attribute:
-        for attribute in include_attribute:  # type: ignore
-            attributes.append(attribute.value)
+        for attribute in include_attribute:
+            attributes.append(attribute.value)  # type: ignore
     return attributes
 
 
