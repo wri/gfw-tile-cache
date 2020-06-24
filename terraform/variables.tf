@@ -7,45 +7,29 @@ variable "region" {
   default = "us-east-1"
   type    = string
 }
+
+variable "log_level" {
+  type = string
+}
+
 variable "container_name" {
-  default     = "fire-vector-tiles"
-  type        = string
-  description = "The name of the container to associate with the load balancer."
+  default = "gfw-tile-cache"
+  type    = string
 }
 
 variable "container_port" {
-  default     = 80
-  type        = number
-  description = "The port on the container to associate with the load balancer."
+  default = 80
+  type    = number
 }
 
 variable "desired_count" {
-
-  default     = 1
-  type        = number
-  description = "Number of tasks"
-}
-
-variable "deployment_min_percent" {
-
-
-  default = 100
-  type    = number
-}
-variable "deployment_max_percent" {
-
-
-  default = 200
+  default = 1
   type    = number
 }
 
-variable "fargate_cpu" {
-  default = 256
-  type    = number
-
-}
-
-variable "fargate_memory" {
-  default = 512
+variable "log_retention" {
+  default = 30
   type    = number
 }
+
+variable "git_sha" {}

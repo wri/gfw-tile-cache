@@ -1,43 +1,35 @@
-[
-  {
-    "name": "${container_name}",
-    "image": "${image}",
-    "networkMode": "awsvpc",
-    "environment": [
+[{
+  "name": "${container_name}",
+  "image": "${image}",
+  "networkMode": "awsvpc",
+  "environment": [
+    {
+      "name": "ENV",
+      "value": "${environment}"
+    },
+    {
+      "name": "LOG_LEVEL",
+      "value": "${log_level}"
+    }
+  ],
+  "secrets": [
       {
-        "name": "POSTGRES_NAME",
-        "value": "${postgres_name}"
-      },
-      {
-        "name": "POSTGRES_USERNAME",
-        "value": "${postgres_username}"
-      },
-      {
-        "name": "POSTGRES_PASSWORD",
-        "value": "${postgres_password}"
-      },
-      {
-        "name": "POSTGRES_HOST",
-        "value": "${postgres_host}"
-      },
-      {
-        "name": "POSTGRES_PORT",
-        "value": "${postgres_port}"
+        "name": "DB_READER_SECRET",
+        "valueFrom": "${reader_secret_arn}"
       }
     ],
-    "portMappings": [
+  "portMappings": [
       {
         "containerPort": ${container_port},
-         "hostPort": ${container_port}
+        "hostPort": ${container_port}
       }
-    ],
-    "logConfiguration": {
+      ],
+  "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "${log_group}",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "${container_name}"
-      }
+      "awslogs-group": "${log_group}",
+      "awslogs-region": "${aws_region}",
+      "awslogs-stream-prefix": "${container_name}"
     }
   }
-]
+}]

@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        - ENV=test
+    container_name: tile-cache_test
+    volumes:
+      - ./app:/app/app:ro
+      - ./tests:/app/tests
+    environment:
+      - DATABASE_RO=_test
+      - DB_USER_RO=gfw
+      - DB_PASSWORD_RO=postgres  # pragma: allowlist secret
+      - DB_PORT_RO=5432
+      - DB_HOST_RO=test_database
+      - LOG_LEVEL=debug
+      - AWS_ACCESS_KEY_ID=testing  # pragma: allowlist secret
+      - AWS_SECRET_ACCESS_KEY=testing  # pragma: allowlist secret
+      - AWS_SECURITY_TOKEN=testing  # pragma: allowlist secret
+      - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
+      - ENV=test
+    entrypoint: wait_for_postgres.sh pytest --cov-report term --cov-report xml:/app/tests/cobertura.xml --cov=app
+    depends_on:
+      - test_database
+
+  test_database:
+    container_name: gfw-tile-cache-test-database
+    image: postgis/postgis:11-3.0-alpine
+    ports:
+      - 54322:5432
+    environment:
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=_test
+      - POSTGRES_USER=gfw
+      - POSTGRES_PASSWORD=postgres  # pragma: allowlist secret
+    volumes:
+      - test_database_data:/var/lib/postgresql/data
+    restart: on-failure
+
+volumes:
+  test_database_data:

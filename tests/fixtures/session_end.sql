@@ -1,0 +1,6 @@
+
+DROP TABLE IF EXISTS public.datasets CASCADE;
+DROP TABLE IF EXISTS  public.versions CASCADE;
+DROP TABLE IF EXISTS  public.assets CASCADE;
+DROP TABLE IF EXISTS  public.geostore CASCADE;
+

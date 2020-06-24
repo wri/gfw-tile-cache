@@ -1,0 +1,41 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+flake8 = "*"
+pre-commit = "*"
+detect-secrets = "*"
+pytest = "*"
+pytest-asyncio = "*"
+pytest-cov = "*"
+
+
+[packages]
+aiofiles = "*"
+aenum = "*"
+asyncpg = "*"
+boto3 = "*"
+fastapi = "*"
+mercantile = "*"
+uvicorn = "*"
+pendulum = "*"
+pyproj = "*"
+SQLAlchemy = "*"
+shapely = "*"
+requests = "*"
+async_lru = "*"
+geojson = "*"
+orjson = "*"
+cachetools = "*"
+psycopg2 = "*"
+gino = "*"
+gino_starlette = "*"
+
+[requires]
+python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true
