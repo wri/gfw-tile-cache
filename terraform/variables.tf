@@ -31,3 +31,5 @@ variable "log_retention" {
   default = 30
   type    = number
 }
+
+variable "git_sha" {}

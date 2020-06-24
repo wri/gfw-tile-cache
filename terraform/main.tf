@@ -20,20 +20,21 @@ locals {
   tf_state_bucket = "gfw-terraform${local.bucket_suffix}"
   tags            = data.terraform_remote_state.core.outputs.tags
   project         = "gfw-tile-cache"
-
+  container_tag   = substr(var.git_sha,0,7)
 }
 
 
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//modules/container_registry?ref=v0.1.5"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//modules/container_registry?ref=v0.1.7"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
+  tag        = local.container_tag
 }
 
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//modules/fargate_autoscaling?ref=v0.1.5"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//modules/fargate_autoscaling?ref=v0.1.7"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
