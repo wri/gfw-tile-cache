@@ -11,5 +11,5 @@ output "tile_cache_bucket_name" {
 }
 
 output "tile_cache_url" {
-  value = module.content_delivery_network.tile_cache_url
+  value = "https://${var.tile_cache_url}"
 }

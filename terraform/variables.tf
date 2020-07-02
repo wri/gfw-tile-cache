@@ -33,3 +33,5 @@ variable "log_retention" {
 }
 
 variable "git_sha" {}
+
+variable "tile_cache_url" {}

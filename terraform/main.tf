@@ -68,6 +68,7 @@ module "content_delivery_network" {
   website_endpoint   = module.storage.tiles_bucket_website_endpoint
   tile_cache_app_url = module.orchestration.lb_dns_name
   log_retention      = var.log_retention
+  tile_cache_url     = var.tile_cache_url
 }
 
 module "storage" {
