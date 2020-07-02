@@ -9,3 +9,7 @@ output "cloudfront_distribution_id" {
 output "tile_cache_bucket_name" {
   value = module.storage.tiles_bucket_name
 }
+
+output "tile_cache_url" {
+  value = module.content_delivery_network.tile_cache_url
+}

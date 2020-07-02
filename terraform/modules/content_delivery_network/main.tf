@@ -6,6 +6,7 @@ locals {
   methods = ["GET", "HEAD", "OPTIONS"]
   headers = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
   suffix  = var.environment == "production" ? "" : "-${var.environment}"
+  tile_cache_url = "tiles${local.suffix}.globalforestwatch.org"
 }
 
 resource "aws_cloudfront_origin_access_identity" "tiles" {}
@@ -13,12 +14,12 @@ resource "aws_cloudfront_origin_access_identity" "tiles" {}
 resource "aws_cloudfront_distribution" "tiles" {
 
   aliases = var.environment == "dev" ? null : [
-  "tiles${local.suffix}.globalforestwatch.org"]
+  local.tile_cache_url]
 
   enabled         = true
   http_version    = "http2"
   is_ipv6_enabled = true
-  comment         = "tiles${local.suffix}.globalforestwatch.org"
+  comment         = local.tile_cache_url
   price_class     = "PriceClass_All"
 
 
