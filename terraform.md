@@ -21,6 +21,7 @@
 | container\_port | n/a | `number` | `80` | no |
 | desired\_count | n/a | `number` | `1` | no |
 | environment | An environment namespace for the infrastructure. | `string` | n/a | yes |
+| git\_sha | n/a | `any` | n/a | yes |
 | log\_level | n/a | `string` | n/a | yes |
 | log\_retention | n/a | `number` | `30` | no |
 | region | n/a | `string` | `"us-east-1"` | no |
@@ -32,4 +33,5 @@
 | cloudfront\_distribution\_domain\_name | n/a |
 | cloudfront\_distribution\_id | n/a |
 | tile\_cache\_bucket\_name | n/a |
+| tile\_cache\_url | n/a |
 
