@@ -9,3 +9,4 @@ variable "website_endpoint" {}
 //variable "lambda_edge_cloudfront_iam_role_arn" {}
 variable "tile_cache_app_url" {}
 variable "log_retention" {}
+variable "tile_cache_url" {}

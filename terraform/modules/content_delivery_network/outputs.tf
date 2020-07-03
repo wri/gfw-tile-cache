@@ -20,7 +20,3 @@ output "lambda_edge_cloudfront_arn" {
 output "cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.tiles.id
 }
-
-output "tile_cache_url" {
-  value = "https://${local.tile_cache_url}"
-}
