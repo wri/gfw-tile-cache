@@ -19,7 +19,7 @@ def get_latest_versions(url):
 
     if not LATEST_VERSIONS:
         with urllib.request.urlopen(url) as response:
-            LATEST_VERSIONS = json.loads(response.read())
+            LATEST_VERSIONS = json.loads(response.read())["data"]
 
     return LATEST_VERSIONS
 
