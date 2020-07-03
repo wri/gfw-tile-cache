@@ -62,5 +62,5 @@ def get_attributes(dataset, version) -> Type[Attributes]:
     fields = get_dynamic_fields(dataset, version)
     for field in fields:
         if field["is_feature_info"]:
-            extend_enum(attributes, field["field_name_"], field["field_name_"])
+            extend_enum(attributes, field["field_name"], field["field_name"])
     return attributes
