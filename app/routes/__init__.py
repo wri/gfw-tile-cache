@@ -124,11 +124,13 @@ def validate_static_version(dataset, version) -> None:
 def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
     _start_date = pendulum.from_format(start_date, "YYYY-MM-DD")
     _end_date = pendulum.from_format(end_date, "YYYY-MM-DD")
-
+    _default_end = pendulum.from_format(DEFAULT_END, "YYYY-MM-DD")
     if _start_date > _end_date:
         raise HTTPException(
-            status_code=403, detail="Start date must be smaller or equal to end date"
+            status_code=403, detail="Start date must be smaller or equal to end date."
         )
+    if _end_date > _default_end:
+        raise HTTPException(status_code=403, detail="End date can't be in the future.")
 
     if not force_date_range:
         diff = _end_date - _start_date

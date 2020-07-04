@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
 from ...crud.async_db.vector_tiles.filters import (
@@ -41,22 +41,25 @@ async def nasa_viirs_fire_alerts_version(
     response_description="PBF Vector Tile",
 )
 async def nasa_viirs_fire_alerts_tile(
+    response: Response,
     version: str = Depends(nasa_viirs_fire_alerts_version),
     bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(
-        None, title="Only show fire alerts within selected geostore area"
+        None, description="Only show fire alerts within selected geostore area"
     ),
     start_date: str = Query(
         DEFAULT_START,
         regex=DATE_REGEX,
-        title="Only show alerts for given date and after",
+        description="Only show alerts for given date and after",
     ),
     end_date: str = Query(
-        DEFAULT_END, regex=DATE_REGEX, title="Only show alerts until given date."
+        DEFAULT_END,
+        regex=DATE_REGEX,
+        description="Only show alerts until given date. End date cannot be in the future.",
     ),
     force_date_range: Optional[bool] = Query(
         False,
-        title="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
+        description="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
     ),
     high_confidence_only: Optional[bool] = Query(
         False, title="Only show high confidence alerts"
@@ -83,6 +86,15 @@ async def nasa_viirs_fire_alerts_tile(
 
     # Remove empty filters
     filters = [f for f in filters if f is not None]
+
+    # If one of the default dates is used, we cannot cache the response for long,
+    # as content might change after next update. For non-default values we can be certain,
+    # that response will always be the same b/c we only add newer dates
+    # and users are not allowed to query future dates
+    if start_date == DEFAULT_START or end_date == DEFAULT_END:
+        response.headers["Cache-Control"] = "max-age=7200"  # 2h
+    else:
+        response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
 
     return await nasa_viirs_fire_alerts.get_aggregated_tile(
         version, bbox, extent, include_attribute, *filters
