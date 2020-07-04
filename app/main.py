@@ -2,13 +2,19 @@
 
     isort:skip_file
 """
+import json
 import logging
 
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.logger import logger
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
+from .middleware import no_cache_response_header
 from .application import app
 from .routes import (
     esri_vector_tile_server,
@@ -52,6 +58,29 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
+app.add_middleware(BaseHTTPMiddleware, dispatch=no_cache_response_header)
+
+#####################
+# Errors
+#####################
+
+
+@app.exception_handler(HTTPException)
+async def httpexception_error_handler(request: Request, exc: HTTPException):
+    if exc.status_code < 500:
+        status = "failed"
+    else:
+        status = "error"
+    return JSONResponse(
+        status_code=exc.status_code, content={"status": status, "message": exc.detail}
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def rve_error_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422, content={"status": "failed", "message": json.loads(exc.json())}
+    )
 
 
 #####################

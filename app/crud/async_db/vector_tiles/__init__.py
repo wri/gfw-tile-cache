@@ -57,7 +57,7 @@ async def _get_tile(query: Select) -> VectorTileResponse:
     logger.debug(query)
     tile = await db.scalar(query)
 
-    return VectorTileResponse(content=tile, status_code=200,)
+    return VectorTileResponse(content=tile, status_code=200)
 
 
 def _get_bounds(left: float, bottom: float, right: float, top: float) -> Select:

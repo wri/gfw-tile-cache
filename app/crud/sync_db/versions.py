@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from cachetools import TTLCache, cached
-from fastapi import HTTPException
+from fastapi.logger import logger
 
 from ...application import get_synchronous_db
 
@@ -16,13 +16,12 @@ def get_latest_versions() -> List[Dict[str, str]]:
                FROM versions
                WHERE versions.status = 'saved'
                 AND versions.is_latest = true"""
-        )
+        ).fetchall()
 
-    latest_versions = rows.fetchall()
-    if not latest_versions:
-        raise HTTPException(
-            status_code=400,
-            detail="There are no latest versions registered with the API.",
-        )
+    if not rows:
+        latest_versions = []
+        logger.warning("There are no latest versions registered with the API.")
+    else:
+        latest_versions = rows.fetchall()
 
     return [{"dataset": row[0], "version": row[1]} for row in latest_versions]

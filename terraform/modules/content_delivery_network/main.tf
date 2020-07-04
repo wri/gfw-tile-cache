@@ -108,8 +108,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
-    default_ttl            = 86400
-    max_ttl                = 86400
+    default_ttl            = 86400  # 24h
+    max_ttl                = 86400  # 24h
     min_ttl                = 0
     smooth_streaming       = false
     target_origin_id       = "dynamic"
@@ -130,12 +130,15 @@ resource "aws_cloudfront_distribution" "tiles" {
 
 
   # Latest default layers need to be rerouted and cache headers need to be rewritten
+  # This cache bahavior sends the requests to a lambda@edge function which looks up the latest version
+  # and then returns a 307 with the correct version number.
+  # Responses are cached for 6 hours
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 86400
-    max_ttl                = 86400
+    default_ttl            = 21600  # 6h
+    max_ttl                = 21600  # 6h
     min_ttl                = 0
     path_pattern           = "*/latest/*"
     smooth_streaming       = false
@@ -165,12 +168,18 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # Legacy behavior
   # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
+  #
+  # Fetches GLAD tiles from WRI S3 account.
+  # Bucket itself is configured to forward 404s to a lambda function
+  # which will generate dynamic tiles for zoom level 9 and up.
+  # The redirected URL is not cached in cloud front.
+  # Static tiles from S3 are cached for 12 hours
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 86400
-    max_ttl                = 86400
+    default_ttl            = 43200  # 12h
+    max_ttl                = 43200  # 12h
     min_ttl                = 0
     path_pattern           = "glad_prod/*"
     smooth_streaming       = false
@@ -197,8 +206,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
-    default_ttl            = 31536000
-    max_ttl                = 31536000
+    default_ttl            = 31536000  # 1y
+    max_ttl                = 31536000  # 1y
     min_ttl                = 0
     path_pattern           = "umd_tree_cover_loss/v1.7/*"
     smooth_streaming       = false
@@ -236,8 +245,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
+    default_ttl            = 86400  # 24h
+    max_ttl                = 31536000  # 1y
 
     lambda_function_association {
       event_type   = "origin-response"

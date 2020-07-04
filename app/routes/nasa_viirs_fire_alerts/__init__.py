@@ -7,7 +7,7 @@ from ...crud.sync_db.vector_tile_assets import get_latest_dynamic_version
 from ...models.enumerators.dynamic_enumerators import Attributes, get_attributes
 
 dataset_name = "nasa_viirs_fire_alerts"
-default_attributes = ["frp__mw"]
+default_attributes = ["frp__MW"]
 
 
 # In case there is no latest version of the dataset we will need to return something

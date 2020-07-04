@@ -1,8 +1,7 @@
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from cachetools import TTLCache, cached
-from fastapi import HTTPException
 from fastapi.logger import logger
 
 from app.application import get_synchronous_db
@@ -25,9 +24,7 @@ def dataset_constructor(asset_type):
             ).fetchall()
 
         datasets = [row[0] for row in rows]
-        logger.info(
-            f"Fetched available datasets for asset type {asset_type}: {datasets}"
-        )
+
         return datasets
 
     return get_datasets
@@ -53,9 +50,6 @@ def version_constructor(asset_type):
             ).fetchall()
 
         versions = [row[0] for row in rows]
-        logger.info(
-            f"Fetched available versions for dataset {dataset} and asset type {asset_type}: {versions}"
-        )
 
         return versions
 
@@ -69,7 +63,7 @@ get_dynamic_versions = version_constructor(dynamic_asset)
 def latest_version_constructor(asset_type):
     # memorize fields for 15 min
     @cached(cache=TTLCache(maxsize=15, ttl=900))
-    def get_latest_version(dataset: str) -> str:
+    def get_latest_version(dataset: str) -> Optional[str]:
         with get_synchronous_db() as db:
             row = db.execute(
                 """SELECT DISTINCT
@@ -85,16 +79,13 @@ def latest_version_constructor(asset_type):
                 {"dataset": dataset, "asset_type": asset_type},
             ).fetchone()
 
-        if not row:
-            raise HTTPException(
-                status_code=400, detail=f"Dataset `{dataset}` has no `latest` version.",
+        if not row or not row[0]:
+            logger.warning(
+                f"Did not found `latest` version for {asset_type} of {dataset}."
             )
-
-        latest = row[0]
-
-        logger.info(
-            f"Fetched latest version for dataset {dataset} and asset type {asset_type}: {latest}"
-        )
+            latest = None
+        else:
+            latest = row[0]
 
         return latest
 
@@ -120,16 +111,13 @@ def field_constructor(asset_type):
                 {"dataset": dataset, "version": version, "asset_type": asset_type},
             ).fetchone()
 
-        if not row:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Dataset `{dataset}.{version}` has no fields specified.",
+        if not row or not row[0]:
+            fields = []
+            logger.warning(
+                f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
             )
-
-        fields = json.loads(row[0])
-        logger.info(
-            f"Fetched fields for version {dataset}.{version} and asset type {asset_type}: {fields}"
-        )
+        else:
+            fields = json.loads(row[0])
 
         return fields
 
