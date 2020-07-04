@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Type
 
 from aenum import extend_enum
-from fastapi import HTTPException, Query
+from fastapi import Query
 
 from ...crud.sync_db.vector_tile_assets import get_latest_dynamic_version
 from ...models.enumerators.dynamic_enumerators import Attributes, get_attributes
