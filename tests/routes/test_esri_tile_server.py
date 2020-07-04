@@ -4,9 +4,11 @@ def test_viirs_vector_tile_server(client):
     """
 
     response = client.get("/nasa_viirs_fire_alerts/latest/dynamic/VectorTileServer")
-    assert response.json() == {
-        "detail": "You must list version name explicitly for this operation."
-    }
+    assert (
+        response.json()["message"]
+        == "You must list version name explicitly for this operation."
+    )
+    assert response.json()["status"] == "failed"
 
     response = client.get("/nasa_viirs_fire_alerts/v202003/dynamic/VectorTileServer")
 

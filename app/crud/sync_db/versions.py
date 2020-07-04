@@ -22,6 +22,6 @@ def get_latest_versions() -> List[Dict[str, str]]:
         latest_versions = []
         logger.warning("There are no latest versions registered with the API.")
     else:
-        latest_versions = rows.fetchall()
+        latest_versions = rows
 
     return [{"dataset": row[0], "version": row[1]} for row in latest_versions]

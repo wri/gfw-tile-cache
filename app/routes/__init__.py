@@ -96,9 +96,9 @@ async def static_version_dependency(
 def validate_dynamic_version(dataset, version) -> None:
     existing_versions = list()
     versions = get_dynamic_versions(dataset)
-    for row in versions:
-        existing_versions.append(row.version)
-        if row.version == version:
+    for v in versions:
+        existing_versions.append(v)
+        if v == version:
             return
 
     raise HTTPException(

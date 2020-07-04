@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cachetools import TTLCache, cached
 from fastapi.logger import logger
@@ -10,7 +10,7 @@ static_asset = "Static vector tile cache"
 dynamic_asset = "Dynamic vector tile cache"
 
 
-def dataset_constructor(asset_type):
+def dataset_constructor(asset_type: str):
     @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_datasets() -> List[str]:
         with get_synchronous_db() as db:
@@ -30,14 +30,14 @@ def dataset_constructor(asset_type):
     return get_datasets
 
 
-get_static_datasets = dataset_constructor(static_asset)
-get_dynamic_datasets = dataset_constructor(dynamic_asset)
+get_static_datasets: Callable[[], List[str]] = dataset_constructor(static_asset)
+get_dynamic_datasets: Callable[[], List[str]] = dataset_constructor(dynamic_asset)
 
 
-def version_constructor(asset_type):
+def version_constructor(asset_type: str):
     # memorize fields for 15 min
     @cached(cache=TTLCache(maxsize=15, ttl=900))
-    def get_versions(dataset) -> List[Tuple[str, str]]:
+    def get_versions(dataset: str) -> List[Tuple[str, str]]:
         with get_synchronous_db() as db:
             rows = db.execute(
                 """SELECT DISTINCT
@@ -56,11 +56,15 @@ def version_constructor(asset_type):
     return get_versions
 
 
-get_static_versions = version_constructor(static_asset)
-get_dynamic_versions = version_constructor(dynamic_asset)
+get_static_versions: Callable[[str], List[Tuple[str, str]]] = version_constructor(
+    static_asset
+)
+get_dynamic_versions: Callable[[str], List[Tuple[str, str]]] = version_constructor(
+    dynamic_asset
+)
 
 
-def latest_version_constructor(asset_type):
+def latest_version_constructor(asset_type: str):
     # memorize fields for 15 min
     @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_latest_version(dataset: str) -> Optional[str]:
@@ -92,11 +96,15 @@ def latest_version_constructor(asset_type):
     return get_latest_version
 
 
-get_latest_static_version = latest_version_constructor(static_asset)
-get_latest_dynamic_version = latest_version_constructor(dynamic_asset)
+get_latest_static_version: Callable[[str], Optional[str]] = latest_version_constructor(
+    static_asset
+)
+get_latest_dynamic_version: Callable[[str], Optional[str]] = latest_version_constructor(
+    dynamic_asset
+)
 
 
-def field_constructor(asset_type):
+def field_constructor(asset_type: str):
     @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_fields(dataset: str, version: str) -> List[Dict[str, Any]]:
         with get_synchronous_db() as db:
@@ -124,5 +132,9 @@ def field_constructor(asset_type):
     return get_fields
 
 
-get_static_fields = field_constructor(static_asset)
-get_dynamic_fields = field_constructor(dynamic_asset)
+get_static_fields: Callable[[str, str], List[Dict[str, Any]]] = field_constructor(
+    static_asset
+)
+get_dynamic_fields: Callable[[str, str], List[Dict[str, Any]]] = field_constructor(
+    dynamic_asset
+)

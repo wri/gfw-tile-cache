@@ -11,12 +11,13 @@ default_attributes = ["frp__MW"]
 
 
 # In case there is no latest version of the dataset we will need to return something
-try:
-    latest_version = get_latest_dynamic_version(dataset_name)
+
+latest_version: Optional[str] = get_latest_dynamic_version(dataset_name)
+if latest_version:
     included_attribute_type: Type[Attributes] = get_attributes(
         dataset_name, latest_version
     )
-except HTTPException:
+else:
     included_attribute_type = Attributes
     for field in default_attributes:
         extend_enum(included_attribute_type, field, field)
