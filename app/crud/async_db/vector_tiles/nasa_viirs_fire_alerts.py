@@ -4,16 +4,21 @@ from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
-from ....models.pydantic.nasa_viirs_fire_alerts import NasaViirsFireAlertsBase
 from ....models.types import Bounds
 from ....responses import VectorTileResponse
 from ...async_db import vector_tiles
+from ...sync_db.vector_tile_assets import get_dynamic_fields, get_latest_dynamic_version
 from . import get_mvt_table
 
 SCHEMA = "nasa_viirs_fire_alerts"
-COLUMNS: List[ColumnClause] = [
-    column(col) for col in NasaViirsFireAlertsBase.schema()["properties"].keys()
-]
+
+COLUMNS: List[ColumnClause] = list()
+latest_version: Optional[str] = get_latest_dynamic_version(SCHEMA)
+if latest_version:
+    fields = get_dynamic_fields(SCHEMA, latest_version)
+    for field in fields:
+        if field["is_feature_info"]:
+            COLUMNS.append(column(field["field_name"]))
 
 
 async def get_tile(
@@ -49,7 +54,7 @@ async def get_aggregated_tile(
         "bright_ti4__K": literal_column('round(avg("bright_ti4__K"),3)').label(
             "bright_ti4__K"
         ),
-        "bright_ti5__K": literal_column('round(avg("bright_ti5__K"),3)').label(
+        "bright_ti5__K": literal_column('round(avg("bright_ti5__k"),3)').label(
             "bright_ti5__K"
         ),
         "frp__MW": literal_column('sum("frp__MW")').label("frp__MW"),
