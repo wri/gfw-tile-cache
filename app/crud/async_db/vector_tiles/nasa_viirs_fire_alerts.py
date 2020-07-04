@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from sqlalchemy import column, literal_column
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
@@ -18,7 +17,7 @@ if latest_version:
     fields = get_dynamic_fields(SCHEMA, latest_version)
     for field in fields:
         if field["is_feature_info"]:
-            COLUMNS.append(column(field["field_name"]))
+            COLUMNS.append(db.column(field["field_name"]))
 
 
 async def get_tile(
@@ -40,36 +39,36 @@ async def get_aggregated_tile(
     """
 
     col_dict = {
-        "latitude": literal_column("round(avg(latitude),4)").label("latitude"),
-        "longitude": literal_column("round(avg(longitude),4)").label("longitude"),
-        "alert__date": literal_column(
+        "latitude": db.literal_column("round(avg(latitude),4)").label("latitude"),
+        "longitude": db.literal_column("round(avg(longitude),4)").label("longitude"),
+        "alert__date": db.literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__date)"
         ).label("alert__date"),
-        "alert__time_utc": literal_column(
+        "alert__time_utc": db.literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__time_utc)"
         ).label("alert__time_utc"),
-        "confidence__cat": literal_column(
+        "confidence__cat": db.literal_column(
             "mode() WITHIN GROUP (ORDER BY confidence__cat)"
         ).label("confidence__cat"),
-        "bright_ti4__K": literal_column('round(avg("bright_ti4__K"),3)').label(
+        "bright_ti4__K": db.literal_column('round(avg("bright_ti4__K"),3)').label(
             "bright_ti4__K"
         ),
-        "bright_ti5__K": literal_column('round(avg("bright_ti5__k"),3)').label(
+        "bright_ti5__K": db.literal_column('round(avg("bright_ti5__k"),3)').label(
             "bright_ti5__K"
         ),
-        "frp__MW": literal_column('sum("frp__MW")').label("frp__MW"),
+        "frp__MW": db.literal_column('sum("frp__MW")').label("frp__MW"),
     }
 
     query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
     columns = [
-        column("geom"),
-        literal_column("count(*)").label("count"),
+        db.column("geom"),
+        db.literal_column("count(*)").label("count"),
     ]
 
     for attribute in attributes:
         columns.append(col_dict[attribute])
 
-    group_by_columns = [column("geom")]
+    group_by_columns = [db.column("geom")]
 
     return await vector_tiles.get_aggregated_tile(
         query, columns, group_by_columns, SCHEMA, extent
