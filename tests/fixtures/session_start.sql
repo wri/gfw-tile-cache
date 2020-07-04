@@ -150,10 +150,10 @@ INSERT INTO public.datasets (dataset) VALUES ('nasa_viirs_fire_alerts');
 INSERT INTO public.versions (dataset, version, is_latest, status, source_type)
   VALUES ('nasa_viirs_fire_alerts', 'v202003', true, 'saved', 'table');
 INSERT INTO public.assets (dataset, version, asset_type, metadata, asset_id, status, asset_uri, is_managed)
-    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{"fields": []}', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true);
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{"fields": [{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]}', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true);
 
 INSERT INTO public.datasets (dataset) VALUES ('wdpa_protected_areas');
 INSERT INTO public.versions (dataset, version, is_latest, status, source_type)
   VALUES ('wdpa_protected_areas', 'v201912', true, 'saved', 'vector');
 INSERT INTO public.assets (dataset, version, asset_type, metadata, asset_id, status, asset_uri, is_managed)
-    VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{"fields": []}', '327fdd68-2d07-4ced-99f1-69e7f74b20b8', 'saved', 'my_uri2', true);
+    VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{"fields": [{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]}', '327fdd68-2d07-4ced-99f1-69e7f74b20b8', 'saved', 'my_uri2', true);

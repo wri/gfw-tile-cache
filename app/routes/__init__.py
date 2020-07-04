@@ -96,9 +96,9 @@ async def static_version_dependency(
 def validate_dynamic_version(dataset, version) -> None:
     existing_versions = list()
     versions = get_dynamic_versions(dataset)
-    for row in versions:
-        existing_versions.append(row.version)
-        if row.version == version:
+    for v in versions:
+        existing_versions.append(v)
+        if v == version:
             return
 
     raise HTTPException(
@@ -124,11 +124,13 @@ def validate_static_version(dataset, version) -> None:
 def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
     _start_date = pendulum.from_format(start_date, "YYYY-MM-DD")
     _end_date = pendulum.from_format(end_date, "YYYY-MM-DD")
-
+    _default_end = pendulum.from_format(DEFAULT_END, "YYYY-MM-DD")
     if _start_date > _end_date:
         raise HTTPException(
-            status_code=403, detail="Start date must be smaller or equal to end date"
+            status_code=403, detail="Start date must be smaller or equal to end date."
         )
+    if _end_date > _default_end:
+        raise HTTPException(status_code=403, detail="End date can't be in the future.")
 
     if not force_date_range:
         diff = _end_date - _start_date
