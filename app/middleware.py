@@ -13,7 +13,7 @@ async def no_cache_response_header(request: Request, call_next):
 
     if request.method == "GET" and request.url.path in no_cache_endpoints:
         response.headers["Cache-Control"] = "no-cache"
-    elif request.method == "GET":
+    elif request.method == "GET" and response.status_code < 300:
         max_age = response.headers.get("Cache-Control", "max-age=31536000")
         response.headers["Cache-Control"] = max_age
 
