@@ -46,13 +46,13 @@ async def get_aggregated_tile(
         "confidence__cat": literal_column(
             "mode() WITHIN GROUP (ORDER BY confidence__cat)"
         ).label("confidence__cat"),
-        "bright_ti4__k": literal_column("round(avg(bright_ti4__k),3)").label(
-            "bright_ti4__k"
+        "bright_ti4__K": literal_column('round(avg("bright_ti4__K"),3)').label(
+            "bright_ti4__K"
         ),
-        "bright_ti5__k": literal_column("round(avg(bright_ti5__k),3)").label(
-            "bright_ti5__k"
+        "bright_ti5__K": literal_column('round(avg("bright_ti5__K"),3)').label(
+            "bright_ti5__K"
         ),
-        "frp__mw": literal_column("sum(frp__mw)").label("frp__mw"),
+        "frp__MW": literal_column('sum("frp__MW")').label("frp__MW"),
     }
 
     query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
