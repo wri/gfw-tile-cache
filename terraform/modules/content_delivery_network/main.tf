@@ -108,8 +108,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
-    default_ttl            = 86400
-    max_ttl                = 86400
+    default_ttl            = 86400  # 24h
+    max_ttl                = 86400  # 24h
     min_ttl                = 0
     smooth_streaming       = false
     target_origin_id       = "dynamic"
@@ -130,12 +130,15 @@ resource "aws_cloudfront_distribution" "tiles" {
 
 
   # Latest default layers need to be rerouted and cache headers need to be rewritten
+  # This cache bahavior sends the requests to a lambda@edge function which looks up the latest version
+  # and then returns a 307 with the correct version number.
+  # Responses are cached for 6 hours
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 86400
-    max_ttl                = 86400
+    default_ttl            = 21600  # 6h
+    max_ttl                = 21600  # 6h
     min_ttl                = 0
     path_pattern           = "*/latest/*"
     smooth_streaming       = false
@@ -165,12 +168,18 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # Legacy behavior
   # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
+  #
+  # Fetches GLAD tiles from WRI S3 account.
+  # Bucket itself is configured to forward 404s to a lambda function
+  # which will generate dynamic tiles for zoom level 9 and up.
+  # The redirected URL is not cached in cloud front.
+  # Static tiles from S3 are cached for 12 hours
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 86400
-    max_ttl                = 86400
+    default_ttl            = 43200  # 12h
+    max_ttl                = 43200  # 12h
     min_ttl                = 0
     path_pattern           = "glad_prod/*"
     smooth_streaming       = false
@@ -191,14 +200,16 @@ resource "aws_cloudfront_distribution" "tiles" {
   }
 
 
-  # Legacy behavior
-  # Should be deprecated, once GLAD alerts run in new GFW account and live in data lake
+  # Externally managed
+  # TCL data are currently generated in GEE and stored in GCS
+  # We update the response header to keep the tiles in browser cache for up to a year
+  # Cloud front will also cache tile for a year
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
-    default_ttl            = 31536000
-    max_ttl                = 31536000
+    default_ttl            = 31536000  # 1y
+    max_ttl                = 31536000  # 1y
     min_ttl                = 0
     path_pattern           = "umd_tree_cover_loss/v1.7/*"
     smooth_streaming       = false
@@ -216,9 +227,17 @@ resource "aws_cloudfront_distribution" "tiles" {
         whitelisted_names = []
       }
     }
+
+    lambda_function_association {
+      event_type   = "origin-response"
+      include_body = false
+      lambda_arn   = aws_lambda_function.response_header_cache_control.qualified_arn
+    }
   }
 
-
+  # Static tiles are stored on S3
+  # They won't change and can stay in cache for a year
+  # We will set response headers for selected tile caches in S3 if required
   ordered_cache_behavior {
     allowed_methods  = local.methods
     cached_methods   = local.methods
@@ -236,8 +255,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
+    default_ttl            = 31536000  # 1y
+    max_ttl                = 31536000  # 1y
 
     lambda_function_association {
       event_type   = "origin-response"
@@ -282,6 +301,12 @@ data "archive_file" "redirect_s3_404" {
   output_path = "${path.module}/lambda_functions/redirect_s3_404.zip"
 }
 
+data "archive_file" "response_header_cache_control" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_functions/response_header_cache_control/src"
+  output_path = "${path.module}/lambda_functions/response_header_cache_control.zip"
+}
+
 resource "aws_lambda_function" "redirect_latest_tile_cache" {
   # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
 
@@ -302,6 +327,20 @@ resource "aws_lambda_function" "redirect_s3_404" {
   function_name    = "${var.project}-redirect_s3_404${var.name_suffix}"
   filename         = data.archive_file.redirect_s3_404.output_path
   source_code_hash = data.archive_file.redirect_s3_404.output_base64sha256
+  role             = aws_iam_role.lambda_edge_cloudfront.arn
+  runtime          = "python3.8"
+  handler          = "lambda_function.handler"
+  memory_size      = 128
+  timeout          = 3
+  publish          = true
+  tags             = var.tags
+}
+
+resource "aws_lambda_function" "response_header_cache_control" {
+
+  function_name    = "${var.project}-response_header_cache_control${var.name_suffix}"
+  filename         = data.archive_file.response_header_cache_control.output_path
+  source_code_hash = data.archive_file.response_header_cache_control.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
   runtime          = "python3.8"
   handler          = "lambda_function.handler"
@@ -369,5 +408,12 @@ resource "aws_cloudwatch_log_group" "redirect_s3_404" {
   count = length(tolist(data.aws_regions.current.names))
 
   name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_s3_404${var.name_suffix}"
+  retention_in_days = var.log_retention
+}
+
+resource "aws_cloudwatch_log_group" "response_header_cache_control" {
+  count = length(tolist(data.aws_regions.current.names))
+
+  name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-response_header_cache_control${var.name_suffix}"
   retention_in_days = var.log_retention
 }

@@ -1,5 +1,3 @@
-from fastapi import HTTPException
-
 from app.crud.sync_db.vector_tile_assets import (
     get_dynamic_datasets,
     get_dynamic_fields,
@@ -48,34 +46,37 @@ def test_get_latest_dynamic_version():
 
 
 def test_get_latest_non_existing_version():
-    response = ""
-    status_code = "200"
-    try:
-        get_latest_static_version("fails")
-    except HTTPException as e:
-        response = str(e.detail)
-        status_code = str(e.status_code)
-    assert response == "Dataset `fails` has no `latest` version."
-    assert status_code == "400"
+    assert get_latest_static_version("fails") is None
 
 
 def test_get_static_fields():
-    result = []
+    result = [
+        {
+            "field_name": "test",
+            "field_alias": "TEST",
+            "field_type": "text",
+            "field_description": None,
+            "is_feature_info": True,
+            "is_filter": False,
+        }
+    ]
     assert result == get_static_fields("wdpa_protected_areas", "v201912")
 
 
 def test_get_dynamic_fields():
-    result = []
+    result = [
+        {
+            "field_name": "test",
+            "field_alias": "TEST",
+            "field_type": "text",
+            "field_description": None,
+            "is_feature_info": True,
+            "is_filter": False,
+        }
+    ]
     assert result == get_dynamic_fields("nasa_viirs_fire_alerts", "v202003")
 
 
 def test_get_non_existing_fields():
-    response = ""
-    status_code = "200"
-    try:
-        get_static_fields("fails", "v2")
-    except HTTPException as e:
-        response = str(e.detail)
-        status_code = str(e.status_code)
-    assert response == "Dataset `fails.v2` has no fields specified."
-    assert status_code == "400"
+    result = []
+    assert result == get_static_fields("fails", "v2")
