@@ -16,15 +16,23 @@ def handler(event, context):
     # custom origin is tile cache app. URL is passed via custom header set in cloud front
     # (env variables are not support for Lambda@Edge)
     if int(response["status"]) == 404 and "default" in request["uri"]:
+
         redirect_path = request["uri"].replace("default", "dynamic")
         if request["querystring"]:
             redirect_path += f"?{request['querystring']}"
 
-        response["status"] = 307
-        response["statusDescription"] = "Temporary Redirect"
+        headers = {"location": [{"key": "Location", "value": redirect_path}]}
 
-        # Drop the body as it is not required for redirects
-        response["body"] = ""
-        response["headers"]["location"] = [{"key": "Location", "value": redirect_path}]
+        # add access control allow origin header
+        # in case an origin was included in request header to avoid cors issues
+        origin = request["headers"].get("origin", None)
+        if origin:
+            headers["access-control-allow-origin"] = "*"
+
+        response = {
+            "status": "307",
+            "statusDescription": "Temporary Redirect",
+            "headers": headers,
+        }
 
     return response
