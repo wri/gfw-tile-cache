@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.responses import ORJSONResponse
 
 from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
 from ...crud.async_db.vector_tiles.filters import (
@@ -8,7 +9,10 @@ from ...crud.async_db.vector_tiles.filters import (
     date_filter,
     geometry_filter,
 )
+from ...crud.async_db.vector_tiles.max_date import get_max_date
+from ...error import RecordNotFoundError
 from ...models.enumerators.dynamic_enumerators import Versions, get_dynamic_versions
+from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
     DATE_REGEX,
@@ -99,3 +103,24 @@ async def nasa_viirs_fire_alerts_tile(
     return await nasa_viirs_fire_alerts.get_aggregated_tile(
         version, bbox, extent, include_attribute, *filters
     )
+
+
+@router.get(
+    "/nasa_viirs_fire_alerts/{version}/max_alert__date",
+    response_class=ORJSONResponse,
+    response_model=MaxDateResponse,
+    response_description="Max alert date in selected dataset",
+    deprecated=True,
+    tags=["Dynamic Vector Tiles"],
+)
+async def max_date(
+    *, version: str = Depends(nasa_viirs_fire_alerts_version),
+) -> MaxDateResponse:
+    """
+    Retrieve max alert date for NASA VIIRS fire alerts for a given version
+    """
+    try:
+        data = await get_max_date(version)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return MaxDateResponse(data=data)

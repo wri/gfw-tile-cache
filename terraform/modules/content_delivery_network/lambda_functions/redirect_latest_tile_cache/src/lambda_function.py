@@ -51,10 +51,19 @@ def handler(event, context):
             if request["querystring"]:
                 redirect_path += f"?{request['querystring']}"
 
+            # set redirect path in location header
+            headers = {"location": [{"key": "Location", "value": redirect_path}]}
+
+            # add access control allow origin header
+            # in case an origin was included in request header to avoid cors issues
+            origin = request["headers"].get("origin", None)
+            if origin:
+                headers["access-control-allow-origin"] = "*"
+
             response = {
                 "status": "307",
                 "statusDescription": "Temporary Redirect",
-                "headers": {"location": [{"key": "Location", "value": redirect_path}]},
+                "headers": headers,
             }
 
             return response
