@@ -29,7 +29,8 @@ async def dynamic_vector_tile(
     dv: Tuple[str, str] = Depends(dynamic_version_dependency),
     bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
     geostore_id: Optional[str] = Query(
-        None, title="Only show fire alerts within selected geostore area"
+        None,
+        title="Only show fire alerts within selected geostore area. Use RW geostore as of now.",
     ),
 ) -> VectorTileResponse:
     """
