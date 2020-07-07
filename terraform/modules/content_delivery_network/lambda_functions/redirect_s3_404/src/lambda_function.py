@@ -27,7 +27,12 @@ def handler(event, context):
         # in case an origin was included in request header to avoid cors issues
         origin = request["headers"].get("origin", None)
         if origin:
-            headers["access-control-allow-origin"] = "*"
+            headers["access-control-allow-origin"] = [
+                {"key": "Access-Control-Allow-Origin", "value": "*"}
+            ]
+            headers["access-control-allow-methods"] = [
+                {"key": "Access-Control-Allow-Methods", "value": "GET, HEAD"}
+            ]
 
         response = {
             "status": "307",
