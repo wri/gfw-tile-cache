@@ -20,7 +20,7 @@ locals {
   tf_state_bucket = "gfw-terraform${local.bucket_suffix}"
   tags            = data.terraform_remote_state.core.outputs.tags
   project         = "gfw-tile-cache"
-  container_tag   = substr(var.git_sha,0,7)
+  container_tag   = substr(var.git_sha, 0, 7)
 }
 
 
@@ -44,12 +44,12 @@ module "orchestration" {
   container_name               = var.container_name
   container_port               = var.container_port
   desired_count                = var.desired_count
-  fargate_cpu                  = 256
-  fargate_memory               = 2048
-  auto_scaling_cooldown        = 300
-  auto_scaling_max_capacity    = 15
-  auto_scaling_max_cpu_util    = 75
-  auto_scaling_min_capacity    = 1
+  fargate_cpu                  = var.fargate_cpu
+  fargate_memory               = var.fargate_memory
+  auto_scaling_cooldown        = var.auto_scaling_cooldown
+  auto_scaling_max_capacity    = var.auto_scaling_max_capacity
+  auto_scaling_max_cpu_util    = var.auto_scaling_max_cpu_util
+  auto_scaling_min_capacity    = var.auto_scaling_min_capacity
   security_group_ids           = [data.terraform_remote_state.core.outputs.postgresql_security_group_id]
   task_role_policies           = []
   task_execution_role_policies = [data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn]
