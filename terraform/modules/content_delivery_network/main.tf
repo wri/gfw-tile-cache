@@ -108,8 +108,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
-    default_ttl            = 86400  # 24h
-    max_ttl                = 86400  # 24h
+    default_ttl            = 86400 # 24h
+    max_ttl                = 86400 # 24h
     min_ttl                = 0
     smooth_streaming       = false
     target_origin_id       = "dynamic"
@@ -137,8 +137,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 21600  # 6h
-    max_ttl                = 21600  # 6h
+    default_ttl            = 21600 # 6h
+    max_ttl                = 21600 # 6h
     min_ttl                = 0
     path_pattern           = "*/latest/*"
     smooth_streaming       = false
@@ -178,8 +178,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
-    default_ttl            = 43200  # 12h
-    max_ttl                = 43200  # 12h
+    default_ttl            = 43200 # 12h
+    max_ttl                = 43200 # 12h
     min_ttl                = 0
     path_pattern           = "glad_prod/*"
     smooth_streaming       = false
@@ -208,8 +208,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
-    default_ttl            = 31536000  # 1y
-    max_ttl                = 31536000  # 1y
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
     min_ttl                = 0
     path_pattern           = "umd_tree_cover_loss/v1.7/*"
     smooth_streaming       = false
@@ -255,8 +255,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
-    default_ttl            = 31536000  # 1y
-    max_ttl                = 31536000  # 1y
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
 
     lambda_function_association {
       event_type   = "origin-response"

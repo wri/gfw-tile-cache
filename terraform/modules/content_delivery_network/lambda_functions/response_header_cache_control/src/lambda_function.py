@@ -1,3 +1,6 @@
+# mypy: ignore-errors
+
+
 def lambda_handler(event, context):
     """Add a response header to keep the response in cache for 1 year"""
     response = event["Records"][0]["cf"]["response"]

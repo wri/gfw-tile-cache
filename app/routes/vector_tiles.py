@@ -8,7 +8,7 @@ the server will redirect the request to the dynamic service and will attempt to 
 
 from typing import Tuple
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
@@ -35,4 +35,4 @@ async def vector_tile(
     # Default vector layers are stored on S3.
     # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
     # Hence, this function should never be called.
-    raise NotImplementedError
+    raise HTTPException(status_code=501, detail="Not implemented.")
