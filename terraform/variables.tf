@@ -4,48 +4,77 @@ variable "environment" {
 }
 
 variable "region" {
-  default = "us-east-1"
-  type    = string
-}
-variable "container_name" {
-  default     = "fire-vector-tiles"
+  default     = "us-east-1"
   type        = string
-  description = "The name of the container to associate with the load balancer."
+  description = "Default AWS Region."
+}
+
+variable "log_level" {
+  type    = string
+  default = "Log level for tile service app."
+}
+
+variable "container_name" {
+  default     = "gfw-tile-cache"
+  type        = string
+  description = "Description of tile service app container image."
 }
 
 variable "container_port" {
   default     = 80
   type        = number
-  description = "The port on the container to associate with the load balancer."
+  description = "Port tile cache app will listen on."
+
 }
 
 variable "desired_count" {
-
-  default     = 1
   type        = number
-  description = "Number of tasks"
+  description = "Initial number of service instances to launch."
 }
 
-variable "deployment_min_percent" {
-
-
-  default = 100
-  type    = number
+variable "log_retention" {
+  default     = 30
+  type        = number
+  description = "Time in days to keep logs."
 }
-variable "deployment_max_percent" {
 
+variable "git_sha" {
+  type        = string
+  description = "Git SHA to use to tag image."
+}
 
-  default = 200
-  type    = number
+variable "tile_cache_url" {
+  type        = string
+  description = "URL of tile cache."
+}
+
+variable "auto_scaling_min_capacity" {
+  type        = number
+  description = "Minimum number of tasks to keep when scaling down."
+}
+
+variable "auto_scaling_max_capacity" {
+  type        = number
+  description = "Minimum number of tasks to deploy when scaling up."
 }
 
 variable "fargate_cpu" {
-  default = 256
-  type    = number
-
+  default     = 256
+  type        = number
+  description = "vCPU for service."
 }
-
 variable "fargate_memory" {
-  default = 512
-  type    = number
+  default     = 2048
+  type        = number
+  description = "Memory for service in MB."
+}
+variable "auto_scaling_cooldown" {
+  default     = 300
+  type        = number
+  description = "Time in seconds to pass before scaling up or down again."
+}
+variable "auto_scaling_max_cpu_util" {
+  default     = 75
+  type        = number
+  description = "CPU usage percentage which will trigger autoscaling event."
 }

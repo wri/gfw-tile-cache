@@ -1,10 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-pip install -r requirements.txt
-pip install -e .
+set -e
+
+pip install pipenv
+pipenv install --dev
 
 detect-secrets scan > .secrets.baseline
 pre-commit install
-
-docker-compose -f docker/terraform/docker-compose.yml build
-./scripts/cibuild
