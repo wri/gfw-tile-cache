@@ -28,7 +28,6 @@ variable "container_port" {
 }
 
 variable "desired_count" {
-  default     = 1
   type        = number
   description = "Initial number of service instances to launch."
 }
