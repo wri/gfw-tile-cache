@@ -33,37 +33,34 @@ def handler(event, context):
 
     request = event["Records"][0]["cf"]["request"]
     host = event["Records"][0]["cf"]["config"]["distributionDomainName"]
-    # print("REQUEST URI:" + request["uri"])
+
+    origin = request["headers"].get("origin", None)
+    headers = {}
+
+    # add access control allow origin header
+    # in case an origin was included in request header to avoid cors issues
+    if origin:
+        headers["access-control-allow-origin"] = [
+            {"key": "Access-Control-Allow-Origin", "value": "*"}
+        ]
+        headers["access-control-allow-methods"] = [
+            {"key": "Access-Control-Allow-Methods", "value": "GET, HEAD"}
+        ]
 
     path_items = request["uri"].split("/")
     dataset = path_items[1]
-
-    # print("DATASET: " + dataset)
 
     latest_versions = get_latest_versions(f"https://{host}/_latest")
 
     for latest_version in latest_versions:
         if latest_version["dataset"] == dataset:
-            # print("LATEST VERSION: " + latest_version["version"])
-            path_items[2] = latest_version["version"]
 
             redirect_path = request["uri"].replace("latest", latest_version["version"])
             if request["querystring"]:
                 redirect_path += f"?{request['querystring']}"
 
             # set redirect path in location header
-            headers = {"location": [{"key": "Location", "value": redirect_path}]}
-
-            # add access control allow origin header
-            # in case an origin was included in request header to avoid cors issues
-            origin = request["headers"].get("origin", None)
-            if origin:
-                headers["access-control-allow-origin"] = [
-                    {"key": "Access-Control-Allow-Origin", "value": "*"}
-                ]
-                headers["access-control-allow-methods"] = [
-                    {"key": "Access-Control-Allow-Methods", "value": "GET, HEAD"}
-                ]
+            headers["location"] = [{"key": "Location", "value": redirect_path}]
 
             response = {
                 "status": "307",
@@ -78,6 +75,12 @@ def handler(event, context):
     response = {
         "status": "404",
         "statusDescription": "Not Found",
-        "body": {"message": f"There is no `latest` version for dataset {dataset}"},
+        "headers": headers,
+        "body": json.dumps(
+            {
+                "status": "failed",
+                "message": f"There is no `latest` version for dataset {dataset}",
+            }
+        ),
     }
     return response
