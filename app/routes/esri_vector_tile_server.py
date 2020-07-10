@@ -1,3 +1,12 @@
+"""
+ESRI JS API requires tile to come from a ESRI VectorTileServer.
+This endpoint mocks the responds of such server and routes the web client to the correct tiles.
+
+The mocked Dynamic Vector Tile Server will also forward any query parameters in the URL to the tile cache.
+However, currently, ESRI JS API does not support the use of query parameters and removed them before making the request.
+Hence this feature might not work in a ESRI applications.
+"""
+
 import hashlib
 from typing import Any, Dict, Optional, Tuple
 
@@ -7,16 +16,6 @@ from ..models.pydantic.esri import VectorTileService
 from . import dynamic_version_dependency, static_version_dependency
 
 router = APIRouter()
-
-
-desciption = """
-ESRI JS API requires tile to come from a ESRI VectorTileServer.
-This endpoint mocks the responds of such server and routes the web client to the correct tiles.
-
-The mocked Dynamic Vector Tile Server will also forward any query parameters in the URL to the tile cache.
-However, currently, ESRI JS API does not support the use of query parameters and removed them before making the request.
-Hence this feature might not work in a ESRI applications.
-"""
 
 
 @router.get(
