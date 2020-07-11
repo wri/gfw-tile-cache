@@ -28,11 +28,11 @@ def to_bbox(x: int, y: int, z: int) -> Bounds:
 
 
 async def xyz(
-    z: int = Path(..., title="Zoom level", ge=0, le=22),
-    x: int = Path(..., title="Tile grid column", ge=0),
+    z: int = Path(..., description="Zoom level", ge=0, le=22),
+    x: int = Path(..., description="Tile grid column", ge=0),
     y: Union[int, str] = Path(
         ...,
-        title="Tile grid row (integer >= 0) and optional scale factor (either @2x, @0.5x or @0.25x)",
+        description="Tile grid row (integer >= 0) and optional scale factor (either @2x, @0.5x or @0.25x)",
         regex="^\d+(@(2|0.5|0.25)x)?$",
     ),
 ) -> Tuple[Bounds, int, int]:
@@ -65,7 +65,7 @@ async def static_dataset_dependency(dataset: get_static_datasets()) -> str:  # t
 
 async def dynamic_version_dependency(
     dataset: str = Depends(dynamic_dataset_dependency),
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    version: str = Path(..., description="Dataset version", regex=VERSION_REGEX),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -80,7 +80,7 @@ async def dynamic_version_dependency(
 
 async def static_version_dependency(
     dataset: str = Depends(static_dataset_dependency),
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    version: str = Path(..., description="Dataset version", regex=VERSION_REGEX),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.

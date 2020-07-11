@@ -13,3 +13,11 @@ output "tile_cache_bucket_name" {
 output "tile_cache_url" {
   value = "https://${var.tile_cache_url}"
 }
+
+output "tile_cache_cluster" {
+  value = module.orchestration.ecs_cluster_name
+}
+
+output "tile_cache_service" {
+  value = module.orchestration.ecs_service_name
+}
