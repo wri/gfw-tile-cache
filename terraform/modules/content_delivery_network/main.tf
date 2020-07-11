@@ -235,6 +235,33 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+   # temporary entry, can delete once new wdpa data are available
+   ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    compress               = true
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
+    min_ttl                = 0
+    path_pattern           = "wdpa_protected_areas/v201909/mvt/*"
+    smooth_streaming       = false
+    target_origin_id       = "static"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = false
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
+
   # Static tiles are stored on S3
   # They won't change and can stay in cache for a year
   # We will set response headers for selected tile caches in S3 if required
