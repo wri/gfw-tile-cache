@@ -15,9 +15,16 @@ from ..models.types import Bounds
 
 DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"  # mypy: ignore
 VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
-NOW = pendulum.now()
-DEFAULT_START = NOW.subtract(weeks=1).to_date_string()
-DEFAULT_END = NOW.to_date_string()
+
+
+def default_start():
+    now = pendulum.now()
+    return now.subtract(weeks=1).to_date_string()
+
+
+def default_end():
+    now = pendulum.now()
+    return now.to_date_string()
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:
@@ -80,7 +87,7 @@ async def dynamic_version_dependency(
 
 async def static_version_dependency(
     dataset: str = Depends(static_dataset_dependency),
-    version: str = Path(..., description="Dataset version", regex=VERSION_REGEX),
+    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -124,7 +131,7 @@ def validate_static_version(dataset, version) -> None:
 def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
     _start_date = pendulum.from_format(start_date, "YYYY-MM-DD")
     _end_date = pendulum.from_format(end_date, "YYYY-MM-DD")
-    _default_end = pendulum.from_format(DEFAULT_END, "YYYY-MM-DD")
+    _default_end = pendulum.from_format(default_end(), "YYYY-MM-DD")
     if _start_date > _end_date:
         raise HTTPException(
             status_code=403, detail="Start date must be smaller or equal to end date."

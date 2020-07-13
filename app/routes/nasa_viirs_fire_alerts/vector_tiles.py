@@ -16,9 +16,9 @@ from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
     DATE_REGEX,
-    DEFAULT_END,
-    DEFAULT_START,
     Bounds,
+    default_end,
+    default_start,
     validate_dates,
     xyz,
 )
@@ -52,12 +52,12 @@ async def nasa_viirs_fire_alerts_tile(
         None, description="Only show fire alerts within selected geostore area"
     ),
     start_date: str = Query(
-        DEFAULT_START,
+        default_start(),
         regex=DATE_REGEX,
         description="Only show alerts for given date and after",
     ),
     end_date: str = Query(
-        DEFAULT_END,
+        default_end(),
         regex=DATE_REGEX,
         description="Only show alerts until given date. End date cannot be in the future.",
     ),
@@ -95,7 +95,7 @@ async def nasa_viirs_fire_alerts_tile(
     # as content might change after next update. For non-default values we can be certain,
     # that response will always be the same b/c we only add newer dates
     # and users are not allowed to query future dates
-    if start_date == DEFAULT_START or end_date == DEFAULT_END:
+    if start_date == default_start() or end_date == default_end():
         response.headers["Cache-Control"] = "max-age=7200"  # 2h
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year

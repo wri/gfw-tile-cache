@@ -3,7 +3,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, Path, Response
 
 from ...models.pydantic.esri import VectorTileService
-from ...routes import DATE_REGEX, DEFAULT_END, DEFAULT_START
+from ...routes import DATE_REGEX, default_end, default_start
 from ...routes.esri_vector_tile_server import get_vector_tile_server
 from ...routes.nasa_viirs_fire_alerts.vector_tiles import nasa_viirs_fire_alerts_version
 
@@ -20,10 +20,10 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
     response: Response,
     version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
     start_date: str = Path(
-        ..., regex=DATE_REGEX, title="Only show alerts for given date and after",
+        ..., regex=DATE_REGEX, description="Only show alerts for given date and after",
     ),
     end_date: str = Path(
-        ..., regex=DATE_REGEX, title="Only show alerts until given date."
+        ..., regex=DATE_REGEX, description="Only show alerts until given date."
     ),
 ):
     """
@@ -45,7 +45,7 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
     # as content might change after next update. For non-default values we can be certain,
     # that response will always be the same b/c we only add newer dates
     # and users are not allowed to query future dates
-    if start_date == DEFAULT_START or end_date == DEFAULT_END:
+    if start_date == default_start() or end_date == default_end():
         response.headers["Cache-Control"] = "max-age=7200"  # 2h
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
