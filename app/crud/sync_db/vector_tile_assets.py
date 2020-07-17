@@ -110,13 +110,13 @@ def field_constructor(asset_type: str):
         with get_synchronous_db() as db:
             row = db.execute(
                 """SELECT DISTINCT
-                    metadata->>'fields' as fields
+                    fields
                    FROM assets
-                   WHERE asset_type = :asset_type
+                   WHERE is_default = true
                     AND status = 'saved'
                     AND dataset = :dataset
                     AND version = :version""",
-                {"dataset": dataset, "version": version, "asset_type": asset_type},
+                {"dataset": dataset, "version": version},
             ).fetchone()
 
         if not row or not row[0]:
@@ -125,8 +125,7 @@ def field_constructor(asset_type: str):
                 f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
             )
         else:
-            fields = json.loads(row[0])
-
+            fields = row[0]
         return fields
 
     return get_fields
