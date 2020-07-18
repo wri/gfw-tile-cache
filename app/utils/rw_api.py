@@ -1,13 +1,12 @@
-from typing import Tuple
 from uuid import UUID
 
 from async_lru import alru_cache
 from httpx import AsyncClient
 from httpx import Response as HTTPXResponse
 
-from app.error import BadResponseError, InvalidResponseError
-from app.models.types import Geometry
-from app.settings.globals import ENV
+from ..error import BadResponseError, InvalidResponseError
+from ..models.types import Geometry
+from ..settings.globals import ENV
 
 
 @alru_cache(maxsize=128)

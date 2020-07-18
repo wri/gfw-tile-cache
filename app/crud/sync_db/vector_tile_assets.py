@@ -1,10 +1,9 @@
-import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cachetools import TTLCache, cached
 from fastapi.logger import logger
 
-from app.application import get_synchronous_db
+from ...application import get_synchronous_db
 
 static_asset = "Static vector tile cache"
 dynamic_asset = "Dynamic vector tile cache"
