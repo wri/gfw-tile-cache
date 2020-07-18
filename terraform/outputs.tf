@@ -21,3 +21,11 @@ output "tile_cache_cluster" {
 output "tile_cache_service" {
   value = module.orchestration.ecs_service_name
 }
+
+output "tile_cache_bucket_policy_update_policy_arn" {
+  value = module.storage.tile_bucket_policy_update_policy_arn
+}
+
+output "ecs_update_service_policy_arn" {
+  value = module.orchestration.ecs_update_service_policy_arn
+}

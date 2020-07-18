@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import ORJSONResponse
@@ -12,6 +13,7 @@ from ...crud.async_db.vector_tiles.filters import (
 from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...error import RecordNotFoundError
 from ...models.enumerators.dynamic_enumerators import Versions, get_dynamic_versions
+from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
@@ -48,8 +50,11 @@ async def nasa_viirs_fire_alerts_tile(
     response: Response,
     version: str = Depends(nasa_viirs_fire_alerts_version),
     bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
-    geostore_id: Optional[str] = Query(
+    geostore_id: Optional[UUID] = Query(
         None, description="Only show fire alerts within selected geostore area"
+    ),
+    geostore_origin: GeostoreOrigin = Query(
+        "gfw", description="Origin service of geostore ID"
     ),
     start_date: str = Query(
         default_start(),
@@ -83,7 +88,7 @@ async def nasa_viirs_fire_alerts_tile(
     validate_dates(start_date, end_date, force_date_range)
 
     filters = [
-        await geometry_filter(geostore_id, bbox),
+        await geometry_filter(geostore_id, bbox, geostore_origin),
         nasa_viirs_fire_alerts.confidence_filter(high_confidence_only),
         date_filter("alert__date", start_date, end_date),
     ] + contextual_filter(**contextual_filters)

@@ -1,10 +1,9 @@
-import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cachetools import TTLCache, cached
 from fastapi.logger import logger
 
-from app.application import get_synchronous_db
+from ...application import get_synchronous_db
 
 static_asset = "Static vector tile cache"
 dynamic_asset = "Dynamic vector tile cache"
@@ -110,13 +109,13 @@ def field_constructor(asset_type: str):
         with get_synchronous_db() as db:
             row = db.execute(
                 """SELECT DISTINCT
-                    metadata->>'fields' as fields
+                    fields
                    FROM assets
-                   WHERE asset_type = :asset_type
+                   WHERE is_default = true
                     AND status = 'saved'
                     AND dataset = :dataset
                     AND version = :version""",
-                {"dataset": dataset, "version": version, "asset_type": asset_type},
+                {"dataset": dataset, "version": version},
             ).fetchone()
 
         if not row or not row[0]:
@@ -125,8 +124,7 @@ def field_constructor(asset_type: str):
                 f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
             )
         else:
-            fields = json.loads(row[0])
-
+            fields = row[0]
         return fields
 
     return get_fields

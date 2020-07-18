@@ -2,5 +2,5 @@
 
 set -e
 
-docker-compose -f docker-compose.test.yml build app
+docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
 docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test  run --rm app tests/"$*"
