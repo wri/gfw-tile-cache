@@ -34,14 +34,10 @@ CREATE TABLE public.versions
     dataset character varying COLLATE pg_catalog."default" NOT NULL,
     version character varying COLLATE pg_catalog."default" NOT NULL,
     is_latest boolean,
-    source_type character varying COLLATE pg_catalog."default" NOT NULL,
-    has_geostore boolean,
-    metadata jsonb,
     is_mutable boolean,
-    source_uri character varying[] COLLATE pg_catalog."default",
-    change_log jsonb[],
     status character varying COLLATE pg_catalog."default" NOT NULL,
-    creation_options jsonb,
+    metadata jsonb,
+    change_log jsonb[],
     CONSTRAINT versions_pkey PRIMARY KEY (dataset, version),
     CONSTRAINT fk FOREIGN KEY (dataset)
         REFERENCES public.datasets (dataset) MATCH SIMPLE
@@ -79,15 +75,18 @@ CREATE TABLE public.assets
 (
     created_on timestamp without time zone DEFAULT now(),
     updated_on timestamp without time zone DEFAULT now(),
+    asset_id uuid NOT NULL,
     dataset character varying COLLATE pg_catalog."default" NOT NULL,
     version character varying COLLATE pg_catalog."default" NOT NULL,
     asset_type character varying COLLATE pg_catalog."default" NOT NULL,
     asset_uri character varying COLLATE pg_catalog."default" NOT NULL,
-    metadata jsonb,
-    asset_id uuid NOT NULL,
-    creation_options jsonb,
-    is_managed boolean NOT NULL,
     status character varying COLLATE pg_catalog."default" NOT NULL,
+    is_managed boolean NOT NULL,
+    is_default boolean NOT NULL,
+    creation_options jsonb,
+    metadata jsonb,
+    fields jsonb,
+    stats jsonb,
     change_log jsonb[],
     CONSTRAINT assets_pkey PRIMARY KEY (dataset, version, asset_type),
     CONSTRAINT uq_asset_type UNIQUE (dataset, version, asset_type),
@@ -147,13 +146,18 @@ CREATE INDEX geostore_gfw_geostore_id_idx
 
 
 INSERT INTO public.datasets (dataset) VALUES ('nasa_viirs_fire_alerts');
-INSERT INTO public.versions (dataset, version, is_latest, status, source_type)
-  VALUES ('nasa_viirs_fire_alerts', 'v202003', true, 'saved', 'table');
-INSERT INTO public.assets (dataset, version, asset_type, metadata, asset_id, status, asset_uri, is_managed)
-    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{"fields": [{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]}', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true);
+INSERT INTO public.versions (dataset, version, is_latest, status)
+  VALUES ('nasa_viirs_fire_alerts', 'v202003', true, 'saved');
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Geo database table', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true, true);
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{}', '[]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri2', true, false);
 
 INSERT INTO public.datasets (dataset) VALUES ('wdpa_protected_areas');
-INSERT INTO public.versions (dataset, version, is_latest, status, source_type)
-  VALUES ('wdpa_protected_areas', 'v201912', true, 'saved', 'vector');
-INSERT INTO public.assets (dataset, version, asset_type, metadata, asset_id, status, asset_uri, is_managed)
-    VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{"fields": [{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]}', '327fdd68-2d07-4ced-99f1-69e7f74b20b8', 'saved', 'my_uri2', true);
+INSERT INTO public.versions (dataset, version, is_latest, status)
+  VALUES ('wdpa_protected_areas', 'v201912', true, 'saved');
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('wdpa_protected_areas', 'v201912', 'Geo database table', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', 'dc647190-c74b-4c9a-865e-e26e90480ec9', 'saved', 'my_uri3', true, true);
+
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{}', '[]', '0637a11b-18f7-42de-9a15-a0ec488c09b6', 'saved', 'my_uri4', true, false);

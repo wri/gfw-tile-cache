@@ -64,7 +64,7 @@ variable "fargate_cpu" {
   description = "vCPU for service."
 }
 variable "fargate_memory" {
-  default     = 2048
+  default     = 1024
   type        = number
   description = "Memory for service in MB."
 }

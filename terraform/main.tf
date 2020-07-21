@@ -11,7 +11,7 @@ terraform {
 # Download any stable version in AWS provider of 2.65.0 or higher in 2.65 train
 provider "aws" {
   region  = "us-east-1"
-  version = "~> 2.65.0"
+  version = "~> 2.70.0"
 }
 
 locals {
@@ -26,7 +26,7 @@ locals {
 
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.2.5"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.2.6"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
   tag        = local.container_tag
@@ -34,7 +34,7 @@ module "container_registry" {
 
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.2.5"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.2.6"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags

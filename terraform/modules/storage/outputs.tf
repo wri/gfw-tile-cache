@@ -9,3 +9,11 @@ output "tiles_bucket_website_endpoint" {
 output "tiles_bucket_name" {
   value = aws_s3_bucket.tiles.id
 }
+
+output "s3_write_tiles_arn" {
+  value = aws_iam_policy.s3_write_tiles.arn
+}
+
+output "s3_full_access_tiles_arn" {
+  value = aws_iam_policy.s3_full_access_tiles.arn
+}

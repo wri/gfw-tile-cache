@@ -109,7 +109,6 @@ def custom_openapi(openapi_prefix: str = ""):
         version="0.1.0",
         description="Use GFW Tile Cache to retrieve vector and raster tiles.",
         routes=app.routes,
-        openapi_prefix=openapi_prefix,
     )
 
     openapi_schema["tags"] = tags_metadata

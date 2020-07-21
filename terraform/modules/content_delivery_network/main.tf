@@ -199,11 +199,16 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-
+  ###################################################
   # Externally managed
   # TCL data are currently generated in GEE and stored in GCS
   # We update the response header to keep the tiles in browser cache for up to a year
   # Cloud front will also cache tile for a year
+  ###################################################
+
+  #####################
+  # UMD Tree Cover Loss
+  #####################
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
@@ -212,6 +217,75 @@ resource "aws_cloudfront_distribution" "tiles" {
     max_ttl                = 31536000 # 1y
     min_ttl                = 0
     path_pattern           = "umd_tree_cover_loss/v1.7/*"
+    smooth_streaming       = false
+    target_origin_id       = "google-tiles"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = false
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+
+    lambda_function_association {
+      event_type   = "origin-response"
+      include_body = false
+      lambda_arn   = aws_lambda_function.response_header_cache_control.qualified_arn
+    }
+  }
+
+  #####################
+  # WHRC Above ground biomass loss
+  #####################
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    compress               = true
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
+    min_ttl                = 0
+    path_pattern           = "whrc_aboveground_biomass_loss__mg_per_ha/v4.1.7/*"
+    smooth_streaming       = false
+    target_origin_id       = "google-tiles"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = false
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+
+    lambda_function_association {
+      event_type   = "origin-response"
+      include_body = false
+      lambda_arn   = aws_lambda_function.response_header_cache_control.qualified_arn
+    }
+  }
+
+  #####################
+  # TSC Tree cover loss drivers
+  #####################
+
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    compress               = true
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
+    min_ttl                = 0
+    path_pattern           = "tsc_tree_cover_loss_drivers/v2020/*"
     smooth_streaming       = false
     target_origin_id       = "google-tiles"
     trusted_signers        = []
