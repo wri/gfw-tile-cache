@@ -87,3 +87,16 @@ resource "aws_iam_policy" "s3_full_access_tiles" {
 
 }
 
+data "template_file" "s3_update_bucket_policy" {
+  template = file("${path.root}/policies/iam_policy_modify_bucket_policy.json.tpl")
+  vars = {
+    bucket_arn = aws_s3_bucket.tiles.arn
+  }
+}
+
+resource "aws_iam_policy" "s3_update_bucket_policy" {
+  name   = "${var.project}-s3_update_bucket_policy${var.name_suffix}"
+  policy = data.template_file.s3_update_bucket_policy.rendered
+
+}
+
