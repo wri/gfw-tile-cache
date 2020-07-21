@@ -22,10 +22,14 @@ output "tile_cache_service" {
   value = module.orchestration.ecs_service_name
 }
 
-output "tile_cache_bucket_policy_update_policy_arn" {
-  value = module.storage.tile_bucket_policy_update_policy_arn
-}
-
 output "ecs_update_service_policy_arn" {
   value = module.orchestration.ecs_update_service_policy_arn
+}
+
+output "tile_cache_bucket_write_policy_arn" {
+  value = module.storage.s3_write_tiles_arn
+}
+
+output "tile_cache_bucket_full_access_policy_arn" {
+  value = module.storage.s3_full_access_tiles_arn
 }
