@@ -11,6 +11,7 @@ def handler(event, context):
 
     response = event["Records"][0]["cf"]["response"]
     request = event["Records"][0]["cf"]["request"]
+    headers = response["headers"]
 
     # if S3 returns a 404 sets custom origin properties
     # custom origin is tile cache app. URL is passed via custom header set in cloud front
@@ -21,18 +22,9 @@ def handler(event, context):
         if request["querystring"]:
             redirect_path += f"?{request['querystring']}"
 
-        headers = {"location": [{"key": "Location", "value": redirect_path}]}
-
-        # add access control allow origin header
-        # in case an origin was included in request header to avoid cors issues
-        origin = request["headers"].get("origin", None)
-        if origin:
-            headers["access-control-allow-origin"] = [
-                {"key": "Access-Control-Allow-Origin", "value": "*"}
-            ]
-            headers["access-control-allow-methods"] = [
-                {"key": "Access-Control-Allow-Methods", "value": "GET, HEAD"}
-            ]
+        headers["location"] = [{"key": "Location", "value": redirect_path}]
+        headers["content-type"] = [{"key": "Content-Type", "value": "application/json"}]
+        headers["content-encoding"] = [{"key": "Content-Encoding", "value": "UTF-8"}]
 
         response = {
             "status": "307",

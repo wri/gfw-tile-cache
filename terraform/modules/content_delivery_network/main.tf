@@ -250,7 +250,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     default_ttl            = 31536000 # 1y
     max_ttl                = 31536000 # 1y
     min_ttl                = 0
-    path_pattern           = "whrc_aboveground_biomass_loss__mg_per_ha/v4.1.7/*"
+    path_pattern           = "whrc_aboveground_biomass_loss/v4.1.7/*"
     smooth_streaming       = false
     target_origin_id       = "google-tiles"
     trusted_signers        = []
@@ -359,11 +359,11 @@ resource "aws_cloudfront_distribution" "tiles" {
     default_ttl            = 31536000 # 1y
     max_ttl                = 31536000 # 1y
 
-    lambda_function_association {
-      event_type   = "origin-response"
-      include_body = false
-      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
-    }
+//    lambda_function_association {
+//      event_type   = "origin-response"
+//      include_body = false
+//      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
+//    }
 
   }
 
