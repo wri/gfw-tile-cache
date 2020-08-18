@@ -8,3 +8,11 @@ class RecordAlreadyExistsError(Exception):
 
 class BadRequestError(Exception):
     pass
+
+
+class BadResponseError(Exception):
+    pass
+
+
+class InvalidResponseError(Exception):
+    pass

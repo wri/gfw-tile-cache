@@ -20,3 +20,7 @@ output "lambda_edge_cloudfront_arn" {
 output "cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.tiles.id
 }
+
+output "cloudfront_invalidation_policy_arn" {
+  value = aws_iam_policy.create_cloudfront_invalidation.arn
+}

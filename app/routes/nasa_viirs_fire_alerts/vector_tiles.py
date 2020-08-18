@@ -11,7 +11,7 @@ from ...crud.async_db.vector_tiles.filters import (
     geometry_filter,
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
-from ...error import RecordNotFoundError
+from ...errors import RecordNotFoundError
 from ...models.enumerators.dynamic_enumerators import Versions, get_dynamic_versions
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse

@@ -6,7 +6,7 @@ from shapely.geometry import box, shape
 from sqlalchemy.sql.elements import TextClause
 
 from ....application import db
-from ....error import BadResponseError, InvalidResponseError
+from ....errors import BadResponseError, InvalidResponseError
 from ....models.enumerators.geostore import GeostoreOrigin
 from ....models.types import Bounds, Geometry
 from ....utils import rw_api

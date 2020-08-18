@@ -11,7 +11,7 @@ output "tile_cache_bucket_name" {
 }
 
 output "tile_cache_url" {
-  value = "https://${var.tile_cache_url}"
+  value = var.tile_cache_url
 }
 
 output "tile_cache_cluster" {
@@ -32,4 +32,8 @@ output "tile_cache_bucket_write_policy_arn" {
 
 output "tile_cache_bucket_full_access_policy_arn" {
   value = module.storage.s3_full_access_tiles_arn
+}
+
+output "cloudfront_invalidation_policy_arn" {
+  value = module.content_delivery_network.cloudfront_invalidation_policy_arn
 }
