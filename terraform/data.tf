@@ -25,6 +25,7 @@ data "template_file" "container_definition" {
     project           = local.project
     environment       = var.environment
     aws_region        = var.region
+    tile_cache_url    = var.tile_cache_url
 
   }
 }
