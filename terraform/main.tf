@@ -34,7 +34,7 @@ module "container_registry" {
 
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.2.6"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.2.7"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
