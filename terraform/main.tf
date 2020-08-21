@@ -21,6 +21,7 @@ locals {
   tags            = data.terraform_remote_state.core.outputs.tags
   project         = "gfw-tile-cache"
   container_tag   = substr(var.git_sha, 0, 7)
+  tile_cache_url  = "https://${var.tile_cache_url}"
 }
 
 

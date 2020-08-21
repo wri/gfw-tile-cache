@@ -11,7 +11,7 @@ output "tile_cache_bucket_name" {
 }
 
 output "tile_cache_url" {
-  value = var.tile_cache_url
+  value = local.tile_cache_url
 }
 
 output "tile_cache_cluster" {
