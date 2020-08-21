@@ -2,5 +2,34 @@
 
 set -e
 
-docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
+
+# Default values
+POSITIONAL=()
+BUILD=true
+# extracting cmd line arguments
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+
+  case $key in
+      --no_build)
+      BUILD=false
+      shift # past argument
+      ;;
+      *)    # unknown option
+      POSITIONAL+=("$1") # save it in an array for later
+      shift # past argument
+      ;;
+  esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+
+if [ "${BUILD}" = true ]; then
+  docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
+fi
+
 docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test  run --rm app tests/"$*"
+exit_code=$?
+docker-compose -f docker-compose.test.yml down
+exit $exit_code

@@ -52,7 +52,7 @@ def test_get_latest_non_existing_version():
 def test_get_static_fields():
     result = [
         {
-            "field_name": "test",
+            "field_name": "static_test",
             "field_alias": "TEST",
             "field_type": "text",
             "field_description": None,
@@ -66,7 +66,7 @@ def test_get_static_fields():
 def test_get_dynamic_fields():
     result = [
         {
-            "field_name": "test",
+            "field_name": "dynamic_test",
             "field_alias": "TEST",
             "field_type": "text",
             "field_description": None,
