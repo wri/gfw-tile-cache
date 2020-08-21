@@ -309,8 +309,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-   # temporary entry, can delete once new wdpa data are available
-   ordered_cache_behavior {
+  # temporary entry, can delete once new wdpa data are available
+  ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = true
@@ -359,11 +359,11 @@ resource "aws_cloudfront_distribution" "tiles" {
     default_ttl            = 31536000 # 1y
     max_ttl                = 31536000 # 1y
 
-//    lambda_function_association {
-//      event_type   = "origin-response"
-//      include_body = false
-//      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
-//    }
+    //    lambda_function_association {
+    //      event_type   = "origin-response"
+    //      include_body = false
+    //      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
+    //    }
 
   }
 
@@ -392,7 +392,7 @@ resource "aws_cloudfront_distribution" "tiles" {
 data "template_file" "create_cloudfront_invalidation" {
   template = file("${path.root}/templates/iam_policy_create_cloudfront_invalidation.json.tmpl")
   vars = {
-    cloudfront_arn     = aws_cloudfront_distribution.tiles.arn
+    cloudfront_arn = aws_cloudfront_distribution.tiles.arn
   }
 }
 
