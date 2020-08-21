@@ -1,5 +1,5 @@
 from ....application import db
-from ....error import RecordNotFoundError
+from ....errors import RecordNotFoundError
 from .nasa_viirs_fire_alerts import SCHEMA
 
 

@@ -151,7 +151,7 @@ INSERT INTO public.versions (dataset, version, is_latest, status)
 INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
     VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Geo database table', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true, true);
 INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
-    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{}', '[]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri2', true, false);
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{}', '[{"field_name":"dynamic_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri2', true, false);
 
 INSERT INTO public.datasets (dataset) VALUES ('wdpa_protected_areas');
 INSERT INTO public.versions (dataset, version, is_latest, status)
@@ -160,4 +160,4 @@ INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset
     VALUES ('wdpa_protected_areas', 'v201912', 'Geo database table', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', 'dc647190-c74b-4c9a-865e-e26e90480ec9', 'saved', 'my_uri3', true, true);
 
 INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
-    VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{}', '[]', '0637a11b-18f7-42de-9a15-a0ec488c09b6', 'saved', 'my_uri4', true, false);
+    VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{}', '[{"field_name":"static_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '0637a11b-18f7-42de-9a15-a0ec488c09b6', 'saved', 'my_uri4', true, false);

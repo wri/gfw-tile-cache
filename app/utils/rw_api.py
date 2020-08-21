@@ -4,7 +4,7 @@ from async_lru import alru_cache
 from httpx import AsyncClient
 from httpx import Response as HTTPXResponse
 
-from ..error import BadResponseError, InvalidResponseError
+from ..errors import BadResponseError, InvalidResponseError
 from ..models.types import Geometry
 from ..settings.globals import ENV
 

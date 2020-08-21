@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Path, Response
 
 from ...models.pydantic.esri import VectorTileService
 from ...routes import DATE_REGEX, default_end, default_start
-from ...routes.esri_vector_tile_server import get_vector_tile_server
+from ...routes.esri_vector_tile_server import _get_vector_tile_server
 from ...routes.nasa_viirs_fire_alerts.vector_tiles import nasa_viirs_fire_alerts_version
 
 router = APIRouter()
@@ -51,8 +51,8 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
 
     # TODO: add scale factor to tile url
-    return await get_vector_tile_server(
-        "nasa_viirs_fire_alerts", version, "default", query_params, levels=3
+    return await _get_vector_tile_server(
+        "nasa_viirs_fire_alerts", version, "dynamic", query_params, levels=3
     )
 
 
@@ -71,4 +71,4 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     """
 
     # TODO: add scale factor to tile url
-    return await get_vector_tile_server("nasa_viirs_fire_alerts", version, "dynamic")
+    return await _get_vector_tile_server("nasa_viirs_fire_alerts", version, "dynamic")

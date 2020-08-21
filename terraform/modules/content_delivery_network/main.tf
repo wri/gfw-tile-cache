@@ -385,6 +385,23 @@ resource "aws_cloudfront_distribution" "tiles" {
 
 }
 
+#########################
+## IAM
+#########################
+
+data "template_file" "create_cloudfront_invalidation" {
+  template = file("${path.root}/templates/iam_policy_create_cloudfront_invalidation.json.tmpl")
+  vars = {
+    cloudfront_arn     = aws_cloudfront_distribution.tiles.arn
+  }
+}
+
+resource "aws_iam_policy" "create_cloudfront_invalidation" {
+  name   = "${var.project}-create_cloudfront_invalidation${var.name_suffix}"
+  policy = data.template_file.create_cloudfront_invalidation.rendered
+
+}
+
 
 #########################
 ## Lambda@Edge Functions
