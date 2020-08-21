@@ -2,18 +2,20 @@ from typing import Tuple, Union
 
 import mercantile
 import pendulum
-from fastapi import Depends, HTTPException, Path
+from fastapi import HTTPException, Path
 from fastapi.logger import logger
 from shapely.geometry import box
 
 from ..crud.sync_db.vector_tile_assets import get_dynamic_versions, get_static_versions
 from ..models.enumerators.dynamic_enumerators import (
+    Datasets,
+    Versions,
     get_dynamic_datasets,
     get_static_datasets,
 )
 from ..models.types import Bounds
 
-DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"  # mypy: ignore
+DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
 VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
 
 
@@ -71,8 +73,11 @@ async def static_dataset_dependency(dataset: get_static_datasets()) -> str:  # t
 
 
 async def dynamic_version_dependency(
-    dataset: str = Depends(dynamic_dataset_dependency),
-    version: str = Path(..., description="Dataset version", regex=VERSION_REGEX),
+    *,
+    dataset: get_dynamic_datasets() = Path(  # type: ignore
+        ..., description=Datasets.__doc__
+    ),
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -86,8 +91,10 @@ async def dynamic_version_dependency(
 
 
 async def static_version_dependency(
-    dataset: str = Depends(static_dataset_dependency),
-    version: str = Path(..., title="Dataset version", regex=VERSION_REGEX),
+    dataset: get_dynamic_datasets() = Path(  # type: ignore
+        ..., description=Datasets.__doc__
+    ),
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.

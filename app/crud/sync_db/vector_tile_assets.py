@@ -111,11 +111,11 @@ def field_constructor(asset_type: str):
                 """SELECT DISTINCT
                     fields
                    FROM assets
-                   WHERE is_default = true
+                   WHERE asset_type = :asset_type
                     AND status = 'saved'
                     AND dataset = :dataset
                     AND version = :version""",
-                {"dataset": dataset, "version": version},
+                {"dataset": dataset, "version": version, "asset_type": asset_type},
             ).fetchone()
 
         if not row or not row[0]:

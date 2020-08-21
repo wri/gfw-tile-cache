@@ -29,13 +29,13 @@ async_lru = "*"
 geojson = "*"
 orjson = "*"
 cachetools = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
 gino = "*"
 gino_starlette = "*"
 httpx = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
