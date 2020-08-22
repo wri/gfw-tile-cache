@@ -12,7 +12,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+
 
 from .middleware import no_cache_response_header
 from .application import app
@@ -83,6 +85,13 @@ async def rve_error_handler(request: Request, exc: RequestValidationError):
     )
 
 
+#################
+# STATIC FILES
+#################
+
+app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")
+
+
 #####################
 ## OpenAPI
 #####################
@@ -112,7 +121,7 @@ def custom_openapi(openapi_prefix: str = ""):
     )
 
     openapi_schema["tags"] = tags_metadata
-    # openapi_schema["info"]["x-logo"] = {"url": "/static/gfw-data-api.png"}
+    openapi_schema["info"]["x-logo"] = {"url": "/static/gfw-tile-cache.png"}
     openapi_schema["x-tagGroups"] = [
         {"name": "Vector Tiles API", "tags": ["Dynamic Vector Tiles", "Vector Tiles"]},
         {"name": "Raster Tiles API", "tags": ["Raster Tiles"]},

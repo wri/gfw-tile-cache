@@ -21,6 +21,7 @@ locals {
   tags            = data.terraform_remote_state.core.outputs.tags
   project         = "gfw-tile-cache"
   container_tag   = substr(var.git_sha, 0, 7)
+  tile_cache_url  = "https://${var.tile_cache_url}"
 }
 
 
@@ -34,7 +35,7 @@ module "container_registry" {
 
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.2.6"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.2.7"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags

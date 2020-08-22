@@ -10,14 +10,17 @@ from ...crud.sync_db.vector_tile_assets import get_static_versions as get_s_vers
 
 
 class Datasets(str, Enum):
+    __doc__ = "Dataset name"
     pass
 
 
 class Versions(str, Enum):
+    __doc__ = "Version name of dataset. When using `latest` call will be redirected (307) to version tagged as latest."
     latest = "latest"
 
 
 class Attributes(str, Enum):
+    __doc__ = "Attribute name"
     pass
 
 

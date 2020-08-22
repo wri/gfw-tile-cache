@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
 
@@ -71,3 +71,9 @@ class VectorTileService(BaseModel):
     maxLOD: int
     resourceInfo: ResourceInfo
     serviceItemId: str
+
+
+class RootJson(BaseModel):
+    version: int
+    sources: Dict[str, Any]
+    layers: List[Dict[str, Any]]
