@@ -35,7 +35,7 @@ resource "aws_s3_bucket_policy" "tiles" {
 
 
 module "tiles_policy" {
-  source = "git::https://github.com/cloudposse/terraform-aws-iam-policy-document-aggregator.git?ref=0.2.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-iam-policy-document-aggregator.git?ref=0.6.0"
   source_documents = [
     data.template_file.tiles_bucket_policy_cloudfront.rendered,
     data.template_file.tiles_bucket_policy_lambda.rendered
