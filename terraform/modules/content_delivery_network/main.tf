@@ -359,11 +359,57 @@ resource "aws_cloudfront_distribution" "tiles" {
     default_ttl            = 31536000 # 1y
     max_ttl                = 31536000 # 1y
 
-    //    lambda_function_association {
-    //      event_type   = "origin-response"
-    //      include_body = false
-    //      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
-    //    }
+  }
+
+
+  # send all dynamic URIs to tile cache app
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    target_origin_id       = "dynamic"
+    compress               = true
+    path_pattern           = "*/dynamic/*"
+    default_ttl            = 86400 # 24h
+    max_ttl                = 86400 # 24h
+    min_ttl                = 0
+    smooth_streaming       = false
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = true
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
+  # Static tiles are stored on S3
+  # There might be some static raster tile caches which don't have default in their name.
+  # We need to cache them somehow. In consequence, dynamic raster tile caches must always have `dynamic` in their name
+  ordered_cache_behavior {
+    allowed_methods  = local.methods
+    cached_methods   = local.methods
+    target_origin_id = "static"
+    compress         = true
+    path_pattern     = "*.png"
+
+    forwarded_values {
+      query_string = false
+      headers      = local.headers
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
 
   }
 
