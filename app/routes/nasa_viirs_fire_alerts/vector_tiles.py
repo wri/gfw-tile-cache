@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 from uuid import UUID
 
+from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import ORJSONResponse
 
@@ -105,9 +106,16 @@ async def nasa_viirs_fire_alerts_tile(
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
 
-    return await nasa_viirs_fire_alerts.get_aggregated_tile(
-        version, bbox, extent, include_attribute, *filters
-    )
+    try:
+        tile = await nasa_viirs_fire_alerts.get_aggregated_tile(
+            version, bbox, extent, include_attribute, *filters
+        )
+    except QueryCanceledError:
+        raise HTTPException(
+            status_code=524,
+            detail="A timeout occurred while processing the request. Request canceled.",
+        )
+    return tile
 
 
 @router.get(
