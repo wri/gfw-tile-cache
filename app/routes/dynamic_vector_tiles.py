@@ -7,7 +7,8 @@ or to change tile resolution using the `@` operator after the `y` index
 from typing import List, Optional, Tuple
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from asyncpg import QueryCanceledError
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.sql import Select, TableClause
 
 from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
@@ -53,4 +54,11 @@ async def dynamic_vector_tile(
 
     query: Select = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
 
-    return await get_tile(query, name=dataset, extent=extent)
+    try:
+        tile = await get_tile(query, name=dataset, extent=extent)
+    except QueryCanceledError:
+        raise HTTPException(
+            status_code=524,
+            detail="A timeout occurred while processing the request. Request canceled.",
+        )
+    return tile

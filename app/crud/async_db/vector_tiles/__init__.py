@@ -55,6 +55,7 @@ async def get_aggregated_tile(
 async def _get_tile(query: Select) -> VectorTileResponse:
 
     logger.debug(query)
+    await db.status("SET statement_timeout = 58000;")
     tile = await db.scalar(query)
 
     return VectorTileResponse(content=tile, status_code=200)
