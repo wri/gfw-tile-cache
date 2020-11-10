@@ -4,15 +4,18 @@ The dynamic nature of the service allows users to apply filters using query para
 or to change tile resolution using the `@` operator after the `y` index
 """
 
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.sql import Select, TableClause
+from sqlalchemy.sql.elements import ColumnClause
 
+from ..application import db
 from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ..crud.async_db.vector_tiles.filters import geometry_filter
+from ..crud.sync_db.vector_tile_assets import get_dynamic_fields
 from ..models.enumerators.geostore import GeostoreOrigin
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
@@ -52,7 +55,13 @@ async def dynamic_vector_tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    query: Select = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
+    columns: List[ColumnClause] = list()
+    fields: List[Dict] = get_dynamic_fields(dataset, version)
+    for field in fields:
+        if field["is_feature_info"]:
+            columns.append(db.column(field["field_name"]))
+
+    query: Select = get_mvt_table(dataset, version, bbox, extent, columns, *filters)
 
     try:
         tile = await get_tile(query, name=dataset, extent=extent)
