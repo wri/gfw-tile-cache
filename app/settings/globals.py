@@ -54,3 +54,4 @@ DATABASE_CONFIG: DatabaseURL = DatabaseURL(
 AWS_REGION = config("AWS_REGION", cast=str, default="us-east-1")
 
 TILE_CACHE_URL: Optional[str] = config("TILE_CACHE_URL", cast=str, default=None)
+SQL_REQUEST_TIMEOUT: int = 58

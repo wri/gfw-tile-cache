@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
-from .settings.globals import DATABASE_CONFIG
+from .settings.globals import DATABASE_CONFIG, SQL_REQUEST_TIMEOUT
 
 READ_ENGINE: Optional[GinoEngine] = None
 SessionLocal: Optional[Session] = None
@@ -25,6 +25,7 @@ db = Gino(
     database=DATABASE_CONFIG.database,
     pool_min_size=5,
     pool_max_size=10,
+    kwargs=dict(command_timeout=SQL_REQUEST_TIMEOUT),
 )
 
 
