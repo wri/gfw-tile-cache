@@ -4,15 +4,18 @@ The dynamic nature of the service allows users to apply filters using query para
 or to change tile resolution using the `@` operator after the `y` index
 """
 
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.sql import Select, TableClause
+from sqlalchemy.sql.elements import ColumnClause
 
+from ..application import db
 from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ..crud.async_db.vector_tiles.filters import geometry_filter
+from ..crud.sync_db.vector_tile_assets import get_dynamic_fields
 from ..models.enumerators.geostore import GeostoreOrigin
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
@@ -37,7 +40,14 @@ async def dynamic_vector_tile(
     ),
     geostore_origin: GeostoreOrigin = Query(
         "gfw", description="Origin service of geostore ID"
-    )
+    ),
+    include_attribute: Optional[List[str]] = Query(
+        None,
+        title="Included Attributes",
+        description="Select which attributes to include in vector tile."
+        "Please check data-api for available attribute values."
+        "If not specified, all attributes will be shown.",
+    ),
 ) -> VectorTileResponse:
     """
     Generic dynamic vector tile
@@ -52,7 +62,25 @@ async def dynamic_vector_tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    query: Select = get_mvt_table(dataset, version, bbox, extent, list(), *filters)
+    fields: List[Dict] = get_dynamic_fields(dataset, version)
+
+    # if no attributes specified get all feature info fields
+    if not include_attribute:
+        columns: List[ColumnClause] = [
+            db.column(field["field_name"])
+            for field in fields
+            if field["is_feature_info"]
+        ]
+
+    # otherwise run provided list against feature info list and keep common elements
+    else:
+        columns = [
+            db.column(field["field_name"])
+            for field in fields
+            if field["is_feature_info"] and field["field_name"] in include_attribute
+        ]
+
+    query: Select = get_mvt_table(dataset, version, bbox, extent, columns, *filters)
 
     try:
         tile = await get_tile(query, name=dataset, extent=extent)
