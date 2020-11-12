@@ -55,7 +55,6 @@ async def get_aggregated_tile(
 async def _get_tile(query: Select) -> VectorTileResponse:
 
     logger.debug(query)
-    await db.status("SET statement_timeout = 58000;")
     tile = await db.scalar(query)
 
     return VectorTileResponse(content=tile, status_code=200)
@@ -91,17 +90,18 @@ def _get_mvt_table(
     mvt_geom = db.literal_column(
         f"ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, {extent}, 0,false)"
     ).label("geom")
+    cols: List[ColumnClause] = list(columns)
+    cols.append(mvt_geom)
 
     src_table = db.table(table_name)
     src_table.schema = schema_name
     src_table = src_table.alias("t")
 
-    col = [mvt_geom]
-    for c in columns:
-        col.append(c)
     bound_filter = db.text("ST_Intersects(t.geom_wm, bounds.geom)")
 
-    return db.select(col).select_from(src_table).select_from(bounds).where(bound_filter)
+    return (
+        db.select(cols).select_from(src_table).select_from(bounds).where(bound_filter)
+    )
 
 
 def _filter_mvt_table(query: Select, *filters: TextClause) -> Select:
