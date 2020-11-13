@@ -3,11 +3,10 @@ Dynamic vector tiles are generated on the fly.
 The dynamic nature of the service allows users to apply filters using query parameters
 or to change tile resolution using the `@` operator after the `y` index
 """
-
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
-from asyncpg import QueryCanceledError
+from asyncpg.exceptions import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.sql import Select, TableClause
 from sqlalchemy.sql.elements import ColumnClause
@@ -89,4 +88,5 @@ async def dynamic_vector_tile(
             status_code=524,
             detail="A timeout occurred while processing the request. Request canceled.",
         )
-    return tile
+    else:
+        return tile
