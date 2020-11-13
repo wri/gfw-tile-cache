@@ -115,7 +115,8 @@ async def nasa_viirs_fire_alerts_tile(
             status_code=524,
             detail="A timeout occurred while processing the request. Request canceled.",
         )
-    return tile
+    else:
+        return tile
 
 
 @router.get(
