@@ -2,11 +2,11 @@ from contextlib import contextmanager
 from typing import Iterator, Optional
 
 from fastapi import FastAPI
-from gino_starlette import Gino, GinoEngine
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
+from .gino import Gino, GinoEngine
 from .settings.globals import DATABASE_CONFIG, SQL_REQUEST_TIMEOUT
 
 READ_ENGINE: Optional[GinoEngine] = None
@@ -25,7 +25,7 @@ db = Gino(
     database=DATABASE_CONFIG.database,
     pool_min_size=5,
     pool_max_size=10,
-    kwargs=dict(command_timeout=SQL_REQUEST_TIMEOUT),
+    kwargs=dict(server_settings=dict(statement_timeout=f"{SQL_REQUEST_TIMEOUT}")),
 )
 
 
