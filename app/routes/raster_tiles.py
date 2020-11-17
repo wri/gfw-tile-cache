@@ -6,10 +6,11 @@ If tiles for a given zoom level are not present for a selected dataset,
 the server will redirect the request to the dynamic service and will attempt to generate it here
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Query, Response
 
+from ..models.enumerators.wmts import WmtsRequest
 from ..models.types import Bounds
 from . import static_version_dependency, xyz
 
@@ -35,3 +36,31 @@ async def raster_tile(
     # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
     # Hence, this function should never be called.
     raise NotImplementedError
+
+
+@router.get(
+    "/{dataset}/{version}/default/wmts",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    # response_description="PNG Raster Tile",
+)
+async def wmts(
+    *,
+    dv: Tuple[str, str] = Depends(static_version_dependency),  # TODO: fix dependency
+    SERVICE: str = Query("WMTS"),
+    VERSION: str = Query("1.0.0"),
+    REQUEST: WmtsRequest = Query(...),
+    tileMatrixSet: Optional[str] = Query(None, description="Projection of tiles"),
+    tileMatrix: Optional[int] = Query(None, description="z index"),
+    tileRow: Optional[int] = Query(None, description="y index"),
+    tileCol: Optional[int] = Query(None, description="x index"),
+) -> Response:
+    """
+    Generic raster tile
+    """
+    # dataset = dv[0]
+    # version = dv[1]
+    if REQUEST == WmtsRequest.get_capabilities:
+        pass
+    elif REQUEST == WmtsRequest.get_tiles:
+        pass
