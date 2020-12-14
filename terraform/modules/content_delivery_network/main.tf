@@ -128,6 +128,33 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+  # TEST RADD data (only exist in dev)
+  # Can be deleted once RADD tile service is operational
+    ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    compress               = false
+    default_ttl            = 43200 # 12h
+    max_ttl                = 43200 # 12h
+    min_ttl                = 0
+    path_pattern           = "radd_alerts/tiles/latest/*"
+    smooth_streaming       = false
+    target_origin_id       = "static"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = false
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
 
   # Latest default layers need to be rerouted and cache headers need to be rewritten
   # This cache bahavior sends the requests to a lambda@edge function which looks up the latest version
