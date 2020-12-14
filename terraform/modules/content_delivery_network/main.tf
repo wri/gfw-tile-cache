@@ -309,34 +309,43 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  # temporary entry, can delete once new wdpa data are available
+
+  # Defautl static raster tiles are stored on S3
+  # They won't change and can stay in cache for a year
+  # We will set response headers for selected tile caches in S3 if required
+  # If tile is not found on S3, redirect to tile cache app (`dynamic` endpoint).
+  # Tile cache app will return dynamically generated tile and upload tile to s3 for future use
+  # or raise 404 error if tile does not exist.
   ordered_cache_behavior {
-    allowed_methods        = local.methods
-    cached_methods         = local.methods
-    compress               = true
-    default_ttl            = 31536000 # 1y
-    max_ttl                = 31536000 # 1y
-    min_ttl                = 0
-    path_pattern           = "wdpa_protected_areas/v201909/mvt/*"
-    smooth_streaming       = false
-    target_origin_id       = "static"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods  = local.methods
+    cached_methods   = local.methods
+    target_origin_id = "static"
+    compress         = true
+    path_pattern     = "*/default/*.png"
 
     forwarded_values {
-      headers                 = local.headers
-      query_string            = false
-      query_string_cache_keys = []
-
+      query_string = false
+      headers      = local.headers
       cookies {
-        forward           = "none"
-        whitelisted_names = []
+        forward = "none"
       }
     }
+
+    lambda_function_association {
+      event_type   = "origin-response"
+      include_body = false
+      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
+
   }
 
 
-  # Static tiles are stored on S3
+  # Default static vector tiles are stored on S3
   # They won't change and can stay in cache for a year
   # We will set response headers for selected tile caches in S3 if required
   ordered_cache_behavior {
@@ -360,7 +369,6 @@ resource "aws_cloudfront_distribution" "tiles" {
     max_ttl                = 31536000 # 1y
 
   }
-
 
   # send all dynamic URIs to tile cache app
   ordered_cache_behavior {
@@ -388,15 +396,22 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  # Static tiles are stored on S3
+  # Non default static tiles are stored on S3.
   # There might be some static raster tile caches which don't have default in their name.
-  # We need to cache them somehow. In consequence, dynamic raster tile caches must always have `dynamic` in their name
+  # We need to cache them somehow. In consequence, dynamic raster tile caches must always have `dynamic` in their name.
+  # If tile is not found on S3, redirect to tile cache app (`dynamic` endpoint).
+  # Tile cache app will return dynamically generated tile and upload tile to s3 for future use
+  # or raise 404 error if tile does not exist.
   ordered_cache_behavior {
-    allowed_methods  = local.methods
-    cached_methods   = local.methods
-    target_origin_id = "static"
-    compress         = true
-    path_pattern     = "*.png"
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    target_origin_id       = "static"
+    compress               = true
+    path_pattern           = "*.png"
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
 
     forwarded_values {
       query_string = false
@@ -406,11 +421,11 @@ resource "aws_cloudfront_distribution" "tiles" {
       }
     }
 
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 31536000 # 1y
-    max_ttl                = 31536000 # 1y
-
+    lambda_function_association {
+      event_type   = "origin-response"
+      include_body = false
+      lambda_arn   = aws_lambda_function.redirect_s3_404.qualified_arn
+    }
   }
 
   restrictions {

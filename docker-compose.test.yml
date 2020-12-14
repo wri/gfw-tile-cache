@@ -22,7 +22,7 @@ services:
       - AWS_SECURITY_TOKEN=testing  # pragma: allowlist secret
       - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
       - ENV=test
-    entrypoint: wait_for_postgres.sh pytest --cov-report term --cov-report xml:/app/tests/cobertura.xml --cov=app
+    entrypoint: wait_for_postgres.sh pytest --cov-report term --cov-report xml:/app/tests/cobertura.xml --cov=app --cov=lambdas
     depends_on:
       - test_database
 

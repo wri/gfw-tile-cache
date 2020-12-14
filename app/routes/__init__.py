@@ -36,7 +36,7 @@ def to_bbox(x: int, y: int, z: int) -> Bounds:
     return box(left, bottom, right, top).bounds
 
 
-async def xyz(
+async def vector_xyz(
     z: int = Path(..., description="Zoom level", ge=0, le=22),
     x: int = Path(..., description="Tile grid column", ge=0),
     y: Union[int, str] = Path(
@@ -62,6 +62,17 @@ async def xyz(
     bbox: Bounds = to_bbox(x, _y, z)
     validate_bbox(*bbox)
     return bbox, z, extent
+
+
+async def raster_xyz(
+    z: int = Path(..., description="Zoom level", ge=0, le=22),
+    x: int = Path(..., description="Tile grid column", ge=0),
+    y: int = Path(..., description="Tile grid row", ge=0),
+) -> Tuple[int, int, int]:
+
+    bbox: Bounds = to_bbox(x, y, z)
+    validate_bbox(*bbox)
+    return x, y, z
 
 
 async def dynamic_dataset_dependency(dataset: get_dynamic_datasets()) -> str:  # type: ignore

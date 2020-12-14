@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
-from . import static_version_dependency, xyz
+from . import static_version_dependency, vector_xyz
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ router = APIRouter()
 async def vector_tile(
     *,
     dv: Tuple[str, str] = Depends(static_version_dependency),
-    bbox_z: Tuple[Bounds, int] = Depends(xyz),
+    bbox_z: Tuple[Bounds, int] = Depends(vector_xyz),
 ) -> VectorTileResponse:
     """
     Generic vector tile
