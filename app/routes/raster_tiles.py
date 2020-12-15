@@ -61,8 +61,7 @@ async def raster_tile(
             Payload=bytes(json.dumps(payload), "utf-8"),
         )
 
-    data = await response["Payload"].read()
-    logger.debug(data)
+    data = json.loads(await response["Payload"].read())
 
     if data["status"] == "success":
         background_tasks.add_task(
