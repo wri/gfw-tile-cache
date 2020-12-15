@@ -11,7 +11,6 @@ from typing import Optional, Tuple
 
 import aioboto3
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
-from fastapi.logger import logger
 
 from ..models.enumerators.wmts import WmtsRequest
 from ..responses import RasterTileResponse
