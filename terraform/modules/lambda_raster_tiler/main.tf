@@ -37,7 +37,7 @@ resource "aws_lambda_function" "default" {
 ##########################
 
 resource "aws_cloudwatch_log_group" "default" {
-  name              = "/aws/lambda/us-east-1.${aws_lambda_function.default.function_name}"
+  name              = "/aws/lambda/${aws_lambda_function.default.function_name}"
   retention_in_days = var.log_retention
 }
 
