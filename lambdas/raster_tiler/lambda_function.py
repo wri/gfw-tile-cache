@@ -12,8 +12,6 @@ from rasterio import RasterioIOError
 from rasterio.windows import Window
 
 ENV: str = os.environ.get("ENV", "dev")
-
-
 TILE_SIZE: int = 256
 
 logger = logging.getLogger(__name__)
