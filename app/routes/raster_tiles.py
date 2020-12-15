@@ -11,6 +11,7 @@ from typing import Optional, Tuple
 
 import aioboto3
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
+from fastapi.logger import logger
 
 from ..models.enumerators.wmts import WmtsRequest
 from ..responses import RasterTileResponse
@@ -61,6 +62,7 @@ async def raster_tile(
         )
 
     data = await response["Payload"].read()
+    logger.debug(data)
 
     if data["status"] == "success":
         background_tasks.add_task(
