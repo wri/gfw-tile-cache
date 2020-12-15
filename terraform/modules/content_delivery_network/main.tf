@@ -130,7 +130,7 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   # TEST RADD data (only exist in dev)
   # Can be deleted once RADD tile service is operational
-    ordered_cache_behavior {
+  ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
     compress               = false
