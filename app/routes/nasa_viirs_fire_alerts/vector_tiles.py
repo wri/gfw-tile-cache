@@ -23,7 +23,7 @@ from ...routes import (
     default_end,
     default_start,
     validate_dates,
-    xyz,
+    vector_xyz,
 )
 from . import include_attributes, nasa_viirs_fire_alerts_filters
 
@@ -50,7 +50,7 @@ async def nasa_viirs_fire_alerts_version(
 async def nasa_viirs_fire_alerts_tile(
     response: Response,
     version: str = Depends(nasa_viirs_fire_alerts_version),
-    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
+    bbox_z: Tuple[Bounds, int, int] = Depends(vector_xyz),
     geostore_id: Optional[UUID] = Query(
         None, description="Only show fire alerts within selected geostore area"
     ),

@@ -18,7 +18,7 @@ from ..crud.sync_db.vector_tile_assets import get_dynamic_fields
 from ..models.enumerators.geostore import GeostoreOrigin
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
-from . import dynamic_version_dependency, xyz
+from . import dynamic_version_dependency, vector_xyz
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ router = APIRouter()
 async def dynamic_vector_tile(
     *,
     dv: Tuple[str, str] = Depends(dynamic_version_dependency),
-    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
+    bbox_z: Tuple[Bounds, int, int] = Depends(vector_xyz),
     geostore_id: Optional[UUID] = Query(
         None,
         description="Only show fire alerts within selected geostore area. Use RW geostore as of now.",
