@@ -6,13 +6,13 @@ from fastapi import HTTPException, Path
 from fastapi.logger import logger
 from shapely.geometry import box
 
-from ..crud.sync_db.vector_tile_assets import get_dynamic_versions, get_static_versions
-from ..models.enumerators.dynamic_enumerators import (
-    Datasets,
-    Versions,
-    get_dynamic_datasets,
-    get_static_datasets,
+from ..crud.sync_db.tile_cache_assets import (
+    get_dynamic_vector_tile_cache_version,
+    get_raster_tile_cache_version,
+    get_static_vector_tile_cache_version,
 )
+from ..models.enumerators.dynamic_enumerators import Datasets, Versions, get_datasets
+from ..models.enumerators.tile_caches import TileCacheType
 from ..models.types import Bounds
 
 DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
@@ -75,17 +75,17 @@ async def raster_xyz(
     return x, y, z
 
 
-async def dynamic_dataset_dependency(dataset: get_dynamic_datasets()) -> str:  # type: ignore
+async def dynamic_dataset_dependency(dataset: get_datasets(TileCacheType.dynamic_vector_tile_cache)) -> str:  # type: ignore
     return dataset
 
 
-async def static_dataset_dependency(dataset: get_static_datasets()) -> str:  # type: ignore
+async def static_dataset_dependency(dataset: get_datasets(TileCacheType.static_vector_tile_cache)) -> str:  # type: ignore
     return dataset
 
 
-async def dynamic_version_dependency(
+async def dynamic_vector_tile_cache_version_dependency(
     *,
-    dataset: get_dynamic_datasets() = Path(  # type: ignore
+    dataset: get_datasets(TileCacheType.dynamic_vector_tile_cache) = Path(  # type: ignore
         ..., description=Datasets.__doc__
     ),
     version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
@@ -97,12 +97,14 @@ async def dynamic_version_dependency(
             status_code=400,
             detail="You must list version name explicitly for this operation.",
         )
-    validate_dynamic_version(dataset, version)
+    validate_tile_cache_version(
+        dataset, version, TileCacheType.dynamic_vector_tile_cache
+    )
     return dataset, version
 
 
-async def static_version_dependency(
-    dataset: get_dynamic_datasets() = Path(  # type: ignore
+async def raster_tile_cache_version_dependency(
+    dataset: get_datasets(TileCacheType.raster_tile_cache) = Path(  # type: ignore
         ..., description=Datasets.__doc__
     ),
     version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
@@ -114,13 +116,38 @@ async def static_version_dependency(
             status_code=400,
             detail="You must list version name explicitly for this operation.",
         )
-    validate_static_version(dataset, version)
+    validate_tile_cache_version(dataset, version, TileCacheType.raster_tile_cache)
     return dataset, version
 
 
-def validate_dynamic_version(dataset, version) -> None:
+async def static_vector_tile_cache_version_dependency(
+    dataset: get_datasets(TileCacheType.static_vector_tile_cache) = Path(  # type: ignore
+        ..., description=Datasets.__doc__
+    ),
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+) -> Tuple[str, str]:
+    # Middleware should have redirected GET requests to latest version already.
+    # Any other request method should not use `latest` keyword.
+    if version == "latest":
+        raise HTTPException(
+            status_code=400,
+            detail="You must list version name explicitly for this operation.",
+        )
+    validate_tile_cache_version(
+        dataset, version, TileCacheType.static_vector_tile_cache
+    )
+    return dataset, version
+
+
+def validate_tile_cache_version(dataset, version, tile_cache_type) -> None:
+    version_lookup = {
+        TileCacheType.raster_tile_cache: get_raster_tile_cache_version,
+        TileCacheType.dynamic_vector_tile_cache: get_dynamic_vector_tile_cache_version,
+        TileCacheType.static_vector_tile_cache: get_static_vector_tile_cache_version,
+    }
+
     existing_versions = list()
-    versions = get_dynamic_versions(dataset)
+    versions = version_lookup[tile_cache_type](dataset)
     for v in versions:
         existing_versions.append(v)
         if v == version:
@@ -128,21 +155,7 @@ def validate_dynamic_version(dataset, version) -> None:
 
     raise HTTPException(
         status_code=400,
-        detail=f"Unknown version number. Dataset {dataset} has versions {existing_versions}",
-    )
-
-
-def validate_static_version(dataset, version) -> None:
-    existing_versions = list()
-    static_versions = get_static_versions(dataset)
-    for static_version in static_versions:
-        existing_versions.append(static_version)
-        if static_version == version:
-            return
-
-    raise HTTPException(
-        status_code=400,
-        detail=f"Unknown version number. Dataset {dataset} has versions {existing_versions}",
+        detail=f"Unknown version number. {tile_cache_type} of dataset {dataset} has versions {existing_versions}",
     )
 
 

@@ -3,8 +3,9 @@ from typing import Any, Dict, List, Optional, Type
 from aenum import extend_enum
 from fastapi import Query
 
-from ...crud.sync_db.vector_tile_assets import get_latest_dynamic_version
+from ...crud.sync_db.tile_cache_assets import get_latest_dynamic_tile_cache_version
 from ...models.enumerators.dynamic_enumerators import Attributes, get_attributes
+from ...models.enumerators.tile_caches import TileCacheType
 
 dataset_name = "nasa_viirs_fire_alerts"
 default_attributes = ["frp__MW"]
@@ -12,10 +13,10 @@ default_attributes = ["frp__MW"]
 
 # In case there is no latest version of the dataset we will need to return something
 
-latest_version: Optional[str] = get_latest_dynamic_version(dataset_name)
+latest_version: Optional[str] = get_latest_dynamic_tile_cache_version(dataset_name)
 if latest_version:
     included_attribute_type: Type[Attributes] = get_attributes(
-        dataset_name, latest_version
+        dataset_name, latest_version, TileCacheType.dynamic_vector_tile_cache
     )
 else:
     included_attribute_type = Attributes

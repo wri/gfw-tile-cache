@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import base64
 import logging
 import os

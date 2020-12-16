@@ -1,12 +1,18 @@
-from typing import Type
+from typing import Callable, Dict, Type
 
 from aenum import Enum, extend_enum
 
-from ...crud.sync_db.vector_tile_assets import get_dynamic_datasets as get_d_datasets
-from ...crud.sync_db.vector_tile_assets import get_dynamic_fields
-from ...crud.sync_db.vector_tile_assets import get_dynamic_versions as get_d_versions
-from ...crud.sync_db.vector_tile_assets import get_static_datasets as get_s_datasets
-from ...crud.sync_db.vector_tile_assets import get_static_versions as get_s_versions
+from ...crud.sync_db.tile_cache_assets import (
+    get_dynamic_vector_tile_cache_attributes,
+    get_dynamic_vector_tile_cache_dataset,
+    get_dynamic_vector_tile_cache_version,
+    get_raster_tile_cache_dataset,
+    get_raster_tile_cache_version,
+    get_static_vector_tile_cache_attributes,
+    get_static_vector_tile_cache_dataset,
+    get_static_vector_tile_cache_version,
+)
+from .tile_caches import TileCacheType
 
 
 class Datasets(str, Enum):
@@ -24,46 +30,44 @@ class Attributes(str, Enum):
     pass
 
 
-def get_dynamic_datasets() -> Type[Datasets]:
-    dynamic_datasets = Datasets
+def get_datasets(tile_cache_type: str) -> Type[Datasets]:
+    dataset_lookup: Dict[str, Callable] = {
+        TileCacheType.raster_tile_cache: get_raster_tile_cache_dataset,
+        TileCacheType.dynamic_vector_tile_cache: get_dynamic_vector_tile_cache_dataset,
+        TileCacheType.static_vector_tile_cache: get_static_vector_tile_cache_dataset,
+    }
 
-    datasets = get_d_datasets()
+    dataset_enum = Datasets
+    datasets = dataset_lookup[tile_cache_type]()
     for dataset in datasets:
-        extend_enum(dynamic_datasets, dataset, dataset)
+        extend_enum(dataset_enum, dataset, dataset)
 
-    return dynamic_datasets
+    return dataset_enum
 
 
-def get_dynamic_versions(dataset) -> Type[Versions]:
-    dynamic_versions = Versions
-    versions = get_d_versions(dataset)
+def get_versions(dataset, tile_cache_type) -> Type[Versions]:
+    version_lookup: Dict[str, Callable] = {
+        TileCacheType.raster_tile_cache: get_raster_tile_cache_version,
+        TileCacheType.dynamic_vector_tile_cache: get_dynamic_vector_tile_cache_version,
+        TileCacheType.static_vector_tile_cache: get_static_vector_tile_cache_version,
+    }
+
+    version_enum = Versions
+    versions = version_lookup[tile_cache_type](dataset)
     for version in versions:
-        extend_enum(dynamic_versions, version, version)
-    return dynamic_versions
+        extend_enum(version_enum, version, version)
+    return version_enum
 
 
-def get_static_datasets() -> Type[Datasets]:
-    static_datasets = Datasets
+def get_attributes(dataset, version, tile_cache_type) -> Type[Versions]:
+    attribute_lookup: Dict[str, Callable] = {
+        # TileCacheType.raster_tile_cache: get_raster_tile_cache_attributes,
+        TileCacheType.dynamic_vector_tile_cache: get_dynamic_vector_tile_cache_attributes,
+        TileCacheType.static_vector_tile_cache: get_static_vector_tile_cache_attributes,
+    }
 
-    datasets = get_s_datasets()
-    for dataset in datasets:
-        extend_enum(static_datasets, dataset, dataset)
-
-    return static_datasets
-
-
-def get_static_versions(dataset) -> Type[Versions]:
-    static_versions = Versions
-    versions = get_s_versions(dataset)
-    for version in versions:
-        extend_enum(static_versions, version, version)
-    return static_versions
-
-
-def get_attributes(dataset, version) -> Type[Attributes]:
-    attributes = Attributes
-    fields = get_dynamic_fields(dataset, version)
-    for field in fields:
-        if field["is_feature_info"]:
-            extend_enum(attributes, field["field_name"], field["field_name"])
-    return attributes
+    attribute_enum = Attributes
+    attributes = attribute_lookup[tile_cache_type](dataset, version)
+    for attribute in attributes:
+        extend_enum(attribute_enum, attribute["field_name"], attribute["field_name"])
+    return attribute_enum

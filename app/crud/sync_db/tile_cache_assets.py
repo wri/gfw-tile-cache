@@ -4,9 +4,7 @@ from cachetools import TTLCache, cached
 from fastapi.logger import logger
 
 from ...application import get_synchronous_db
-
-static_asset = "Static vector tile cache"
-dynamic_asset = "Dynamic vector tile cache"
+from ...models.enumerators.tile_caches import TileCacheType
 
 
 def dataset_constructor(asset_type: str):
@@ -29,8 +27,15 @@ def dataset_constructor(asset_type: str):
     return get_datasets
 
 
-get_static_datasets: Callable[[], List[str]] = dataset_constructor(static_asset)
-get_dynamic_datasets: Callable[[], List[str]] = dataset_constructor(dynamic_asset)
+get_static_vector_tile_cache_dataset: Callable[[], List[str]] = dataset_constructor(
+    TileCacheType.static_vector_tile_cache
+)
+get_dynamic_vector_tile_cache_dataset: Callable[[], List[str]] = dataset_constructor(
+    TileCacheType.dynamic_vector_tile_cache
+)
+get_raster_tile_cache_dataset: Callable[[], List[str]] = dataset_constructor(
+    TileCacheType.raster_tile_cache
+)
 
 
 def version_constructor(asset_type: str):
@@ -55,12 +60,15 @@ def version_constructor(asset_type: str):
     return get_versions
 
 
-get_static_versions: Callable[[str], List[Tuple[str, str]]] = version_constructor(
-    static_asset
-)
-get_dynamic_versions: Callable[[str], List[Tuple[str, str]]] = version_constructor(
-    dynamic_asset
-)
+get_static_vector_tile_cache_version: Callable[
+    [str], List[Tuple[str, str]]
+] = version_constructor(TileCacheType.static_vector_tile_cache)
+get_dynamic_vector_tile_cache_version: Callable[
+    [str], List[Tuple[str, str]]
+] = version_constructor(TileCacheType.dynamic_vector_tile_cache)
+get_raster_tile_cache_version: Callable[
+    [str], List[Tuple[str, str]]
+] = version_constructor(TileCacheType.raster_tile_cache)
 
 
 def latest_version_constructor(asset_type: str):
@@ -95,17 +103,20 @@ def latest_version_constructor(asset_type: str):
     return get_latest_version
 
 
-get_latest_static_version: Callable[[str], Optional[str]] = latest_version_constructor(
-    static_asset
-)
-get_latest_dynamic_version: Callable[[str], Optional[str]] = latest_version_constructor(
-    dynamic_asset
-)
+get_latest_static_tile_cache_version: Callable[
+    [str], Optional[str]
+] = latest_version_constructor(TileCacheType.static_vector_tile_cache)
+get_latest_dynamic_tile_cache_version: Callable[
+    [str], Optional[str]
+] = latest_version_constructor(TileCacheType.dynamic_vector_tile_cache)
+get_latest_raster_tile_cache_version: Callable[
+    [str], Optional[str]
+] = latest_version_constructor(TileCacheType.raster_tile_cache)
 
 
-def field_constructor(asset_type: str):
+def attribute_constructor(asset_type: str):
     @cached(cache=TTLCache(maxsize=15, ttl=900))
-    def get_fields(dataset: str, version: str) -> List[Dict[str, Any]]:
+    def get_attributes(dataset: str, version: str) -> List[Dict[str, Any]]:
         with get_synchronous_db() as db:
             row = db.execute(
                 """SELECT DISTINCT
@@ -119,20 +130,20 @@ def field_constructor(asset_type: str):
             ).fetchone()
 
         if not row or not row[0]:
-            fields = []
+            attributes = []
             logger.warning(
                 f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
             )
         else:
-            fields = row[0]
-        return fields
+            attributes = row[0]
+        return attributes
 
-    return get_fields
+    return get_attributes
 
 
-get_static_fields: Callable[[str, str], List[Dict[str, Any]]] = field_constructor(
-    static_asset
-)
-get_dynamic_fields: Callable[[str, str], List[Dict[str, Any]]] = field_constructor(
-    dynamic_asset
-)
+get_static_vector_tile_cache_attributes: Callable[
+    [str, str], List[Dict[str, Any]]
+] = attribute_constructor(TileCacheType.static_vector_tile_cache)
+get_dynamic_vector_tile_cache_attributes: Callable[
+    [str, str], List[Dict[str, Any]]
+] = attribute_constructor(TileCacheType.dynamic_vector_tile_cache)

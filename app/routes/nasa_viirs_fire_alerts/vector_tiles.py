@@ -13,8 +13,9 @@ from ...crud.async_db.vector_tiles.filters import (
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...errors import RecordNotFoundError
-from ...models.enumerators.dynamic_enumerators import Versions, get_dynamic_versions
+from ...models.enumerators.dynamic_enumerators import Versions, get_versions
 from ...models.enumerators.geostore import GeostoreOrigin
+from ...models.enumerators.tile_caches import TileCacheType
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
@@ -31,7 +32,7 @@ router = APIRouter()
 
 
 async def nasa_viirs_fire_alerts_version(
-    version: get_dynamic_versions("nasa_viirs_fire_alerts"),  # type: ignore
+    version: get_versions("nasa_viirs_fire_alerts", TileCacheType.dynamic_vector_tile_cache),  # type: ignore
 ) -> Versions:
     if version == "latest":
         raise HTTPException(
