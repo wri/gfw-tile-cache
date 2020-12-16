@@ -8,7 +8,7 @@ from ...models.enumerators.tile_caches import TileCacheType
 
 
 def dataset_constructor(asset_type: str):
-    @cached(cache=TTLCache(maxsize=15, ttl=900))
+    # @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_datasets() -> List[str]:
         with get_synchronous_db() as db:
             rows = db.execute(
@@ -40,7 +40,7 @@ get_raster_tile_cache_dataset: Callable[[], List[str]] = dataset_constructor(
 
 def version_constructor(asset_type: str):
     # memorize fields for 15 min
-    @cached(cache=TTLCache(maxsize=15, ttl=900))
+    # @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_versions(dataset: str) -> List[Tuple[str, str]]:
         with get_synchronous_db() as db:
             rows = db.execute(
@@ -73,7 +73,7 @@ get_raster_tile_cache_version: Callable[
 
 def latest_version_constructor(asset_type: str):
     # memorize fields for 15 min
-    @cached(cache=TTLCache(maxsize=15, ttl=900))
+    # @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_latest_version(dataset: str) -> Optional[str]:
         with get_synchronous_db() as db:
             row = db.execute(
@@ -115,7 +115,7 @@ get_latest_raster_tile_cache_version: Callable[
 
 
 def attribute_constructor(asset_type: str):
-    @cached(cache=TTLCache(maxsize=15, ttl=900))
+    # @cached(cache=TTLCache(maxsize=15, ttl=900))
     def get_attributes(dataset: str, version: str) -> List[Dict[str, Any]]:
         with get_synchronous_db() as db:
             row = db.execute(
