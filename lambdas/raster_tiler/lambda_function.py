@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 def array_to_img(arr: np.ndarray) -> str:
     """Convert a numpy array to an base64 encoded img."""
 
-    img = Image.fromarray(arr, mode="RGBA")
+    modes = {3: "RGB", 4: "RRBA"}
+
+    img = Image.fromarray(arr, mode=modes[arr.shape[2]])
 
     sio = BytesIO()
     params = {"compress_level": 0}
@@ -36,11 +38,11 @@ def array_to_img(arr: np.ndarray) -> str:
 def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     """Create mercator tile from GFW WM Tile Set images."""
 
-    indexes = (1, 2, 3, 4)
-
-    out_shape = (len(indexes), TILE_SIZE, TILE_SIZE)
-
     with rasterio.open(src_tile) as src:
+        profile = src.profile
+        bands = profile["count"]
+        indexes = tuple(range(1, bands + 1))
+        out_shape = (len(indexes), TILE_SIZE, TILE_SIZE)
         data = src.read(
             window=window, boundless=True, out_shape=out_shape, indexes=indexes
         )
@@ -50,7 +52,7 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     # only propogates the first band to the other three
     # when in (4, 256, 256)
     # print(data)
-    data = np.dstack((data[0], data[1], data[2], data[3]))
+    data = np.dstack((data[i] for i in indexes))
     return data
 
 
@@ -85,23 +87,27 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
 
     suffix: str = "" if ENV == "production" else f"-{ENV}"
 
-    if implementation == "default":
+    if implementation == "dynamic":
         pixel_meaning: str = "rgb_encoded"
     else:
         pixel_meaning = implementation
 
     row, col, row_off, col_off = get_tile_location(x, y)
 
-    src_tile = f"s3://gfw-data-lake{suffix}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+    src_tile = f"s3://gfw-data-lake{suffix}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
     window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
+
+    print("X, Y, Z: ", (x, y, z))
+    print("SCR TILE: ", src_tile)
 
     response: Dict[str, str] = {}
 
     try:
         tile = get_tile_array(src_tile, window)
-    except RasterioIOError:
+    except RasterioIOError as e:
         response["status"] = "error"
         response["message"] = "Tile not found"
+        print(str(e))
     else:
         # write out 3 band RGB PNG
         png = array_to_img(tile)
