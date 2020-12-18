@@ -15,7 +15,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, R
 from ..models.enumerators.wmts import WmtsRequest
 from ..responses import RasterTileResponse
 from ..settings.globals import AWS_REGION, BUCKET, RASTER_TILER_LAMBDA_NAME
-from . import raster_xyz, static_version_dependency
+from . import raster_tile_cache_version_dependency, raster_xyz
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ router = APIRouter()
 )
 async def raster_tile(
     *,
-    dv: Tuple[str, str] = Depends(static_version_dependency),  # TODO: fix dependency
+    dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
     implementation: str = Query(
         "default", description="Tile cache implementation name"
     ),
@@ -93,7 +93,7 @@ async def copy_tile(tile, key):
 )
 async def wmts(
     *,
-    dv: Tuple[str, str] = Depends(static_version_dependency),  # TODO: fix dependency
+    dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
     SERVICE: str = Query("WMTS"),
     VERSION: str = Query("1.0.0"),
     REQUEST: WmtsRequest = Query(...),

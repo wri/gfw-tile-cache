@@ -6,7 +6,7 @@ Endpoints listed here are for internal use only.
 from fastapi import APIRouter, Response
 from fastapi.responses import ORJSONResponse
 
-from ..crud.sync_db.versions import get_latest_versions
+from ..crud.sync_db.tile_cache_assets import get_latest_versions
 from ..models.pydantic.versions import LatestVersionResponse
 
 router = APIRouter()
