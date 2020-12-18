@@ -23,7 +23,7 @@ def get_datasets(asset_type: str) -> List[str]:
     return datasets
 
 
-@cached(cache=TTLCache(maxsize=15, ttl=900))
+# @cached(cache=TTLCache(maxsize=15, ttl=900))
 def get_versions(dataset: str, asset_type: str) -> List[Tuple[str, str]]:
     with get_synchronous_db() as db:
         rows = db.execute(
@@ -41,7 +41,7 @@ def get_versions(dataset: str, asset_type: str) -> List[Tuple[str, str]]:
     return versions
 
 
-@cached(cache=TTLCache(maxsize=15, ttl=900))
+# @cached(cache=TTLCache(maxsize=15, ttl=900))
 def get_latest_version(dataset: str, asset_type: str) -> Optional[str]:
     with get_synchronous_db() as db:
         row = db.execute(
@@ -88,7 +88,7 @@ def get_latest_versions() -> List[Dict[str, str]]:
     return [{"dataset": row[0], "version": row[1]} for row in latest_versions]
 
 
-@cached(cache=TTLCache(maxsize=15, ttl=900))
+# @cached(cache=TTLCache(maxsize=15, ttl=900))
 def get_attributes(dataset: str, version: str, asset_type: str) -> List[Dict[str, Any]]:
     with get_synchronous_db() as db:
         row = db.execute(
