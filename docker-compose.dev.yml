@@ -21,6 +21,7 @@ services:
       - DB_PORT_RO=5432
       - AWS_DEFAULT_PROFILE=gfw-dev
       - LOG_LEVEL=debug
+      - RASTER_TILER_LAMBDA_NAME=test
       - ENV=dev
     ports:
       - 8088:80

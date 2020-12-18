@@ -3,21 +3,23 @@ from typing import List, Optional
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
+from ....models.enumerators.tile_caches import TileCacheType
 from ....models.types import Bounds
 from ....responses import VectorTileResponse
 from ...async_db import vector_tiles
-from ...sync_db.tile_cache_assets import (
-    get_dynamic_vector_tile_cache_attributes,
-    get_latest_dynamic_tile_cache_version,
-)
+from ...sync_db.tile_cache_assets import get_attributes, get_latest_version
 from . import get_mvt_table
 
 SCHEMA = "nasa_viirs_fire_alerts"
 
 COLUMNS: List[ColumnClause] = list()
-latest_version: Optional[str] = get_latest_dynamic_tile_cache_version(SCHEMA)
+latest_version: Optional[str] = get_latest_version(
+    SCHEMA, TileCacheType.dynamic_vector_tile_cache
+)
 if latest_version:
-    fields = get_dynamic_vector_tile_cache_attributes(SCHEMA, latest_version)
+    fields = get_attributes(
+        SCHEMA, latest_version, TileCacheType.dynamic_vector_tile_cache
+    )
     for field in fields:
         if field["is_feature_info"]:
             COLUMNS.append(db.column(field["field_name"]))

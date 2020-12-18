@@ -14,8 +14,9 @@ from sqlalchemy.sql.elements import ColumnClause
 from ..application import db
 from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ..crud.async_db.vector_tiles.filters import geometry_filter
-from ..crud.sync_db.tile_cache_assets import get_dynamic_vector_tile_cache_attributes
+from ..crud.sync_db.tile_cache_assets import get_attributes
 from ..models.enumerators.geostore import GeostoreOrigin
+from ..models.enumerators.tile_caches import TileCacheType
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
 from . import dynamic_vector_tile_cache_version_dependency, vector_xyz
@@ -61,7 +62,9 @@ async def dynamic_vector_tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    fields: List[Dict] = get_dynamic_vector_tile_cache_attributes(dataset, version)
+    fields: List[Dict] = get_attributes(
+        dataset, version, TileCacheType.dynamic_vector_tile_cache
+    )
 
     # if no attributes specified get all feature info fields
     if not include_attribute:
