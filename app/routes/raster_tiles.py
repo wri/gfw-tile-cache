@@ -10,7 +10,16 @@ import json
 from typing import Optional, Tuple
 
 import aioboto3
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Response,
+)
+from fastapi.logger import logger
 
 from ..models.enumerators.wmts import WmtsRequest
 from ..responses import RasterTileResponse
@@ -18,6 +27,27 @@ from ..settings.globals import AWS_REGION, BUCKET, RASTER_TILER_LAMBDA_NAME
 from . import raster_tile_cache_version_dependency, raster_xyz
 
 router = APIRouter()
+
+#
+# @router.get(
+#     "/{dataset}/{version}/default/{z}/{x}/{y}.png",
+#     response_class=Response,
+#     tags=["Raster Tiles"],
+#     response_description="PNG Raster Tile",
+# )
+# async def static_raster_tile(
+#     *,
+#     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
+#     xyz: Tuple[int, int, int] = Depends(raster_xyz),
+# ) -> Response:
+#     """
+#     Generic raster tile
+#     """
+#     # This endpoint is not implemented and only exist for documentation purposes
+#     # Default vector layers are stored on S3.
+#     # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
+#     # Hence, this function should never be called.
+#     raise NotImplementedError
 
 
 @router.get(
@@ -29,9 +59,7 @@ router = APIRouter()
 async def raster_tile(
     *,
     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
-    implementation: str = Query(
-        "default", description="Tile cache implementation name"
-    ),
+    implementation: str = Path("default", description="Tile cache implementation name"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
 ) -> RasterTileResponse:
@@ -61,10 +89,12 @@ async def raster_tile(
         )
 
     data = json.loads(await response["Payload"].read())
+    logger.debug(data)
 
     if data["status"] == "success":
         background_tasks.add_task(
-            copy_tile, f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
+            copy_tile,
+            f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         )
         return data["data"]
     elif data["status"] == "error" and data.get("message") == "Tile not found":
