@@ -69,7 +69,7 @@ async def raster_tile(
     Generic raster tile.
     """
 
-    print(json.dumps(request))
+    print(request)
 
     dataset, version = dv
     x, y, z = xyz
@@ -93,7 +93,7 @@ async def raster_tile(
         )
 
     data = json.loads(await response["Payload"].read())
-    print(json.dumps(data))
+    print(data)
 
     if data.get("status") == "success":
         # background_tasks.add_task(
