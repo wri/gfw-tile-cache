@@ -10,6 +10,7 @@ import json
 from typing import Optional, Tuple
 
 import aioboto3
+import boto3
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -82,19 +83,34 @@ async def raster_tile(
         "y": y,
         "z": z,
     }
+    #
+    # # Tile requests are routed to S3 first and only hit the tile cache app if S3 returns a 404.
+    # # We then try to dynamically create the PNG using a lambda function, return the result and store the PNG on S3 for future use.
+    # async with aioboto3.client("lambda", region_name=AWS_REGION) as lambda_client:
+    #     response = await lambda_client.invoke(
+    #         FunctionName=RASTER_TILER_LAMBDA_NAME,
+    #         InvocationType="RequestResponse",
+    #         Payload=bytes(json.dumps(payload), "utf-8"),
+    #     )
+    #
+    # data_encoded = await response["Payload"].read()
+    # data = json.loads(data_encoded.decode())
+    # print(data)
 
     # Tile requests are routed to S3 first and only hit the tile cache app if S3 returns a 404.
     # We then try to dynamically create the PNG using a lambda function, return the result and store the PNG on S3 for future use.
-    async with aioboto3.client("lambda", region_name=AWS_REGION) as lambda_client:
-        response = await lambda_client.invoke(
-            FunctionName=RASTER_TILER_LAMBDA_NAME,
-            InvocationType="RequestResponse",
-            Payload=bytes(json.dumps(payload), "utf-8"),
-        )
 
-    data_encoded = await response["Payload"].read()
+    lambda_client = boto3.client("lambda", region_name=AWS_REGION)
+    response = lambda_client.invoke(
+        FunctionName=RASTER_TILER_LAMBDA_NAME,
+        InvocationType="RequestResponse",
+        Payload=bytes(json.dumps(payload), "utf-8"),
+    )
+
+    data_encoded = response["Payload"].read()
     data = json.loads(data_encoded.decode())
     print(data)
+
     if data.get("status") == "success":
         # background_tasks.add_task(
         #     copy_tile,
