@@ -52,7 +52,7 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     # only propogates the first band to the other three
     # when in (4, 256, 256)
     # print(data)
-    data = np.dstack((data[i] for i in indexes))
+    data = np.dstack(tuple([data[i - 1] for i in indexes]))
     return data
 
 
@@ -113,5 +113,7 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
         png = array_to_img(tile)
         response["status"] = "success"
         response["data"] = png
+
+    print("RESPONSE: ", response)
 
     return response
