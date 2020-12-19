@@ -10,7 +10,6 @@ import json
 from typing import Optional, Tuple
 
 import aioboto3
-import boto3
 import httpx
 from fastapi import (
     APIRouter,
@@ -19,40 +18,17 @@ from fastapi import (
     HTTPException,
     Path,
     Query,
-    Request,
     Response,
 )
 from fastapi.logger import logger
-from httpx_auth import AWS4Auth
+from starlette.responses import StreamingResponse
 
 from ..models.enumerators.wmts import WmtsRequest
-from ..responses import RasterTileResponse
 from ..settings.globals import AWS_REGION, BUCKET, RASTER_TILER_LAMBDA_NAME
 from ..utils.aws import invoke_lambda
 from . import raster_tile_cache_version_dependency, raster_xyz
 
 router = APIRouter()
-
-#
-# @router.get(
-#     "/{dataset}/{version}/default/{z}/{x}/{y}.png",
-#     response_class=Response,
-#     tags=["Raster Tiles"],
-#     response_description="PNG Raster Tile",
-# )
-# async def static_raster_tile(
-#     *,
-#     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
-#     xyz: Tuple[int, int, int] = Depends(raster_xyz),
-# ) -> Response:
-#     """
-#     Generic raster tile
-#     """
-#     # This endpoint is not implemented and only exist for documentation purposes
-#     # Default vector layers are stored on S3.
-#     # If tile is not found, Cloud Front will redirect request to dynamic endpoint.
-#     # Hence, this function should never be called.
-#     raise NotImplementedError
 
 
 @router.get(
@@ -67,8 +43,7 @@ async def raster_tile(
     implementation: str = Path("default", description="Tile cache implementation name"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
-    response: Response,
-) -> RasterTileResponse:
+) -> StreamingResponse:
     """
     Generic raster tile.
     """
@@ -98,8 +73,9 @@ async def raster_tile(
         #     copy_tile,
         #     f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         # )
-        response.headers["media_type"] = "image/png"
-        return data.get("data").encode()
+        return StreamingResponse(
+            io.BytesIO(data.get("data").encode()), media_type="image/png"
+        )
 
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
