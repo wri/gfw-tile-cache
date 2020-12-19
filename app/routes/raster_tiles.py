@@ -17,6 +17,7 @@ from fastapi import (
     HTTPException,
     Path,
     Query,
+    Request,
     Response,
 )
 from fastapi.logger import logger
@@ -62,10 +63,13 @@ async def raster_tile(
     implementation: str = Path("default", description="Tile cache implementation name"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
+    request: Request,
 ) -> RasterTileResponse:
     """
     Generic raster tile.
     """
+
+    print(json.dumps(request))
 
     dataset, version = dv
     x, y, z = xyz
@@ -89,15 +93,15 @@ async def raster_tile(
         )
 
     data = json.loads(await response["Payload"].read())
-    logger.debug(data)
+    print(json.dumps(data))
 
-    if data["status"] == "success":
-        background_tasks.add_task(
-            copy_tile,
-            f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
-        )
-        return data["data"]
-    elif data["status"] == "error" and data.get("message") == "Tile not found":
+    if data.get("status") == "success":
+        # background_tasks.add_task(
+        #     copy_tile,
+        #     f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
+        # )
+        return data.get("data")
+    elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
     else:
         raise HTTPException(status_code=500, detail="Internal server error")

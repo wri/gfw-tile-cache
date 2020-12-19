@@ -27,6 +27,7 @@ resource "aws_lambda_function" "default" {
   environment {
     variables = {
       LOG_LEVEL = var.log_level
+      ENV       = var.environment
     }
   }
 }
