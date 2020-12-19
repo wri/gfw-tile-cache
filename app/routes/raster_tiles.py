@@ -110,12 +110,16 @@ async def raster_tile(
         service="lambda",
     )
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"https://lambda.{AWS_REGION}.amazonaws.com/2015-03-31/functions/{RASTER_TILER_LAMBDA_NAME}/invocations",
-            json=payload,
-            auth=aws,
-        )
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://lambda.{AWS_REGION}.amazonaws.com/2015-03-31/functions/{RASTER_TILER_LAMBDA_NAME}/invocations",
+                json=payload,
+                auth=aws,
+                timeout=30.0,
+            )
+    except httpx.ReadTimeout:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
     data = json.loads(response.text)
 
