@@ -118,7 +118,8 @@ async def raster_tile(
                 auth=aws,
                 timeout=30.0,
             )
-    except httpx.ReadTimeout:
+    except httpx.ReadTimeout as e:
+        logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
     data = json.loads(response.text)
