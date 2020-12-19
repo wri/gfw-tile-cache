@@ -11,6 +11,7 @@ from typing import Optional, Tuple
 
 import aioboto3
 import boto3
+import httpx
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -22,6 +23,7 @@ from fastapi import (
     Response,
 )
 from fastapi.logger import logger
+from httpx_auth import AWS4Auth
 
 from ..models.enumerators.wmts import WmtsRequest
 from ..responses import RasterTileResponse
@@ -83,7 +85,7 @@ async def raster_tile(
         "y": y,
         "z": z,
     }
-    #
+
     # # Tile requests are routed to S3 first and only hit the tile cache app if S3 returns a 404.
     # # We then try to dynamically create the PNG using a lambda function, return the result and store the PNG on S3 for future use.
     # async with aioboto3.client("lambda", region_name=AWS_REGION) as lambda_client:
@@ -97,19 +99,25 @@ async def raster_tile(
     # data = json.loads(data_encoded.decode())
     # print(data)
 
-    # Tile requests are routed to S3 first and only hit the tile cache app if S3 returns a 404.
-    # We then try to dynamically create the PNG using a lambda function, return the result and store the PNG on S3 for future use.
+    session = boto3.Session()
+    cred = session.get_credentials()
 
-    lambda_client = boto3.client("lambda", region_name=AWS_REGION)
-    response = lambda_client.invoke(
-        FunctionName=RASTER_TILER_LAMBDA_NAME,
-        InvocationType="RequestResponse",
-        Payload=bytes(json.dumps(payload), "utf-8"),
+    aws = AWS4Auth(
+        access_id=cred.access_key,
+        secret_key=cred.secret_key,
+        security_token=cred.token,
+        region=AWS_REGION,
+        service="lambda",
     )
 
-    data_encoded = response["Payload"].read()
-    data = json.loads(data_encoded.decode())
-    print(data)
+    async with httpx.AsyncClient() as client:
+        response = client.post(
+            f"https://lambda.{AWS_REGION}.amazonaws.com/2015-03-31/functions/{RASTER_TILER_LAMBDA_NAME}/invocations",
+            json=payload,
+            auth=aws,
+        )
+
+    data = json.loads(response.text)
 
     if data.get("status") == "success":
         # background_tasks.add_task(
