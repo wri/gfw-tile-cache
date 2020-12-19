@@ -111,7 +111,7 @@ async def raster_tile(
     )
 
     async with httpx.AsyncClient() as client:
-        response = client.post(
+        response = await client.post(
             f"https://lambda.{AWS_REGION}.amazonaws.com/2015-03-31/functions/{RASTER_TILER_LAMBDA_NAME}/invocations",
             json=payload,
             auth=aws,
