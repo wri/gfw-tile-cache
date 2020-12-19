@@ -28,6 +28,7 @@ from httpx_auth import AWS4Auth
 from ..models.enumerators.wmts import WmtsRequest
 from ..responses import RasterTileResponse
 from ..settings.globals import AWS_REGION, BUCKET, RASTER_TILER_LAMBDA_NAME
+from ..utils.aws import invoke_lambda
 from . import raster_tile_cache_version_dependency, raster_xyz
 
 router = APIRouter()
@@ -66,13 +67,11 @@ async def raster_tile(
     implementation: str = Path("default", description="Tile cache implementation name"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
-    request: Request,
+    response: Response,
 ) -> RasterTileResponse:
     """
     Generic raster tile.
     """
-
-    print("REQUEST HEADERS: ", request.headers)
 
     dataset, version = dv
     x, y, z = xyz
@@ -86,38 +85,8 @@ async def raster_tile(
         "z": z,
     }
 
-    # # Tile requests are routed to S3 first and only hit the tile cache app if S3 returns a 404.
-    # # We then try to dynamically create the PNG using a lambda function, return the result and store the PNG on S3 for future use.
-    # async with aioboto3.client("lambda", region_name=AWS_REGION) as lambda_client:
-    #     response = await lambda_client.invoke(
-    #         FunctionName=RASTER_TILER_LAMBDA_NAME,
-    #         InvocationType="RequestResponse",
-    #         Payload=bytes(json.dumps(payload), "utf-8"),
-    #     )
-    #
-    # data_encoded = await response["Payload"].read()
-    # data = json.loads(data_encoded.decode())
-    # print(data)
-
-    session = boto3.Session()
-    cred = session.get_credentials()
-
-    aws = AWS4Auth(
-        access_id=cred.access_key,
-        secret_key=cred.secret_key,
-        security_token=cred.token,
-        region=AWS_REGION,
-        service="lambda",
-    )
-
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"https://lambda.{AWS_REGION}.amazonaws.com/2015-03-31/functions/{RASTER_TILER_LAMBDA_NAME}/invocations",
-                json=payload,
-                auth=aws,
-                timeout=30.0,
-            )
+        response = await invoke_lambda(RASTER_TILER_LAMBDA_NAME, payload)
     except httpx.ReadTimeout as e:
         logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -129,7 +98,8 @@ async def raster_tile(
         #     copy_tile,
         #     f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         # )
-        return data.get("data")
+        response.headers["media_type"] = "image/png"
+        return data.get("data").encode()
 
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
