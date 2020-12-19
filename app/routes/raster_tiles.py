@@ -64,7 +64,7 @@ async def raster_tile(
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
     request: Request,
-) -> RasterTileResponse:
+) -> Response:
     """
     Generic raster tile.
     """
@@ -100,7 +100,7 @@ async def raster_tile(
         #     copy_tile,
         #     f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         # )
-        return data.get("data")
+        return data
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
     elif data.get("errorMessage"):
