@@ -69,7 +69,7 @@ async def raster_tile(
     Generic raster tile.
     """
 
-    print(request)
+    print("REQUEST HEADERS: ", request.headers)
 
     dataset, version = dv
     x, y, z = xyz
@@ -95,8 +95,6 @@ async def raster_tile(
     data_encoded = await response["Payload"].read()
     data = json.loads(data_encoded.decode())
 
-    print(data)
-
     if data.get("status") == "success":
         # background_tasks.add_task(
         #     copy_tile,
@@ -105,7 +103,13 @@ async def raster_tile(
         return data.get("data")
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
+    elif data.get("errorMessage"):
+        logger.error(f"Lambda Function exited with error: {data['errorMessage']}")
+        raise HTTPException(status_code=500, detail="Internal server error")
     else:
+        logger.error(
+            f"An unknown error occurred. Data received from Lambda function: {data}"
+        )
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
