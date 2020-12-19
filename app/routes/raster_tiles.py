@@ -92,7 +92,9 @@ async def raster_tile(
             Payload=bytes(json.dumps(payload), "utf-8"),
         )
 
-    data = json.loads(await response["Payload"].read())
+    data_encoded = await response["Payload"].read()
+    data = json.loads(data_encoded.decode())
+
     print(data)
 
     if data.get("status") == "success":
