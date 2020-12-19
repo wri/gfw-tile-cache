@@ -36,6 +36,7 @@ gino = "*"
 gino_starlette = "*"
 httpx = "*"
 aioboto3 = "*"
+httpx-auth = "*"
 
 [requires]
 python_version = "3.8"
