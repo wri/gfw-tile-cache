@@ -5,6 +5,7 @@ Any of this operations will have to happen on the frontend.
 If tiles for a given zoom level are not present for a selected dataset,
 the server will redirect the request to the dynamic service and will attempt to generate it here
 """
+import base64
 import io
 import json
 from typing import Optional, Tuple
@@ -43,7 +44,7 @@ async def raster_tile(
     implementation: str = Path("default", description="Tile cache implementation name"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
-) -> StreamingResponse:
+) -> Response:
     """
     Generic raster tile.
     """
@@ -74,9 +75,8 @@ async def raster_tile(
         #     f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         # )
         return StreamingResponse(
-            io.BytesIO(data.get("data").encode()), media_type="image/png"
+            io.BytesIO(base64.b64decode(data.get("data"))), media_type="image/png"
         )
-
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
     elif data.get("errorMessage"):
