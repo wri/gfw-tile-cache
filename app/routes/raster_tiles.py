@@ -5,6 +5,7 @@ Any of this operations will have to happen on the frontend.
 If tiles for a given zoom level are not present for a selected dataset,
 the server will redirect the request to the dynamic service and will attempt to generate it here
 """
+import base64
 import io
 import json
 from typing import Optional, Tuple
@@ -43,7 +44,7 @@ async def raster_tile(
     implementation: str = Path("default", description="Tile cache implementation name"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
-) -> StreamingResponse:
+) -> Response:
     """
     Generic raster tile.
     """
@@ -69,14 +70,13 @@ async def raster_tile(
     data = json.loads(response.text)
 
     if data.get("status") == "success":
-        png_data = io.BytesIO(data.get("data").encode())
+        png_data = base64.b64decode(data.get("data"))
         background_tasks.add_task(
             copy_tile,
             png_data,
             f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         )
-        return StreamingResponse(png_data, media_type="image/png")
-
+        return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
     elif data.get("errorMessage"):
@@ -92,10 +92,9 @@ async def raster_tile(
 async def copy_tile(data, key):
     async with aioboto3.client("s3", region_name=AWS_REGION) as s3_client:
 
-        png_file = io.BytesIO()
-        _: int = png_file.write(data)
+        png_file_obj = io.BytesIO().write(data)
         await s3_client.upload_fileobj(
-            png_file,
+            png_file_obj,
             BUCKET,
             key,
             ExtraArgs={"ContentType": "image/png", "CacheControl": "max-age=31536000"},
