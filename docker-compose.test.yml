@@ -9,6 +9,7 @@ services:
     container_name: tile-cache_test
     volumes:
       - ./app:/app/app:ro
+      - ./lambdas:/app/lambdas:ro
       - ./tests:/app/tests
     environment:
       - DATABASE_RO=_test

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def array_to_img(arr: np.ndarray) -> str:
     """Convert a numpy array to an base64 encoded img."""
 
-    modes = {3: "RGB", 4: "RRBA"}
+    modes = {3: "RGB", 4: "RGBA"}
 
     img = Image.fromarray(arr, mode=modes[arr.shape[2]])
 
