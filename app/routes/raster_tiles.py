@@ -69,13 +69,13 @@ async def raster_tile(
     data = json.loads(response.text)
 
     if data.get("status") == "success":
-        # background_tasks.add_task(
-        #     copy_tile,
-        #     f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
-        # )
-        return StreamingResponse(
-            io.BytesIO(data.get("data").encode()), media_type="image/png"
+        png_data = io.BytesIO(data.get("data").encode())
+        background_tasks.add_task(
+            copy_tile,
+            png_data,
+            f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
         )
+        return StreamingResponse(png_data, media_type="image/png")
 
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
@@ -89,12 +89,13 @@ async def raster_tile(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def copy_tile(tile, key):
+async def copy_tile(data, key):
     async with aioboto3.client("s3", region_name=AWS_REGION) as s3_client:
 
-        data = io.StringIO().write(tile)
+        png_file = io.BytesIO()
+        _: int = png_file.write(data)
         await s3_client.upload_fileobj(
-            data,
+            png_file,
             BUCKET,
             key,
             ExtraArgs={"ContentType": "image/png", "CacheControl": "max-age=31536000"},
