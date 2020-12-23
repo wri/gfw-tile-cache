@@ -49,7 +49,7 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
 
     # moves data from (4, 256, 256) format to (256, 256, 4)
     # PIL will read it in both ways, but for some reason
-    # only propogates the first band to the other three
+    # only propagates the first band to the other three
     # when in (4, 256, 256)
     # print(data)
     data = np.dstack(tuple([data[i - 1] for i in indexes]))

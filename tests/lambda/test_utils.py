@@ -1,25 +1,29 @@
 import numpy as np
 from rasterio.windows import Window
 
-from lambdas.raster_tiler.utils import array_to_img, get_tile_location, tile
+from lambdas.raster_tiler.lambda_function import (
+    array_to_img,
+    get_tile_array,
+    get_tile_location,
+)
 from tests.conftest import TEST_FILE
 
 
 def test_tile():
 
-    data = tile(TEST_FILE, Window(0, 0, 256, 256))
+    data = get_tile_array(TEST_FILE, Window(0, 0, 256, 256))
     assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [1, 2, 3, 4])
 
-    data = tile(TEST_FILE, Window(0, 256, 256, 256))
+    data = get_tile_array(TEST_FILE, Window(0, 256, 256, 256))
     assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [2, 4, 6, 8])
 
-    data = tile(TEST_FILE, Window(256, 0, 256, 256))
+    data = get_tile_array(TEST_FILE, Window(256, 0, 256, 256))
     assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [3, 6, 9, 12])
 
-    data = tile(TEST_FILE, Window(256, 256, 256, 256))
+    data = get_tile_array(TEST_FILE, Window(256, 256, 256, 256))
     assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [4, 8, 12, 16])
 
@@ -57,4 +61,6 @@ def test_get_tile_location():
     assert row == 1
     assert col == 1
     assert row_off == 256
+
+
 #     assert col_off == 256
