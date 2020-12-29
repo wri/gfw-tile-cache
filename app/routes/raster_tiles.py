@@ -91,6 +91,7 @@ async def raster_tile(
 
 async def copy_tile(data, key):
     async with aioboto3.client("s3", region_name=AWS_REGION) as s3_client:
+        logger.info(f"Uploading to S3 bucket: {BUCKET} key: {key}")
 
         png_file_obj = io.BytesIO()
         _: int = png_file_obj.write(data)
