@@ -64,7 +64,7 @@ def get_tile_location(x: int, y: int) -> Tuple[int, int, int, int]:
     pixel which is equivalent to 256x256 blocks of 256x256 pixels each.
     Tile Ids follow the pattern 000R_000C, indicating the row and column
     of tile in zoom level starting at the top left corner. X and Y
-    indicies represent one 256x256 block within a tile.
+    indices represent one 256x256 block within a tile.
     """
 
     row: int = floor(y / TILE_SIZE)
