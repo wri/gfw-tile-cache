@@ -85,4 +85,5 @@ module "lambda_raster_tiler" {
   project    = local.project
   source_dir = "${path.root}/../lambdas/raster_tiler"
   tags       = local.tags
+  tiles_bucket_name = module.storage.tiles_bucket_name
 }
