@@ -36,8 +36,6 @@ data "template_file" "container_definition" {
     aws_region               = var.region
     tile_cache_url           = local.tile_cache_url
     raster_tiler_lambda_name = module.lambda_raster_tiler.lambda_name
-
+    tiles_bucket_name        = module.storage.tiles_bucket_name
   }
 }
-
-
