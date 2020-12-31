@@ -95,6 +95,7 @@ async def copy_tile(data, key):
 
         png_file_obj = io.BytesIO()
         _: int = png_file_obj.write(data)
+        png_file_obj.seek(0)
         await s3_client.upload_fileobj(
             png_file_obj,
             BUCKET,
