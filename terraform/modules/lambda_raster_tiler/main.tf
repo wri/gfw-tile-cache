@@ -83,7 +83,7 @@ resource "aws_iam_role_policy_attachment" "read_s3" {
 
 
 data "template_file" "iam_lambda_invoke" {
-  template = file("${path.root}/templates/lambda_invoke_policy.json.tmpl")
+  template = file("${path.module}/templates/lambda_invoke_policy.json.tmpl")
   vars = {
     resource = aws_lambda_function.default.arn
   }
