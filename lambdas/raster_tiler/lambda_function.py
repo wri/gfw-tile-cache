@@ -15,10 +15,9 @@ from rasterio.windows import Window
 
 ENV: str = os.environ.get("ENV", "dev")
 TILE_SIZE: int = 256
-
-if ENV == "test":
-    LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
-    AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
+DATA_LAKE_BUCKET: str = os.environ["DATA_LAKE_BUCKET"]
+LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
+AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
 
     row, col, row_off, col_off = get_tile_location(x, y)
 
-    src_tile = f"s3://gfw-data-lake{suffix}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
     window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
     print("X, Y, Z: ", (x, y, z))

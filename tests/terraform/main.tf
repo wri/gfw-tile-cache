@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">=0.12.13"
+  required_version = ">=0.13"
 }
 
 provider "aws" {
@@ -77,5 +77,5 @@ module "lambda_raster_tiler" {
   project    = "test_project"
   source_dir = "../../lambdas/raster_tiler"
   tags       = {}
-  tiles_bucket_name = "gfw-tiles-test"
+  data_lake_bucket_name = "gfw-data-lake-test"
 }

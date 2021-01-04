@@ -4,6 +4,8 @@ import numpy as np
 import boto3
 import pytest
 
+from ..conftest import AWS_ENDPOINT_URI
+
 
 @pytest.mark.parametrize("x, y, multiplier", [(0, 0, 1), (1, 1, 4)])
 def test_dynamic_tiles(x, y, multiplier, client):
@@ -27,12 +29,12 @@ def test_dynamic_tiles(x, y, multiplier, client):
 
         # check if s3 file copied
         saved_bytes = BytesIO()
-        s3_client = boto3.client("s3", endpoint_url="http://localstack:4566")
+        s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
         s3_client.download_fileobj("gfw-tiles-test", f"wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png", saved_bytes)
         saved_bytes.seek(0)
         _check_png(saved_bytes, multiplier)
     finally:
-        log_client = boto3.client("logs", region_name="us-east-1", endpoint_url="http://localstack:4566")
+        log_client = boto3.client("logs", region_name="us-east-1", endpoint_url=AWS_ENDPOINT_URI)
         log_group_name = "/aws/lambda/test_project-lambda-tiler"
         for log_stream in log_client.describe_log_streams(logGroupName=log_group_name)[
             "logStreams"
