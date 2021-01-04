@@ -54,6 +54,7 @@ DATABASE_CONFIG: DatabaseURL = DatabaseURL(
 
 AWS_REGION = config("AWS_REGION", cast=str, default="us-east-1")
 AWS_ENDPOINT_URI = config("AWS_ENDPOINT_URI", cast=str, default="")
+LAMBDA_HOST = AWS_ENDPOINT_URI if AWS_ENDPOINT_URI else f"https://lambda.{AWS_REGION}.amazonaws.com"
 
 TILE_CACHE_URL: Optional[str] = config("TILE_CACHE_URL", cast=str, default=None)
 SQL_REQUEST_TIMEOUT: int = 58000

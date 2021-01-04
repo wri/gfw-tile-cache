@@ -16,6 +16,10 @@ from rasterio.windows import Window
 ENV: str = os.environ.get("ENV", "dev")
 TILE_SIZE: int = 256
 
+if ENV == "test":
+    LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
+    AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,41 +42,21 @@ def array_to_img(arr: np.ndarray) -> str:
 def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     """Create mercator tile from GFW WM Tile Set images."""
     # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
-    LOCALSTACK_HOSTNAME = os.environ.get("LOCALSTACK_HOSTNAME", None)
-    AWS_ENDPOINT_HOST = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
+    gdal_env = {
+        "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
+        "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
+        "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
+        "GDAL_DISABLE_READDIR_ON_OPEN": "YES"
+    }
 
-    # FIXME this is just temporary to make test work, some issue with reading ranges in localstack S3
-    #
-    # import boto3
-    # s3_client = boto3.client("s3", endpoint_url=f"http://{AWS_ENDPOINT_HOST}")
-    #
-    # from urllib.parse import urlparse
-    # def get_s3_path_parts(path):
-    #     parsed = urlparse(path)
-    #     bucket = parsed.netloc
-    #     key = parsed.path.lstrip("/")
-    #     return bucket, key
-    #
-    # with open('/tmp/raster.tif', 'wb') as file:
-    #     bucket, key = get_s3_path_parts(src_tile)
-    #     print(bucket)
-    #     print(key)
-    #     s3_client.download_fileobj(bucket, key, file)
-
-    with rasterio.Env(
-            AWS_HTTPS='NO',
-            AWS_VIRTUAL_HOSTING=False,
-            AWS_S3_ENDPOINT=AWS_ENDPOINT_HOST,
-            GDAL_DISABLE_READDIR_ON_OPEN='YES'
-    ):
-        with rasterio.open(src_tile) as src:
-            profile = src.profile
-            bands = profile["count"]
-            indexes = tuple(range(1, bands + 1))
-            out_shape = (len(indexes), TILE_SIZE, TILE_SIZE)
-            data = src.read(
-                window=window, boundless=True, out_shape=out_shape, indexes=indexes
-            )
+    with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
+        profile = src.profile
+        bands = profile["count"]
+        indexes = tuple(range(1, bands + 1))
+        out_shape = (len(indexes), TILE_SIZE, TILE_SIZE)
+        data = src.read(
+            window=window, boundless=True, out_shape=out_shape, indexes=indexes
+        )
 
     # moves data from (4, 256, 256) format to (256, 256, 4)
     # PIL will read it in both ways, but for some reason
@@ -120,8 +104,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
         pixel_meaning = implementation
 
     row, col, row_off, col_off = get_tile_location(x, y)
-    LOCALSTACK_HOSTNAME = os.environ.get("LOCALSTACK_HOSTNAME", None)
-    AWS_ENDPOINT_HOST = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
 
     src_tile = f"s3://gfw-data-lake{suffix}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
     window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)

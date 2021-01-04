@@ -26,7 +26,7 @@ services:
       - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
       - AWS_ENDPOINT_URI=http://localstack:4566
       - RASTER_TILER_LAMBDA_NAME=test_project-lambda-tiler
-      - ENV=tests
+      - ENV=test
       - BUCKET=gfw-tiles-test
     entrypoint: /app/tests/run_tests.sh
     depends_on:
