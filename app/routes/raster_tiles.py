@@ -74,7 +74,9 @@ async def raster_tile(
         background_tasks.add_task(
             copy_tile,
             png_data,
-            f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",  # FIXME need to write to default?
+            # FIXME: Hard-coding to "default" for now, as that works for 95% of cases
+            # Need to figure out how to get implementation of original request instead
+            f"{dataset}/{version}/default/{z}/{x}/{y}.png",
         )
         return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
     elif data.get("status") == "error" and data.get("message") == "Tile not found":

@@ -63,7 +63,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  // Tile Cache App hosted on AWS Fargage with Load Balancer
+  // Tile Cache App hosted on AWS Fargate with Load Balancer
   origin {
     domain_name = var.tile_cache_app_url
     origin_id   = "dynamic"
@@ -337,7 +337,7 @@ resource "aws_cloudfront_distribution" "tiles" {
   }
 
 
-  # Defautl static raster tiles are stored on S3
+  # Default static raster tiles are stored on S3
   # They won't change and can stay in cache for a year
   # We will set response headers for selected tile caches in S3 if required
   # If tile is not found on S3, redirect to tile cache app (`dynamic` endpoint).

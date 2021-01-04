@@ -26,7 +26,6 @@ resource "aws_lambda_function" "default" {
   tags             = var.tags
   environment {
     variables = {
-      BUCKET    = var.tiles_bucket_name
       LOG_LEVEL = var.log_level
       ENV       = var.environment
     }
