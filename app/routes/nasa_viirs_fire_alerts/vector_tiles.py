@@ -13,8 +13,11 @@ from ...crud.async_db.vector_tiles.filters import (
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...errors import RecordNotFoundError
-from ...models.enumerators.dynamic_enumerators import Versions, get_dynamic_versions
 from ...models.enumerators.geostore import GeostoreOrigin
+from ...models.enumerators.nasa_viirs_fire_alerts.versions import (
+    Versions,
+    get_versions_enum,
+)
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
@@ -23,7 +26,7 @@ from ...routes import (
     default_end,
     default_start,
     validate_dates,
-    xyz,
+    vector_xyz,
 )
 from . import include_attributes, nasa_viirs_fire_alerts_filters
 
@@ -31,7 +34,7 @@ router = APIRouter()
 
 
 async def nasa_viirs_fire_alerts_version(
-    version: get_dynamic_versions("nasa_viirs_fire_alerts"),  # type: ignore
+    version: get_versions_enum(),  # type: ignore
 ) -> Versions:
     if version == "latest":
         raise HTTPException(
@@ -50,7 +53,7 @@ async def nasa_viirs_fire_alerts_version(
 async def nasa_viirs_fire_alerts_tile(
     response: Response,
     version: str = Depends(nasa_viirs_fire_alerts_version),
-    bbox_z: Tuple[Bounds, int, int] = Depends(xyz),
+    bbox_z: Tuple[Bounds, int, int] = Depends(vector_xyz),
     geostore_id: Optional[UUID] = Query(
         None, description="Only show fire alerts within selected geostore area"
     ),

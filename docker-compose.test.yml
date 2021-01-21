@@ -9,6 +9,7 @@ services:
     container_name: tile-cache_test
     volumes:
       - ./app:/app/app:ro
+      - ./lambdas:/app/lambdas:ro
       - ./tests:/app/tests
     environment:
       - DATABASE_RO=_test
@@ -21,8 +22,9 @@ services:
       - AWS_SECRET_ACCESS_KEY=testing  # pragma: allowlist secret
       - AWS_SECURITY_TOKEN=testing  # pragma: allowlist secret
       - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
+      - RASTER_TILER_LAMBDA_NAME=testing
       - ENV=test
-    entrypoint: wait_for_postgres.sh pytest --cov-report term --cov-report xml:/app/tests/cobertura.xml --cov=app
+    entrypoint: wait_for_postgres.sh pytest --cov-report term --cov-report xml:/app/tests/cobertura.xml --cov=app --cov=lambdas
     depends_on:
       - test_database
 

@@ -9,6 +9,15 @@ data "terraform_remote_state" "core" {
 }
 
 
+data "terraform_remote_state" "lambda_layers" {
+  backend = "s3"
+  config = {
+    bucket = local.tf_state_bucket
+    region = "us-east-1"
+    key    = "lambda-layers.tfstate"
+  }
+}
+
 
 data "template_file" "container_definition" {
   template = file("${path.root}/templates/container_definition.json.tmpl")
@@ -20,14 +29,13 @@ data "template_file" "container_definition" {
 
     log_group = aws_cloudwatch_log_group.default.name
 
-    reader_secret_arn = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_arn
-    log_level         = var.log_level
-    project           = local.project
-    environment       = var.environment
-    aws_region        = var.region
-    tile_cache_url    = local.tile_cache_url
-
+    reader_secret_arn        = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_arn
+    log_level                = var.log_level
+    project                  = local.project
+    environment              = var.environment
+    aws_region               = var.region
+    tile_cache_url           = local.tile_cache_url
+    raster_tiler_lambda_name = module.lambda_raster_tiler.lambda_name
+    tiles_bucket_name        = module.storage.tiles_bucket_name
   }
 }
-
-
