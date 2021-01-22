@@ -4,6 +4,11 @@ from ...crud.sync_db.tile_cache_assets import get_datasets
 from .tile_caches import TileCacheType
 
 
+class DeforestationAlertDatasets(str, Enum):
+    glad = "umd_glad_alerts"
+    radd = "gfw_radd_alerts"
+
+
 class RasterTileCacheDatasets(str, Enum):
     __doc__ = "Raster tile cache datasets"
 

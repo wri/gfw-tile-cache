@@ -20,7 +20,9 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
     response: Response,
     version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
     start_date: str = Path(
-        ..., regex=DATE_REGEX, description="Only show alerts for given date and after",
+        ...,
+        regex=DATE_REGEX,
+        description="Only show alerts for given date and after",
     ),
     end_date: str = Path(
         ..., regex=DATE_REGEX, description="Only show alerts until given date."
@@ -62,7 +64,8 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
     response_model=VectorTileService,
 )
 async def nasa_viirs_fire_alerts_esri_vector_tile_service(
-    *, version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
+    *,
+    version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
 ):
     """
     Mock ESRI Vector Tile Server for NASA VIIRS fire alerts.

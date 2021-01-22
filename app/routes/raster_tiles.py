@@ -8,7 +8,10 @@ the server will redirect the request to the dynamic service and will attempt to 
 import base64
 import io
 import json
-from typing import Optional, Tuple
+from datetime import datetime
+from enum import Enum
+from hashlib import md5
+from typing import Any, Dict, Optional, Tuple
 
 import aioboto3
 import httpx
@@ -24,12 +27,136 @@ from fastapi import (
 from fastapi.logger import logger
 from starlette.responses import StreamingResponse
 
+from ..models.enumerators.attributes import TcdEnum
+from ..models.enumerators.datasets import (
+    DeforestationAlertDatasets,
+    RasterTileCacheDatasets,
+)
+from ..models.enumerators.versions import Versions
 from ..models.enumerators.wmts import WmtsRequest
 from ..settings.globals import AWS_REGION, BUCKET, RASTER_TILER_LAMBDA_NAME
 from ..utils.aws import invoke_lambda
-from . import raster_tile_cache_version_dependency, raster_xyz
+from . import (
+    DATE_REGEX,
+    VERSION_REGEX,
+    raster_tile_cache_version_dependency,
+    raster_xyz,
+)
 
 router = APIRouter()
+
+
+@router.get(
+    "/umd_tree_cover_loss/{version}/dynamic/{z}/{x}/{y}.png",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+)
+async def umd_tree_cover_loss_raster_tile(
+    *,
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    xyz: Tuple[int, int, int] = Depends(raster_xyz),
+    start_year: Optional[int] = Query(
+        None, description="Start Year.", ge=2000, le=datetime.now().year - 1
+    ),
+    end_year: Optional[int] = Query(
+        None, description="End Year.", ge=2000, le=datetime.now().year - 1
+    ),
+    tcd: TcdEnum = Query(TcdEnum.thirty, description="Tree Cover Density threshold."),
+    background_tasks: BackgroundTasks,
+) -> Response:
+    """
+    Generic raster tile.
+    """
+
+    dataset = "umd_tree_cover_loss"
+    x, y, z = xyz
+
+    payload = {
+        "dataset": dataset,
+        "version": version,
+        "implementation": f"tcd_{tcd}",
+        "x": x,
+        "y": y,
+        "z": z,
+        "start_year": start_year,
+        "end_year": end_year,
+        "filter_type": "annual_loss",
+        "source": "tilecache",
+    }
+
+    png_data = await _dynamic_tile(payload, background_tasks)
+
+    params = {"start_year": start_year, "end_year": end_year, "tcd": tcd}
+    query_hash = hash_query_params(params)
+
+    background_tasks.add_task(
+        copy_tile,
+        png_data,
+        f"{dataset}/{version}/{query_hash}/{z}/{x}/{y}.png",
+    )
+    return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
+
+
+@router.get(
+    "/{dataset}/{version}/dynamic/{z}/{x}/{y}.png",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+)
+async def deforestation_alert_raster_tile(
+    *,
+    dataset: DeforestationAlertDatasets = Path(  # type: ignore
+        ..., description=RasterTileCacheDatasets.__doc__
+    ),
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    xyz: Tuple[int, int, int] = Depends(raster_xyz),
+    start_date: str = Path(
+        ...,
+        regex=DATE_REGEX,
+        description="Only show alerts for given date and after",
+    ),
+    end_date: str = Path(
+        ..., regex=DATE_REGEX, description="Only show alerts until given date."
+    ),
+    confirmed_only: bool = Query(False, description="Only show confirmed alerts"),
+    background_tasks: BackgroundTasks,
+) -> Response:
+    """
+    Generic raster tile.
+    """
+
+    x, y, z = xyz
+
+    payload = {
+        "dataset": dataset,
+        "version": version,
+        "implementation": "default",
+        "x": x,
+        "y": y,
+        "z": z,
+        "start_date": start_date,
+        "end_date": end_date,
+        "confirmed_only": confirmed_only,
+        "filter_type": "deforestation_alerts",
+        "source": "tilecache",
+    }
+
+    png_data = await _dynamic_tile(payload, background_tasks)
+
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "confirmed_only": confirmed_only,
+    }
+    query_hash = hash_query_params(params)
+
+    background_tasks.add_task(
+        copy_tile,
+        png_data,
+        f"{dataset}/{version}/{query_hash}/{z}/{x}/{y}.png",
+    )
+    return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
 
 
 @router.get(
@@ -60,7 +187,16 @@ async def raster_tile(
         "y": y,
         "z": z,
     }
+    png_data = await _dynamic_tile(payload, background_tasks)
+    background_tasks.add_task(
+        copy_tile,
+        png_data,
+        f"{dataset}/{version}/default/{z}/{x}/{y}.png",
+    )
+    return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
 
+
+async def _dynamic_tile(payload: Dict[str, Any], background_tasks):
     try:
         response = await invoke_lambda(RASTER_TILER_LAMBDA_NAME, payload)
     except httpx.ReadTimeout as e:
@@ -70,15 +206,7 @@ async def raster_tile(
     data = json.loads(response.text)
 
     if data.get("status") == "success":
-        png_data = base64.b64decode(data.get("data"))
-        background_tasks.add_task(
-            copy_tile,
-            png_data,
-            # FIXME: Hard-coding to "default" for now, as that works for 95% of cases
-            # Need to figure out how to get implementation of original request instead
-            f"{dataset}/{version}/default/{z}/{x}/{y}.png",
-        )
-        return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
+        return base64.b64decode(data.get("data"))
     elif data.get("status") == "error" and data.get("message") == "Tile not found":
         raise HTTPException(status_code=404, detail=data.get("message"))
     elif data.get("errorMessage"):
@@ -89,6 +217,13 @@ async def raster_tile(
             f"An unknown error occurred. Data received from Lambda function: {data}"
         )
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+def hash_query_params(params: Dict[str, Any]) -> str:
+    sorted_params = {
+        key: params[key] for key in sorted(params) if params[key] is not None
+    }
+    return md5(json.dumps(sorted_params).encode()).hexdigest()
 
 
 async def copy_tile(data, key):

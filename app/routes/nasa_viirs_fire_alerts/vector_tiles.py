@@ -131,7 +131,8 @@ async def nasa_viirs_fire_alerts_tile(
     tags=["Dynamic Vector Tiles"],
 )
 async def max_date(
-    response: Response, version: str = Depends(nasa_viirs_fire_alerts_version),
+    response: Response,
+    version: str = Depends(nasa_viirs_fire_alerts_version),
 ) -> MaxDateResponse:
     """
     Retrieve max alert date for NASA VIIRS fire alerts for a given version
