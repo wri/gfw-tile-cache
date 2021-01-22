@@ -45,7 +45,7 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
         "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
         "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
         "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
-        "GDAL_DISABLE_READDIR_ON_OPEN": "YES"
+        "GDAL_DISABLE_READDIR_ON_OPEN": "YES",
     }
 
     with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
@@ -95,8 +95,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     y: int = int(event["y"])
     z: int = int(event["z"])
 
-    suffix: str = "" if ENV == "production" else f"-{ENV}"
-
     if implementation == "dynamic":
         pixel_meaning: str = "rgb_encoded"
     else:
@@ -124,6 +122,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
         response["status"] = "success"
         response["data"] = png
 
-    print("RESPONSE: ", response)
+    # print("RESPONSE: ", response)
 
     return response

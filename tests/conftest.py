@@ -1,9 +1,9 @@
 import os
 
 import boto3
+import numpy as np
 import pytest
 import rasterio
-import numpy as np
 from fastapi.testclient import TestClient
 from rasterio.enums import ColorInterp
 from rasterio.windows import Window
@@ -39,7 +39,11 @@ with rasterio.open(TEST_FILE, "w", **profile) as dst:
     ]
 
 s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
-s3_client.upload_file(TEST_FILE, "gfw-data-lake-test", "wur_radd_alerts/v20201214/raster/epsg-3857/zoom_14/rgb_encoded/geotiff/000R_000C.tif")
+s3_client.upload_file(
+    TEST_FILE,
+    "gfw-data-lake-test",
+    "wur_radd_alerts/v20201214/raster/epsg-3857/zoom_14/rgb_encoded/geotiff/000R_000C.tif",
+)
 
 
 def pytest_sessionstart(session):
