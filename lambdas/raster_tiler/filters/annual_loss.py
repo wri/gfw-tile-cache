@@ -1,6 +1,7 @@
 from typing import Callable
 
-from numpy import ndarray, np
+import numpy as np
+from numpy import ndarray
 
 
 def scale_intensity(zoom: int) -> Callable:

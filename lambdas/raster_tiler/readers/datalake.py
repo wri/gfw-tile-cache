@@ -6,7 +6,7 @@ import rasterio
 from rasterio import RasterioIOError
 from rasterio.windows import Window
 
-from ..lambda_function import SUFFIX, TILE_SIZE, TileNotFoundError
+from ..settings import SUFFIX, TILE_SIZE, TileNotFoundError
 
 
 def get_tile_location(x: int, y: int) -> Tuple[int, int, int, int]:

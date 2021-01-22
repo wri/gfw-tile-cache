@@ -1,8 +1,9 @@
+import numpy as np
 import requests
-from numpy import ndarray, np
+from numpy import ndarray
 from PIL import Image
 
-from ..lambda_function import SUFFIX
+from ..settings import SUFFIX
 
 
 def read(dataset, version, implementation, x, y, z, **kwargs) -> ndarray:

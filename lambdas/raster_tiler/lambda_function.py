@@ -2,18 +2,15 @@
 
 import base64
 import logging
-import os
 from io import BytesIO
 from typing import Any, Dict, Optional
 
 import numpy as np
-from filters import annual_loss, deforestation_alerts
 from PIL import Image
-from readers import datalake, tilecache
 
-ENV: str = os.environ.get("ENV", "dev")
-TILE_SIZE: int = 256
-SUFFIX: str = "" if ENV == "production" else f"-{ENV}"
+from .filters import annual_loss, deforestation_alerts
+from .readers import datalake, tilecache
+from .settings import TileNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +20,6 @@ filter_constructor = {
     "annual_loss": annual_loss.apply_filter,
     "deforestation_alerts": deforestation_alerts.apply_filter,
 }
-
-
-class TileNotFoundError(Exception):
-    pass
 
 
 def array_to_img(arr: np.ndarray) -> str:
