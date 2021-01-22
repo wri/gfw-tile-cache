@@ -9,3 +9,4 @@ variable "source_dir" { type = string }
 variable "lambda_layers" { type = list(string) }
 variable "project" { type = string }
 variable "tags" { type = map(string) }
+variable "data_lake_bucket_name" { type = string }

@@ -25,7 +25,12 @@ from fastapi.logger import logger
 from starlette.responses import StreamingResponse
 
 from ..models.enumerators.wmts import WmtsRequest
-from ..settings.globals import AWS_REGION, BUCKET, RASTER_TILER_LAMBDA_NAME
+from ..settings.globals import (
+    AWS_ENDPOINT_URI,
+    AWS_REGION,
+    BUCKET,
+    RASTER_TILER_LAMBDA_NAME,
+)
 from ..utils.aws import invoke_lambda
 from . import raster_tile_cache_version_dependency, raster_xyz
 
@@ -68,7 +73,6 @@ async def raster_tile(
         raise HTTPException(status_code=500, detail="Internal server error")
 
     data = json.loads(response.text)
-
     if data.get("status") == "success":
         png_data = base64.b64decode(data.get("data"))
         background_tasks.add_task(
@@ -92,7 +96,9 @@ async def raster_tile(
 
 
 async def copy_tile(data, key):
-    async with aioboto3.client("s3", region_name=AWS_REGION) as s3_client:
+    async with aioboto3.client(
+        "s3", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URI
+    ) as s3_client:
         logger.info(f"Uploading to S3 bucket: {BUCKET} key: {key}")
 
         png_file_obj = io.BytesIO()

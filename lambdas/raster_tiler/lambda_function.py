@@ -15,6 +15,9 @@ from rasterio.windows import Window
 
 ENV: str = os.environ.get("ENV", "dev")
 TILE_SIZE: int = 256
+DATA_LAKE_BUCKET: str = os.environ["DATA_LAKE_BUCKET"]
+LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
+AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +40,15 @@ def array_to_img(arr: np.ndarray) -> str:
 
 def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     """Create mercator tile from GFW WM Tile Set images."""
+    # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
+    gdal_env = {
+        "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
+        "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
+        "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
+        "GDAL_DISABLE_READDIR_ON_OPEN": "YES",
+    }
 
-    with rasterio.open(src_tile) as src:
+    with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
         indexes = tuple(range(1, bands + 1))
@@ -85,8 +95,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     y: int = int(event["y"])
     z: int = int(event["z"])
 
-    suffix: str = "" if ENV == "production" else f"-{ENV}"
-
     if implementation == "dynamic":
         pixel_meaning: str = "rgb_encoded"
     else:
@@ -94,11 +102,11 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
 
     row, col, row_off, col_off = get_tile_location(x, y)
 
-    src_tile = f"s3://gfw-data-lake{suffix}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
     window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
     print("X, Y, Z: ", (x, y, z))
-    print("SCR TILE: ", src_tile)
+    print("SRC TILE: ", src_tile)
 
     response: Dict[str, str] = {}
 
@@ -114,6 +122,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
         response["status"] = "success"
         response["data"] = png
 
-    print("RESPONSE: ", response)
+    # print("RESPONSE: ", response)
 
     return response
