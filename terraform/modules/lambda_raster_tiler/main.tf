@@ -26,8 +26,10 @@ resource "aws_lambda_function" "default" {
   tags             = var.tags
   environment {
     variables = {
+      DATA_LAKE_BUCKET    = var.data_lake_bucket_name
       LOG_LEVEL = var.log_level
       ENV       = var.environment
+      TILE_CACHE_URL = var.tile_cache_url
     }
   }
 }
@@ -82,7 +84,7 @@ resource "aws_iam_role_policy_attachment" "read_s3" {
 
 
 data "template_file" "iam_lambda_invoke" {
-  template = file("${path.root}/templates/lambda_invoke_policy.json.tmpl")
+  template = file("${path.module}/templates/lambda_invoke_policy.json.tmpl")
   vars = {
     resource = aws_lambda_function.default.arn
   }

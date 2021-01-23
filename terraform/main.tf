@@ -85,4 +85,6 @@ module "lambda_raster_tiler" {
   project    = local.project
   source_dir = "${path.root}/../lambdas/raster_tiler"
   tags       = local.tags
+  data_lake_bucket_name = data.terraform_remote_state.core.outputs.data-lake_bucket
+  tile_cache_url = local.tile_cache_url
 }

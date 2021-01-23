@@ -161,3 +161,10 @@ INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset
 
 INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
     VALUES ('wdpa_protected_areas', 'v201912', 'Static vector tile cache', '{}', '[{"field_name":"static_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '0637a11b-18f7-42de-9a15-a0ec488c09b6', 'saved', 'my_uri4', true, false);
+
+INSERT INTO public.datasets (dataset) VALUES ('wur_radd_alerts');
+INSERT INTO public.versions (dataset, version, is_latest, status)
+  VALUES ('wur_radd_alerts', 'v20201214', true, 'saved');
+
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('wur_radd_alerts', 'v20201214', 'Raster tile cache', '{}', '[]', '0637a11b-18f7-42de-9a15-a0ec488c09b7', 'saved', 'my_uri5', true, false);

@@ -31,7 +31,6 @@ db = Gino(
 
 @contextmanager
 def get_synchronous_db() -> Iterator[Session]:
-
     global SessionLocal
 
     if SessionLocal is None:

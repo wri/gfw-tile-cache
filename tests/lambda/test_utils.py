@@ -1,8 +1,12 @@
 import numpy as np
 from rasterio.windows import Window
 
-from lambdas.raster_tiler.lambda_function import array_to_img
-from lambdas.raster_tiler.readers.datalake import get_tile_array, get_tile_location
+from lambdas.raster_tiler.lambda_function import (
+    array_to_img,
+    combine_bands,
+    get_tile_array,
+    get_tile_location,
+)
 from tests.conftest import TEST_FILE
 
 
@@ -10,23 +14,31 @@ def test_tile():
 
     data = get_tile_array(TEST_FILE, Window(0, 0, 256, 256))
     assert data.shape == (4, 256, 256)
+    data = combine_bands(data)
+    assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [1, 2, 3, 4])
 
     data = get_tile_array(TEST_FILE, Window(0, 256, 256, 256))
     assert data.shape == (4, 256, 256)
+    data = combine_bands(data)
+    assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [2, 4, 6, 8])
 
     data = get_tile_array(TEST_FILE, Window(256, 0, 256, 256))
     assert data.shape == (4, 256, 256)
+    data = combine_bands(data)
+    assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [3, 6, 9, 12])
 
     data = get_tile_array(TEST_FILE, Window(256, 256, 256, 256))
     assert data.shape == (4, 256, 256)
+    data = combine_bands(data)
+    assert data.shape == (256, 256, 4)
     np.testing.assert_equal(data[0][0], [4, 8, 12, 16])
 
 
 def test_array_to_img():
-    data = np.array([[[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]]])
+    data = np.array([[[1, 2, 4, 5]], [[2, 3, 5, 6]], [[3, 4, 5, 6]], [[4, 5, 6, 7]]])
     img = array_to_img(data)
     assert isinstance(img, str)
     assert (
