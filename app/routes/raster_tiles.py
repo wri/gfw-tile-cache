@@ -28,10 +28,6 @@ from fastapi.logger import logger
 from starlette.responses import StreamingResponse
 
 from ..models.enumerators.attributes import TcdEnum
-from ..models.enumerators.datasets import (
-    DeforestationAlertDatasets,
-    RasterTileCacheDatasets,
-)
 from ..models.enumerators.versions import Versions
 from ..models.enumerators.wmts import WmtsRequest
 from ..settings.globals import (

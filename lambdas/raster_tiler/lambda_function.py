@@ -47,9 +47,9 @@ def scale_intensity(zoom: int) -> Callable:
     """
     exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
     domain = (0, 256)
-    range = (0, 256)
-    m = range[1] / domain[1] ** exp
-    b = range[0]
+    scale_range = (0, 256)
+    m = scale_range[1] / domain[1] ** exp
+    b = scale_range[0]
 
     def scale_pow(x: ndarray) -> ndarray:
         return m * x ** exp + b
@@ -224,7 +224,7 @@ def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
 
 def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndarray:
     url = f"https://tiles{SUFFIX}.globalforestwatch.org/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
-    png = Image.open(urlopen(url))
+    png = Image.open(urlopen(url))  # nosec
     arr = np.array(png)
 
     return seperate_bands(arr)
