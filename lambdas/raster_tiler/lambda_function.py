@@ -25,19 +25,24 @@ AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME el
 
 logger = logging.getLogger(__name__)
 
+# !Note: To ease deployment I kept all functions within this one module.
+# Ideally the different sections in this file would live in seperate modules.
+# However, it would require to deploy the lambda function differently.
+# Depending on how complex this modules becomes, we need to refactor it accordingly.
 
-###############
+
+#############################
 # Error Classes
-###############
+#############################
 
 
 class TileNotFoundError(Exception):
     pass
 
 
-#################
+#############################
 # Annual Loss Filters
-#################
+#############################
 
 
 def scale_intensity(zoom: int) -> Callable:
@@ -84,9 +89,9 @@ def apply_annual_loss_filter(
     return np.vstack((red, green, blue, alpha))
 
 
-#################
+##############################
 # Deforestation Alerts Filters
-#################
+##############################
 
 
 def days_since_bog(d: date) -> int:
@@ -147,9 +152,9 @@ def apply_deforestation_filter(
     return np.vstack((pink, alpha))
 
 
-##############
+############################
 # Data Lake Reader
-################
+############################
 
 
 def get_tile_location(x: int, y: int) -> Tuple[int, int, int, int]:
@@ -217,9 +222,9 @@ def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
     return tile
 
 
-#################
+#########################
 # Tile Cache Reader
-################
+#########################
 
 
 def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndarray:
@@ -230,9 +235,9 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
     return seperate_bands(arr)
 
 
-##################
+##########################
 # Array functions
-##################
+##########################
 
 
 def seperate_bands(arr: ndarray) -> ndarray:
@@ -270,9 +275,9 @@ def array_to_img(arr: np.ndarray) -> str:
     return base64.b64encode(sio.getvalue()).decode()
 
 
-############
+###########################
 # Handler
-#############
+###########################
 
 
 def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
