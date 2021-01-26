@@ -7,7 +7,7 @@ import os
 from datetime import date, datetime
 from io import BytesIO
 from math import floor
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 from urllib.request import urlopen
 
 import numpy as np
@@ -72,7 +72,7 @@ def scale_intensity(zoom: int) -> Callable:
 
 
 def apply_annual_loss_filter(
-    data: ndarray, z: str, start_year: str = "2000", end_year: str = "3000", **kwargs
+    data: ndarray, z: str, start_year: Optional[str], end_year: Optional[str], **kwargs
 ) -> ndarray:
 
     logger.debug("Apply annual loss filter")
@@ -83,8 +83,12 @@ def apply_annual_loss_filter(
     scale_pow: Callable = scale_intensity(zoom)
     scaled_intensity: ndarray = scale_pow(intensity).astype("uint8")
 
-    start_year_mask: ndarray = year >= (int(start_year) - 2000)
-    end_year_mask: ndarray = year <= (int(end_year) - 2000)
+    start_year_mask: Union[bool, ndarray] = (start_year is None) or (
+        year >= (int(start_year) - 2000)
+    )
+    end_year_mask: Union[bool, ndarray] = (end_year is None) or (
+        year <= (int(end_year) - 2000)
+    )
 
     red: ndarray = np.ones(intensity.shape).astype("uint8") * 228
     green: ndarray = (
@@ -118,12 +122,12 @@ def days_since_bog(d: date) -> int:
     return offset + day_in_year
 
 
-def get_alpha(
+def get_alpha_band(
     rgb: ndarray,
     start_date: Optional[int],
     end_date: Optional[int],
     confirmed_only: Optional[bool],
-) -> int:
+) -> ndarray:
     """Compute alpha value based on RGB encoding and applied filters.
     Expecting 3D array.
     """
@@ -137,18 +141,16 @@ def get_alpha(
     intensity = (blue % 100).astype("uint8")
 
     # build masks
-    date_mask = (start_date is None or start_date <= date) * (
+    date_mask: Union[bool, ndarray] = (start_date is None or start_date <= date) * (
         end_date is None or date <= end_date
     )
-    confidence_mask = (
-        (confidence == 2)
-        if confirmed_only
-        else np.ones(confidence.shape).astype("bool")
+    confidence_mask: Union[bool, ndarray] = (
+        (confidence == 2) if confirmed_only else True
     )
-    no_data_mask = red + green + blue > 0
+    no_data_mask: ndarray = red + green + blue > 0
 
     # compute alpha value
-    alpha = (
+    alpha: ndarray = (
         np.minimum(255, intensity * 50) * date_mask * confidence_mask * no_data_mask
     ).astype("uint8")
 
@@ -183,7 +185,7 @@ def apply_deforestation_filter(
     blue = np.ones(data[2].shape).astype("uint8") * 153
 
     # Compute alpha value
-    alpha = get_alpha(data, start_day, end_day, confirmed_only)
+    alpha = get_alpha_band(data, start_day, end_day, confirmed_only)
 
     # stack bands and return
     return np.array([red, green, blue, alpha])
