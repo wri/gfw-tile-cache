@@ -1,3 +1,6 @@
+import base64
+from io import BytesIO
+
 import numpy as np
 from rasterio.windows import Window
 
@@ -13,28 +16,28 @@ from tests.conftest import TEST_FILE
 def test_tile():
 
     data = get_tile_array(TEST_FILE, Window(0, 0, 256, 256))
-    assert data.shape == (4, 256, 256)
+    assert data.shape == (3, 256, 256)
     data = combine_bands(data)
-    assert data.shape == (256, 256, 4)
-    np.testing.assert_equal(data[0][0], [1, 2, 3, 4])
+    assert data.shape == (256, 256, 3)
+    np.testing.assert_equal(data[0][0], [1, 2, 3])
 
     data = get_tile_array(TEST_FILE, Window(0, 256, 256, 256))
-    assert data.shape == (4, 256, 256)
+    assert data.shape == (3, 256, 256)
     data = combine_bands(data)
-    assert data.shape == (256, 256, 4)
-    np.testing.assert_equal(data[0][0], [2, 4, 6, 8])
+    assert data.shape == (256, 256, 3)
+    np.testing.assert_equal(data[0][0], [2, 4, 6])
 
     data = get_tile_array(TEST_FILE, Window(256, 0, 256, 256))
-    assert data.shape == (4, 256, 256)
+    assert data.shape == (3, 256, 256)
     data = combine_bands(data)
-    assert data.shape == (256, 256, 4)
-    np.testing.assert_equal(data[0][0], [3, 6, 9, 12])
+    assert data.shape == (256, 256, 3)
+    np.testing.assert_equal(data[0][0], [3, 6, 9])
 
     data = get_tile_array(TEST_FILE, Window(256, 256, 256, 256))
-    assert data.shape == (4, 256, 256)
+    assert data.shape == (3, 256, 256)
     data = combine_bands(data)
-    assert data.shape == (256, 256, 4)
-    np.testing.assert_equal(data[0][0], [4, 8, 12, 16])
+    assert data.shape == (256, 256, 3)
+    np.testing.assert_equal(data[0][0], [4, 8, 12])
 
 
 def test_array_to_img():
@@ -70,6 +73,3 @@ def test_get_tile_location():
     assert row == 1
     assert col == 1
     assert row_off == 256
-
-
-#     assert col_off == 256

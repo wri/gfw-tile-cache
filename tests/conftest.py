@@ -17,10 +17,16 @@ AWS_ENDPOINT_URI = os.environ.get("AWS_ENDPOINT_URI", None)
 # Create Test data
 ##################
 
+band_count = 3
+profile = {
+    "driver": "GTiff",
+    "height": 512,
+    "width": 512,
+    "count": band_count,
+    "dtype": "uint8",
+}
 
-profile = {"driver": "GTiff", "height": 512, "width": 512, "count": 4, "dtype": "uint8"}
-
-bands = range(1, 5)
+bands = range(1, band_count + 1)
 windows = ((0, 0), (0, 256), (256, 0), (256, 256))
 
 fixtures = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -35,7 +41,7 @@ with rasterio.open(TEST_FILE, "w", **profile) as dst:
         ColorInterp.red,
         ColorInterp.green,
         ColorInterp.blue,
-        ColorInterp.alpha,
+        # ColorInterp.alpha,
     ]
 
 s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)

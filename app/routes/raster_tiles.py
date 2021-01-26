@@ -8,27 +8,15 @@ the server will redirect the request to the dynamic service and will attempt to 
 import base64
 import io
 import json
-from datetime import datetime
 from hashlib import md5
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import aioboto3
 import httpx
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Depends,
-    HTTPException,
-    Path,
-    Query,
-    Response,
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Response
 from fastapi.logger import logger
 from starlette.responses import StreamingResponse
 
-from ..models.enumerators.attributes import TcdEnum
-from ..models.enumerators.versions import Versions
-from ..models.enumerators.wmts import WmtsRequest
 from ..settings.globals import (
     AWS_ENDPOINT_URI,
     AWS_REGION,
@@ -36,181 +24,9 @@ from ..settings.globals import (
     RASTER_TILER_LAMBDA_NAME,
 )
 from ..utils.aws import invoke_lambda
-from . import (
-    DATE_REGEX,
-    VERSION_REGEX,
-    raster_tile_cache_version_dependency,
-    raster_xyz,
-)
+from . import raster_tile_cache_version_dependency, raster_xyz
 
 router = APIRouter()
-
-
-@router.get(
-    "/umd_tree_cover_loss/{version}/dynamic/{z}/{x}/{y}.png",
-    response_class=Response,
-    tags=["Raster Tiles"],
-    response_description="PNG Raster Tile",
-)
-async def umd_tree_cover_loss_raster_tile(
-    *,
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
-    xyz: Tuple[int, int, int] = Depends(raster_xyz),
-    start_year: Optional[int] = Query(
-        None, description="Start Year.", ge=2000, le=datetime.now().year - 1
-    ),
-    end_year: Optional[int] = Query(
-        None, description="End Year.", ge=2000, le=datetime.now().year - 1
-    ),
-    tcd: TcdEnum = Query(TcdEnum.thirty, description="Tree Cover Density threshold."),
-    background_tasks: BackgroundTasks,
-) -> Response:
-    """
-    Generic raster tile.
-    """
-
-    dataset = "umd_tree_cover_loss"
-    x, y, z = xyz
-
-    payload = {
-        "dataset": dataset,
-        "version": version,
-        "implementation": f"tcd_{tcd}",
-        "x": x,
-        "y": y,
-        "z": z,
-        "start_year": start_year,
-        "end_year": end_year,
-        "filter_type": "annual_loss",
-        "source": "tilecache",
-    }
-
-    png_data = await _dynamic_tile(payload, background_tasks)
-
-    params = {"start_year": start_year, "end_year": end_year, "tcd": tcd}
-    query_hash = hash_query_params(params)
-
-    background_tasks.add_task(
-        copy_tile,
-        png_data,
-        f"{dataset}/{version}/{query_hash}/{z}/{x}/{y}.png",
-    )
-    return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
-
-
-@router.get(
-    "/umd_glad_alerts/{version}/dynamic/{z}/{x}/{y}.png",
-    response_class=Response,
-    tags=["Raster Tiles"],
-    response_description="PNG Raster Tile",
-)
-async def umd_glad_alerts_raster_tile(
-    *,
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
-    xyz: Tuple[int, int, int] = Depends(raster_xyz),
-    start_date: Optional[str] = Query(
-        None,
-        regex=DATE_REGEX,
-        description="Only show alerts for given date and after",
-    ),
-    end_date: Optional[str] = Query(
-        None, regex=DATE_REGEX, description="Only show alerts until given date."
-    ),
-    confirmed_only: Optional[bool] = Query(
-        None, description="Only show confirmed alerts"
-    ),
-    background_tasks: BackgroundTasks,
-) -> Response:
-    """
-    UMD GLAD alerts raster tiles.
-    """
-    dataset = "umd_glad_alerts"
-    return await _deforestation_alert_tiles(
-        dataset, version, xyz, start_date, end_date, confirmed_only, background_tasks
-    )
-
-
-@router.get(
-    "/gfw_radd_alerts/{version}/dynamic/{z}/{x}/{y}.png",
-    response_class=Response,
-    tags=["Raster Tiles"],
-    response_description="PNG Raster Tile",
-)
-async def gfw_radd_alerts_raster_tile(
-    *,
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
-    xyz: Tuple[int, int, int] = Depends(raster_xyz),
-    start_date: Optional[str] = Query(
-        None,
-        regex=DATE_REGEX,
-        description="Only show alerts for given date and after",
-    ),
-    end_date: Optional[str] = Query(
-        None, regex=DATE_REGEX, description="Only show alerts until given date."
-    ),
-    confirmed_only: Optional[bool] = Query(
-        None, description="Only show confirmed alerts"
-    ),
-    background_tasks: BackgroundTasks,
-) -> Response:
-    """
-    GFW RADD alerts raster tiles.
-
-    Sourced from University of Wageningen and Sateligence.
-    """
-    dataset = "gfw_radd_alerts"
-    return await _deforestation_alert_tiles(
-        dataset, version, xyz, start_date, end_date, confirmed_only, background_tasks
-    )
-
-
-async def _deforestation_alert_tiles(
-    dataset: str,
-    version: str,
-    xyz: Tuple[int, int, int],
-    start_date: Optional[str],
-    end_date: Optional[str],
-    confirmed_only: Optional[bool],
-    background_tasks: BackgroundTasks,
-) -> Response:
-    x, y, z = xyz
-
-    payload = {
-        "dataset": dataset,
-        "version": version,
-        "implementation": "dynamic",
-        "x": x,
-        "y": y,
-        "z": z,
-    }
-
-    if start_date or end_date or confirmed_only:
-        payload.update(
-            {
-                "start_date": start_date,
-                "end_date": end_date,
-                "confirmed_only": confirmed_only,
-                "filter_type": "deforestation_alerts",
-                "source": "tilecache",
-            }
-        )
-        params = {
-            "start_date": start_date,
-            "end_date": end_date,
-            "confirmed_only": confirmed_only,
-        }
-        implementation = hash_query_params(params)
-    else:
-        implementation = "default"
-
-    png_data = await _dynamic_tile(payload, background_tasks)
-
-    background_tasks.add_task(
-        copy_tile,
-        png_data,
-        f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",
-    )
-    return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
 
 
 @router.get(
@@ -222,7 +38,9 @@ async def _deforestation_alert_tiles(
 async def raster_tile(
     *,
     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
-    implementation: str = Path("default", description="Tile cache implementation name"),
+    implementation: str = Path(
+        "default", description="Tile cache implementation name."
+    ),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
 ) -> Response:
@@ -241,7 +59,10 @@ async def raster_tile(
         "y": y,
         "z": z,
     }
-    png_data = await _dynamic_tile(payload, background_tasks)
+    # As per cloud front settings only `dynamic` implementations should make it to this endpoint.
+    png_data = await get_dynamic_tile(payload)
+
+    # Copy dynamically created tile o tile cache for later reuse.
     background_tasks.add_task(
         copy_tile,
         png_data,
@@ -250,7 +71,10 @@ async def raster_tile(
     return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
 
 
-async def _dynamic_tile(payload: Dict[str, Any], background_tasks):
+async def get_dynamic_tile(payload: Dict[str, Any]):
+    """
+    Invoke Lambda function to generate raster tile dynamically.
+    """
     try:
         response = await invoke_lambda(RASTER_TILER_LAMBDA_NAME, payload)
     except httpx.ReadTimeout as e:
@@ -273,6 +97,12 @@ async def _dynamic_tile(payload: Dict[str, Any], background_tasks):
 
 
 def hash_query_params(params: Dict[str, Any]) -> str:
+    """Hash query parameters in alphabetic order.
+
+    This way we can store tile as its own implementation and
+    later read it them from file instead of dynamically create them over and over again.
+    """
+
     sorted_params = {
         key: params[key] for key in sorted(params) if params[key] is not None
     }
@@ -280,6 +110,7 @@ def hash_query_params(params: Dict[str, Any]) -> str:
 
 
 async def copy_tile(data, key):
+    """Copy tile to S3"""
     async with aioboto3.client(
         "s3", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URI
     ) as s3_client:
@@ -294,31 +125,3 @@ async def copy_tile(data, key):
             key,
             ExtraArgs={"ContentType": "image/png", "CacheControl": "max-age=31536000"},
         )
-
-
-@router.get(
-    "/{dataset}/{version}/default/wmts",
-    response_class=Response,
-    tags=["Raster Tiles"],
-    # response_description="PNG Raster Tile",
-)
-async def wmts(
-    *,
-    dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
-    SERVICE: str = Query("WMTS"),
-    VERSION: str = Query("1.0.0"),
-    REQUEST: WmtsRequest = Query(...),
-    tileMatrixSet: Optional[str] = Query(None, description="Projection of tiles"),
-    tileMatrix: Optional[int] = Query(None, description="z index"),
-    tileRow: Optional[int] = Query(None, description="y index"),
-    tileCol: Optional[int] = Query(None, description="x index"),
-) -> Response:
-    """
-    WMTS Service
-    """
-    # dataset = dv[0]
-    # version = dv[1]
-    if REQUEST == WmtsRequest.get_capabilities:
-        pass
-    elif REQUEST == WmtsRequest.get_tiles:
-        pass

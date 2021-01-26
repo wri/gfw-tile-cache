@@ -1,6 +1,7 @@
 # mypy: ignore-errors
 
 import base64
+import json
 import logging
 import os
 from datetime import date, datetime
@@ -23,7 +24,15 @@ DATA_LAKE_BUCKET: str = os.environ.get("DATA_LAKE_BUCKET")
 LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
 AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
 
+log_level = {
+    "test": logging.DEBUG,
+    "dev": logging.DEBUG,
+    "staging": logging.DEBUG,
+    "production": logging.INFO,
+}
+
 logger = logging.getLogger(__name__)
+logger.setLevel(log_level[ENV])
 
 # !Note: To ease deployment I kept all functions within this one module.
 # Ideally the different sections in this file would live in seperate modules.
@@ -66,6 +75,8 @@ def apply_annual_loss_filter(
     data: ndarray, z: str, start_year: str = "2000", end_year: str = "3000", **kwargs
 ) -> ndarray:
 
+    logger.debug("Apply annual loss filter")
+
     zoom = int(z)
 
     intensity, _, year = data
@@ -86,7 +97,7 @@ def apply_annual_loss_filter(
         (scaled_intensity if zoom < 13 else intensity) * start_year_mask * end_year_mask
     ).astype("uint8")
 
-    return np.vstack((red, green, blue, alpha))
+    return np.array([red, green, blue, alpha])
 
 
 ##############################
@@ -108,48 +119,74 @@ def days_since_bog(d: date) -> int:
 
 
 def get_alpha(
-    rgb: ndarray, start_date: int, end_date: int, confirmed_only: bool
+    rgb: ndarray,
+    start_date: Optional[int],
+    end_date: Optional[int],
+    confirmed_only: Optional[bool],
 ) -> int:
     """Compute alpha value based on RGB encoding and applied filters.
     Expecting 3D array.
     """
 
+    logger.debug("Get Deforestation Alert Alpha Band")
+
     # encode false color tiles
     red, green, blue = rgb
-    date = red * 255 + green
-    confidence = np.floor(blue / 100) - 1
-    intensity = blue % 100
+    date = (red * 255 + green).astype("uint8")
+    confidence = np.floor(blue / 100).astype("uint8")
+    intensity = (blue % 100).astype("uint8")
 
     # build masks
-    date_mask = (start_date <= date) * (date <= end_date)
+    date_mask = (start_date is None or start_date <= date) * (
+        end_date is None or date <= end_date
+    )
     confidence_mask = (
-        (confidence == 1)
+        (confidence == 2)
         if confirmed_only
         else np.ones(confidence.shape).astype("bool")
     )
     no_data_mask = red + green + blue > 0
 
     # compute alpha value
-    alpha = np.minimim(255, intensity * 50) * date_mask * confidence_mask * no_data_mask
+    alpha = (
+        np.minimum(255, intensity * 50) * date_mask * confidence_mask * no_data_mask
+    ).astype("uint8")
 
     return alpha
 
 
 def apply_deforestation_filter(
-    data: ndarray, start_date: str, end_date: str, confirmed_only: bool, **kwargs
+    data: ndarray,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    confirmed_only: Optional[bool],
+    **kwargs,
 ) -> ndarray:
     """Decode using Pink alert color and filtering out unwanted alerts."""
 
-    start_day = days_since_bog(datetime.strptime(start_date, "%Y-%m-%d").date())
-    end_day = days_since_bog(datetime.strptime(end_date, "%Y-%m-%d").date())
+    print("Apply Deforestation Filter")
 
-    # Create an all pink image
-    pink = np.ones(data.shape).astype("uint8") * [[228], [102], [153]]
+    start_day = (
+        days_since_bog(datetime.strptime(start_date, "%Y-%m-%d").date())
+        if start_date
+        else None
+    )
+    end_day = (
+        days_since_bog(datetime.strptime(end_date, "%Y-%m-%d").date())
+        if end_date
+        else None
+    )
+
+    # Create an all pink image with varying opacity
+    red = np.ones(data[0].shape).astype("uint8") * 228
+    green = np.ones(data[1].shape).astype("uint8") * 102
+    blue = np.ones(data[2].shape).astype("uint8") * 153
+
     # Compute alpha value
     alpha = get_alpha(data, start_day, end_day, confirmed_only)
 
     # stack bands and return
-    return np.vstack((pink, alpha))
+    return np.array([red, green, blue, alpha])
 
 
 ############################
@@ -168,6 +205,8 @@ def get_tile_location(x: int, y: int) -> Tuple[int, int, int, int]:
     indices represent one 256x256 block within a tile.
     """
 
+    logger.debug("Get Tile Location")
+
     row: int = floor(y / TILE_SIZE)
     col: int = floor(x / TILE_SIZE)
 
@@ -179,6 +218,9 @@ def get_tile_location(x: int, y: int) -> Tuple[int, int, int, int]:
 
 def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     """Create mercator tile from GFW WM Tile Set images."""
+
+    logger.debug("Get Tile Array")
+
     # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
     gdal_env = {
         "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
@@ -200,6 +242,8 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
 
 
 def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
+
+    logger.debug("Read data lake")
 
     if implementation == "dynamic":
         pixel_meaning: str = "rgb_encoded"
@@ -228,6 +272,9 @@ def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
 
 
 def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndarray:
+
+    logger.debug("Read Tile Cache")
+
     url = f"https://tiles{SUFFIX}.globalforestwatch.org/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
     png = Image.open(urlopen(url))  # nosec
     arr = np.array(png)
@@ -241,23 +288,28 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
 
 
 def seperate_bands(arr: ndarray) -> ndarray:
+
+    logger.debug("Store bands in seperate arrays")
     # convert data from (height, width, bands) to (bands, height, width)
     shape = arr.shape
     return arr.transpose((2, 1, 0)).reshape(shape[::-1])
 
 
 def combine_bands(arr: ndarray) -> ndarray:
+
+    logger.debug("Combine bands in one array.")
     # moves data from (4, 256, 256) format to (256, 256, 4)
     # PIL will read it in both ways, but for some reason
-    # only propogates the first band to the other three
+    # only propagates the first band to the other three
     # when in (4, 256, 256)
 
-    band_count = arr.shape[0]
-    return np.dstack(tuple([arr[i] for i in range(band_count)]))
+    return np.dstack([*arr])
 
 
 def array_to_img(arr: np.ndarray) -> str:
     """Convert a numpy array to an base64 encoded img."""
+
+    logger.debug("Convert array into image")
 
     band_count = arr.shape[0]
     arr = combine_bands(arr)
@@ -282,6 +334,8 @@ def array_to_img(arr: np.ndarray) -> str:
 
 def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     """Handle tile requests."""
+
+    logger.debug(f"EVENT DATA: {json.dumps(event)}")
 
     reader_constructor = {"datalake": read_data_lake, "tilecache": read_tile_cache}
 
