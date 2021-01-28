@@ -21,6 +21,9 @@ provider "aws" {
   }
 }
 
+
+
+
 resource "aws_s3_bucket" "data_lake_test" {
   bucket = "gfw-data-lake-test"
   acl    = "private"
@@ -80,4 +83,3 @@ module "lambda_raster_tiler" {
   data_lake_bucket_name = "gfw-data-lake-test"
   tile_cache_url = "http://localstack:4566"
 }
-

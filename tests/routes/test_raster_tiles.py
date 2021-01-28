@@ -24,7 +24,6 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
 
         img = _response_to_img(response)
         _check_png(img, multiplier)
-        assert False
 
         # check if s3 file copied. It should now be accessible using the default endpoint.
         saved_bytes = BytesIO()

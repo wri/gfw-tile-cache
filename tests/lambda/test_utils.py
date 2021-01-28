@@ -10,30 +10,30 @@ from lambdas.raster_tiler.lambda_function import (
     get_tile_array,
     get_tile_location,
 )
-from tests.conftest import TEST_FILE
+from tests.conftest import TEST_TIF
 
 
 def test_tile():
 
-    data = get_tile_array(TEST_FILE, Window(0, 0, 256, 256))
+    data = get_tile_array(TEST_TIF, Window(0, 0, 256, 256))
     assert data.shape == (3, 256, 256)
     data = combine_bands(data)
     assert data.shape == (256, 256, 3)
     np.testing.assert_equal(data[0][0], [1, 2, 3])
 
-    data = get_tile_array(TEST_FILE, Window(0, 256, 256, 256))
+    data = get_tile_array(TEST_TIF, Window(0, 256, 256, 256))
     assert data.shape == (3, 256, 256)
     data = combine_bands(data)
     assert data.shape == (256, 256, 3)
     np.testing.assert_equal(data[0][0], [2, 4, 6])
 
-    data = get_tile_array(TEST_FILE, Window(256, 0, 256, 256))
+    data = get_tile_array(TEST_TIF, Window(256, 0, 256, 256))
     assert data.shape == (3, 256, 256)
     data = combine_bands(data)
     assert data.shape == (256, 256, 3)
     np.testing.assert_equal(data[0][0], [3, 6, 9])
 
-    data = get_tile_array(TEST_FILE, Window(256, 256, 256, 256))
+    data = get_tile_array(TEST_TIF, Window(256, 256, 256, 256))
     assert data.shape == (3, 256, 256)
     data = combine_bands(data)
     assert data.shape == (256, 256, 3)

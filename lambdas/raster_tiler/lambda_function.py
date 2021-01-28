@@ -23,6 +23,12 @@ SUFFIX: str = "" if ENV == "production" else f"-{ENV}"
 DATA_LAKE_BUCKET: str = os.environ.get("DATA_LAKE_BUCKET")
 LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
 AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
+GDAL_ENV = {
+    "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
+    "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
+    "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
+    "GDAL_DISABLE_READDIR_ON_OPEN": "YES",
+}
 
 log_level = {
     "test": logging.DEBUG,
@@ -224,14 +230,8 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     logger.debug("Get Tile Array")
 
     # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
-    gdal_env = {
-        "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
-        "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
-        "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
-        "GDAL_DISABLE_READDIR_ON_OPEN": "YES",
-    }
 
-    with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
+    with rasterio.Env(**GDAL_ENV), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
         indexes = tuple(range(1, bands + 1))

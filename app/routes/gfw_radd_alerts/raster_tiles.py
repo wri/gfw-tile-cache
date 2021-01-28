@@ -54,7 +54,7 @@ async def gfw_radd_alerts_raster_tile(
     print("START_DATE: ", start_date)
     print("END_DATE: ", end_date)
     print("CONFIRMED_ONLY: ", confirmed_only)
-    if start_date is None or end_date is None or confirmed_only is None:
+    if start_date is not None or end_date is not None or confirmed_only is not None:
         payload.update(
             start_date=start_date,
             end_date=end_date,
