@@ -113,6 +113,7 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     try:
         tile = get_tile_array(src_tile, window)
     except RasterioIOError as e:
+        logger.debug(f"Cannot find tile. Full traceback: {str(e)}")
         response["status"] = "error"
         response["message"] = "Tile not found"
         print(str(e))
