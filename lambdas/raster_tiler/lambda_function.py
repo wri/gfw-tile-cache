@@ -53,7 +53,7 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
         "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
         "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
         "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
-        "GDAL_DISABLE_READDIR_ON_OPEN": "YES",
+        "GDAL_DISABLE_READDIR_ON_OPEN": "NO" if AWS_ENDPOINT_HOST else "YES",
     }
 
     with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
