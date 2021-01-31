@@ -124,7 +124,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
         logger.debug(f"Cannot find tile. Full traceback: {str(e)}")
         response["status"] = "error"
         response["message"] = "Tile not found"
-        print(str(e))
     else:
         # write out 3 band RGB PNG
         png = array_to_img(tile)
