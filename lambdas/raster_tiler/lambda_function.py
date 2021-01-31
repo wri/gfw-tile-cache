@@ -19,7 +19,15 @@ DATA_LAKE_BUCKET: str = os.environ["DATA_LAKE_BUCKET"]
 LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
 AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
 
+log_level = {
+    "test": logging.DEBUG,
+    "dev": logging.DEBUG,
+    "staging": logging.DEBUG,
+    "production": logging.INFO,
+}
+
 logger = logging.getLogger(__name__)
+logger.setLevel(log_level[ENV])
 
 
 def array_to_img(arr: np.ndarray) -> str:
