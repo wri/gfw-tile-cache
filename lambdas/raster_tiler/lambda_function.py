@@ -35,6 +35,8 @@ def array_to_img(arr: np.ndarray) -> str:
 
     modes = {3: "RGB", 4: "RGBA"}
 
+    logger.debug(f"SHAPE: {arr.shape}")
+
     img = Image.fromarray(arr, mode=modes[arr.shape[2]])
 
     sio = BytesIO()
@@ -49,14 +51,17 @@ def array_to_img(arr: np.ndarray) -> str:
 def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     """Create mercator tile from GFW WM Tile Set images."""
     # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
-    gdal_env = {
-        "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
-        "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
-        "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
-        "GDAL_DISABLE_READDIR_ON_OPEN": "NO" if AWS_ENDPOINT_HOST else "YES",
-    }
 
-    logger.debug(gdal_env)
+    gdal_env = {}
+    if AWS_ENDPOINT_HOST:
+        gdal_env = {
+            "AWS_HTTPS": "NO",
+            "AWS_VIRTUAL_HOSTING": False,
+            "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
+            "GDAL_DISABLE_READDIR_ON_OPEN": "NO",
+        }
+
+    logger.debug(f"GDAL_ENV: f{gdal_env}")
 
     with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
         profile = src.profile
@@ -115,8 +120,9 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
     window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
-    print("X, Y, Z: ", (x, y, z))
-    print("SRC TILE: ", src_tile)
+    logger.info(f"X, Y, Z: {(x, y, z)}")
+    logger.info(f"SRC TILE: {src_tile}")
+    logger.debug(f"Window: {window}")
 
     response: Dict[str, str] = {}
 
