@@ -72,6 +72,8 @@ async def raster_tile(
         logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
+    logger.debug(response.text)
+
     data = json.loads(response.text)
     if data.get("status") == "success":
         png_data = base64.b64decode(data.get("data"))
