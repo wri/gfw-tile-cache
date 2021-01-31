@@ -56,6 +56,8 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
         "GDAL_DISABLE_READDIR_ON_OPEN": "NO" if AWS_ENDPOINT_HOST else "YES",
     }
 
+    logger.debug(gdal_env)
+
     with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
