@@ -17,12 +17,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Re
 from fastapi.logger import logger
 from starlette.responses import StreamingResponse
 
-from ..settings.globals import (
-    AWS_ENDPOINT_URI,
-    AWS_REGION,
-    BUCKET,
-    RASTER_TILER_LAMBDA_NAME,
-)
+from ..settings.globals import GLOBALS
 from ..utils.aws import invoke_lambda
 from . import raster_tile_cache_version_dependency, raster_xyz
 
@@ -76,7 +71,7 @@ async def get_dynamic_tile(payload: Dict[str, Any]):
     Invoke Lambda function to generate raster tile dynamically.
     """
     try:
-        response = await invoke_lambda(RASTER_TILER_LAMBDA_NAME, payload)
+        response = await invoke_lambda(GLOBALS.raster_tiler_lambda_name, payload)
     except httpx.ReadTimeout as e:
         logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -112,16 +107,16 @@ def hash_query_params(params: Dict[str, Any]) -> str:
 async def copy_tile(data, key):
     """Copy tile to S3"""
     async with aioboto3.client(
-        "s3", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URI
+        "s3", region_name=GLOBALS.aws_region, endpoint_url=GLOBALS.aws_endpoint_uri
     ) as s3_client:
-        logger.info(f"Uploading to S3 bucket: {BUCKET} key: {key}")
+        logger.info(f"Uploading to S3 bucket: {GLOBALS.bucket} key: {key}")
 
         png_file_obj = io.BytesIO()
         _: int = png_file_obj.write(data)
         png_file_obj.seek(0)
         await s3_client.upload_fileobj(
             png_file_obj,
-            BUCKET,
+            GLOBALS.bucket,
             key,
             ExtraArgs={"ContentType": "image/png", "CacheControl": "max-age=31536000"},
         )

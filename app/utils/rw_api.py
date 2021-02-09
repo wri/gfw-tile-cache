@@ -6,7 +6,7 @@ from httpx import Response as HTTPXResponse
 
 from ..errors import BadResponseError, InvalidResponseError
 from ..models.types import Geometry
-from ..settings.globals import ENV
+from ..settings.globals import GLOBALS
 
 
 @alru_cache(maxsize=128)
@@ -34,9 +34,9 @@ async def get_geostore_geometry(geostore_id: UUID) -> Geometry:
 
 def _env_prefix() -> str:
     """Set RW environment."""
-    if ENV == "dev":
+    if GLOBALS.env == "dev":
         prefix = "staging"
     else:
-        prefix = ENV
+        prefix = GLOBALS.env
 
     return prefix

@@ -1,6 +1,3 @@
-import base64
-from io import BytesIO
-
 import numpy as np
 from rasterio.windows import Window
 
