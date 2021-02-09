@@ -5,11 +5,11 @@ class Attributes(str, Enum):
     __doc__ = "Attribute name"
 
 
-class TcdEnum(int, Enum):
-    ten = 10
-    fifteen = 15
-    twenty = 20
-    twentyfive = 25
-    thirty = 30
-    fifty = 50
-    seventyfive = 75
+class TcdEnum(str, Enum):
+    ten = "10"
+    fifteen = "15"
+    twenty = "20"
+    twentyfive = "25"
+    thirty = "30"
+    fifty = "50"
+    seventyfive = "75"

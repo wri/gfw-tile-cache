@@ -1,11 +1,17 @@
+import json
 from io import BytesIO
+from unittest import mock
 
 import boto3
 import numpy as np
 import pytest
 from PIL import Image
 
-from ..conftest import AWS_ENDPOINT_URI
+from ..conftest import (
+    AWS_ENDPOINT_URI,
+    umd_glad_alerts_payload,
+    umd_tree_cover_loss_payload,
+)
 
 
 @pytest.mark.parametrize("x, y, multiplier", [(0, 0, 1), (1, 1, 4)])
@@ -70,6 +76,34 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
         _get_logs()
 
 
+@pytest.mark.parametrize(
+    "params, payload", [umd_tree_cover_loss_payload(), umd_glad_alerts_payload()]
+)
+def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
+
+    dataset = payload["dataset"]
+    version = payload["version"]
+    x = payload["x"]
+    y = payload["y"]
+    z = payload["z"]
+
+    # This will mock the lambda function and return the payload
+    mock_patch = f"app.routes.{dataset}.raster_tiles.get_dynamic_tile"
+    with mock.patch(mock_patch) as mck:
+        mck.side_effect = mock_get_dynamic_tile
+
+        response = client.get(
+            f"/{dataset}/{version}/dynamic/{z}/{x}/{y}.png", params=params, stream=True
+        )
+        print(response.json())
+        assert response.status_code == 200
+
+        expected_response = {"data": payload, "status": "success"}
+
+        rsp = _response_to_img(response)
+        assert json.loads(rsp.read()) == expected_response
+
+
 def _response_to_img(response):
     response.raw.decode_content = True
     image_bytes = BytesIO()
@@ -90,7 +124,6 @@ def _check_png(image_bytes, multiplier):
 
 
 def _check_filtered_png(image_bytes, confirmed_only):
-
     image = Image.open(image_bytes)
     rgba = np.array(image)
     assert rgba.shape == (256, 256, 4)
