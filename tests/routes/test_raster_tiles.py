@@ -7,13 +7,11 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from ..conftest import (
-    AWS_ENDPOINT_URI,
-    umd_glad_alerts_payload,
-    umd_tree_cover_loss_payload,
-)
+from ..conftest import AWS_ENDPOINT_URI
+from ..fixtures.payloads import umd_glad_alerts_payload, umd_tree_cover_loss_payload
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("x, y, multiplier", [(0, 0, 1), (1, 1, 4)])
 def test_dynamic_tiles_no_params(x, y, multiplier, client):
     """
@@ -45,10 +43,11 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
         _get_logs()
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("x, y, confirmed_only", [(0, 0, False), (0, 0, True)])
 def test_dynamic_tiles_params(x, y, confirmed_only, client):
-    """z
-    Test dynamic tile cache
+    """
+    Test dynamic tile cache end to end
     """
     try:
         response = client.get(
@@ -80,7 +79,9 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
     "params, payload", [umd_tree_cover_loss_payload(), umd_glad_alerts_payload()]
 )
 def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
-
+    """Only testing if payload is correctly forwarded to lambda.
+    Lambda execution should be handled by a seperate test.
+    """
     dataset = payload["dataset"]
     version = payload["version"]
     x = payload["x"]

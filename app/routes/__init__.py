@@ -16,8 +16,9 @@ from ..models.enumerators.tile_caches import TileCacheType
 from ..models.enumerators.versions import Versions
 from ..models.types import Bounds
 
-DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
-VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
+DATE_REGEX = r"^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
+VERSION_REGEX = r"^v\d{1,8}(\.\d{1,3}){0,2}?$|^latest$"
+XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
 
 
 def default_start():
@@ -43,7 +44,7 @@ async def vector_xyz(
     y: Union[int, str] = Path(
         ...,
         description="Tile grid row (integer >= 0) and optional scale factor (either @2x, @0.5x or @0.25x)",
-        regex="^\d+(@(2|0.5|0.25)x)?$",
+        regex=XYZ_REGEX,
     ),
 ) -> Tuple[Bounds, int, int]:
     if isinstance(y, str) and "@" in y:
