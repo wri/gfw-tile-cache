@@ -8,6 +8,7 @@ from datetime import date, datetime
 from io import BytesIO
 from math import floor
 from typing import Any, Callable, Dict, Optional, Tuple, Union
+from urllib.error import URLError
 from urllib.request import urlopen
 
 import numpy as np
@@ -269,8 +270,9 @@ def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
 
     try:
         tile = get_tile_array(src_tile, window)
-    except RasterioIOError as e:
-        raise TileNotFoundError(str(e))
+    except RasterioIOError:
+        logger.exception(f"Cannot open file {src_tile} with window {window}")
+        raise TileNotFoundError()
 
     return tile
 
@@ -285,7 +287,12 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
     logger.debug("Read Tile Cache")
 
     url = f"https://tiles{SUFFIX}.globalforestwatch.org/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
-    png = Image.open(urlopen(url))  # nosec
+    try:
+        png = Image.open(urlopen(url))  # nosec
+    except URLError:
+        logger.exception(f"Cannot open remote tile {url}")
+        raise TileNotFoundError()
+
     arr = np.array(png)
 
     return seperate_bands(arr)
