@@ -66,8 +66,8 @@ def scale_intensity(zoom: int) -> Callable:
     Assuming that both domain and range always start with 0
     """
     exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
-    domain = (0, 256)
-    scale_range = (0, 256)
+    domain = (0, 255)
+    scale_range = (0, 255)
     m = scale_range[1] / domain[1] ** exp
     b = scale_range[0]
 
@@ -89,16 +89,17 @@ def apply_annual_loss_filter(
     scale_pow: Callable = scale_intensity(zoom)
     scaled_intensity: ndarray = scale_pow(intensity).astype("uint8")
 
-    start_year_mask: Union[bool, ndarray] = (start_year is None) or (
-        year >= (int(start_year) - 2000)
-    )
-    end_year_mask: Union[bool, ndarray] = (end_year is None) or (
-        year <= (int(end_year) - 2000)
+    _start_year = 2001 if not start_year else max(2001, int(start_year))
+    _end_year = None if not end_year else max(_start_year, int(end_year))
+
+    start_year_mask: Union[bool, ndarray] = year >= _start_year - 2000
+    end_year_mask: Union[bool, ndarray] = (_end_year is None) or (
+        year <= _end_year - 2000
     )
 
     red: ndarray = np.ones(intensity.shape).astype("uint8") * 228
     green: ndarray = (
-        np.ones(intensity.shape) * 102 + (72 - zoom) - (3 * scaled_intensity / zoom)
+        np.ones(intensity.shape) * 102 + (72 - zoom) - (scaled_intensity * (3 / zoom))
     ).astype("uint8")
     blue: ndarray = (
         np.ones(intensity.shape) * 153 + (33 - zoom) - (intensity / zoom)
@@ -142,13 +143,15 @@ def get_alpha_band(
 
     # encode false color tiles
     red, green, blue = rgb
-    date = (red * 255 + green).astype("uint8")
+
+    # date and intensity must be Unit16 to stay in value range
+    days = (red.astype("uint16") * 255 + green).astype("uint16")
     confidence = np.floor(blue / 100).astype("uint8")
-    intensity = (blue % 100).astype("uint8")
+    intensity = (blue % 100).astype("uint16")
 
     # build masks
-    date_mask: Union[bool, ndarray] = (start_date is None or start_date <= date) * (
-        end_date is None or date <= end_date
+    date_mask: Union[bool, ndarray] = (start_date is None or start_date <= days) * (
+        end_date is None or days <= end_date
     )
     confidence_mask: Union[bool, ndarray] = (
         (confidence == 2) if confirmed_only else True
@@ -172,7 +175,7 @@ def apply_deforestation_filter(
 ) -> ndarray:
     """Decode using Pink alert color and filtering out unwanted alerts."""
 
-    print("Apply Deforestation Filter")
+    logger.debug("Apply Deforestation Filter")
 
     start_day = (
         days_since_bog(datetime.strptime(start_date, "%Y-%m-%d").date())
@@ -229,8 +232,8 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
 
     logger.debug("Get Tile Array")
 
+    logger.debug(GDAL_ENV)
     # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
-
     with rasterio.Env(**GDAL_ENV), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
@@ -257,8 +260,8 @@ def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
     src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
     window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
-    print("X, Y, Z: ", (x, y, z))
-    print("SCR TILE: ", src_tile)
+    logger.info(f"X, Y, Z: {(x, y, z)}")
+    logger.info(f"SCR TILE: {src_tile}")
 
     try:
         tile = get_tile_array(src_tile, window)

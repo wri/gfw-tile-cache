@@ -25,6 +25,7 @@ services:
       - AWS_SECURITY_TOKEN=testing  # pragma: allowlist secret
       - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
       - AWS_ENDPOINT_URI=http://localstack:4566
+      - LOCALSTACK_HOSTNAME=localstack
       - HTTPX_TIMEOUT=60
       - RASTER_TILER_LAMBDA_NAME=test_project-lambda-tiler
       - ENV=test

@@ -25,7 +25,6 @@ TEST_PNG = os.path.join(fixtures, "test.png")
 
 
 def create_test_tif():
-
     band_count = 3
     profile = {
         "driver": "GTiff",
@@ -100,6 +99,13 @@ def pytest_sessionfinish(session, exitstatus):
 
         db.execute(sql)
         db.commit()
+
+    os.remove(TEST_PNG)
+    s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
+    s3_client.delete_object(
+        Bucket="gfw-data-lake-test",
+        Key="gfw_radd_alerts/v20201214/raster/epsg-3857/zoom_14/rgb_encoded/geotiff/000R_000C.tif",
+    )
 
 
 @pytest.fixture(autouse=True)
