@@ -23,12 +23,6 @@ SUFFIX: str = "" if ENV == "production" else f"-{ENV}"
 DATA_LAKE_BUCKET: str = os.environ.get("DATA_LAKE_BUCKET")
 LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
 AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
-GDAL_ENV = {
-    "AWS_HTTPS": "NO" if AWS_ENDPOINT_HOST else "YES",
-    "AWS_VIRTUAL_HOSTING": False if AWS_ENDPOINT_HOST else True,
-    "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
-    "GDAL_DISABLE_READDIR_ON_OPEN": "YES",
-}
 
 log_level = {
     "test": logging.DEBUG,
@@ -39,6 +33,7 @@ log_level = {
 
 logger = logging.getLogger(__name__)
 logger.setLevel(log_level[ENV])
+
 
 # !Note: To ease deployment I kept all functions within this one module.
 # Ideally the different sections in this file would live in seperate modules.
@@ -232,9 +227,18 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
 
     logger.debug("Get Tile Array")
 
-    logger.debug(GDAL_ENV)
+    gdal_env = {}
+    if AWS_ENDPOINT_HOST:
+        gdal_env = {
+            "AWS_HTTPS": "NO",
+            "AWS_VIRTUAL_HOSTING": False,
+            "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
+            "GDAL_DISABLE_READDIR_ON_OPEN": "NO",
+        }
+
+    logger.debug(f"GDAL_ENV: f{gdal_env}")
     # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
-    with rasterio.Env(**GDAL_ENV), rasterio.open(src_tile) as src:
+    with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
         indexes = tuple(range(1, bands + 1))
@@ -383,5 +387,7 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     png = array_to_img(tile)
     response["status"] = "success"
     response["data"] = png
+
+    logger.debug(response)
 
     return response

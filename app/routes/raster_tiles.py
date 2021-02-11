@@ -76,6 +76,8 @@ async def get_dynamic_tile(payload: Dict[str, Any]):
         logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
+    logger.debug(response.text)
+
     data = json.loads(response.text)
     if data.get("status") == "success":
         return base64.b64decode(data.get("data"))
