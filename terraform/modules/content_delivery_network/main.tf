@@ -12,8 +12,7 @@ resource "aws_cloudfront_origin_access_identity" "tiles" {}
 
 resource "aws_cloudfront_distribution" "tiles" {
 
-  aliases = var.environment == "dev" ? null : [
-  var.tile_cache_url]
+  aliases = [var.tile_cache_url]
 
   enabled         = true
   http_version    = "http2"
