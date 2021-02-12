@@ -436,9 +436,9 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   viewer_certificate {
     acm_certificate_arn            = var.certificate_arn
-    cloudfront_default_certificate = var.environment == "dev" ? true : false
-    minimum_protocol_version       = var.environment == "dev" ? "TLSv1" : "TLSv1.1_2016"
-    ssl_support_method             = var.environment == "dev" ? null : "sni-only"
+    cloudfront_default_certificate = false
+    minimum_protocol_version       = "TLSv1.1_2016"
+    ssl_support_method             = "sni-only"
   }
 
 
