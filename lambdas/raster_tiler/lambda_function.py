@@ -22,8 +22,11 @@ ENV: str = os.environ.get("ENV", "dev")
 TILE_SIZE: int = 256
 SUFFIX: str = "" if ENV == "production" else f"-{ENV}"
 DATA_LAKE_BUCKET: str = os.environ.get("DATA_LAKE_BUCKET")
-LOCALSTACK_HOSTNAME: str = os.environ.get("LOCALSTACK_HOSTNAME", None)
-AWS_ENDPOINT_HOST: str = f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
+LOCALSTACK_HOSTNAME: Optional[str] = os.environ.get("LOCALSTACK_HOSTNAME", None)
+AWS_ENDPOINT_HOST: Optional[str] = (
+    f"{LOCALSTACK_HOSTNAME}:4566" if LOCALSTACK_HOSTNAME else None
+)
+TILE_CACHE_URL: str = os.environ.get("TILE_CACHE_URL")
 
 log_level = {
     "test": logging.DEBUG,
@@ -286,7 +289,7 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
 
     logger.debug("Read Tile Cache")
 
-    url = f"https://tiles{SUFFIX}.globalforestwatch.org/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
+    url = f"{TILE_CACHE_URL}/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
     try:
         png = Image.open(urlopen(url))  # nosec
     except URLError:
