@@ -6,7 +6,7 @@ from .tile_caches import TileCacheType
 
 class DeforestationAlertDatasets(str, Enum):
     glad = "umd_glad_alerts"
-    radd = "gfw_radd_alerts"
+    radd = "wur_radd_alerts"
 
 
 class RasterTileCacheDatasets(str, Enum):
