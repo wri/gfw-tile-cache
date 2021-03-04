@@ -72,13 +72,13 @@ def test_read_data_lake():
     s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
     s3_client.head_object(
         Bucket="gfw-data-lake-test",
-        Key="gfw_radd_alerts/v20201214/raster/epsg-3857/zoom_14/rgb_encoded/geotiff/000R_000C.tif",
+        Key="wur_radd_alerts/v20201214/raster/epsg-3857/zoom_14/default/geotiff/000R_000C.tif",
     )
 
     input_data = {
-        "dataset": "gfw_radd_alerts",
+        "dataset": "wur_radd_alerts",
         "version": "v20201214",
-        "implementation": "dynamic",
+        "implementation": "default",
         "x": 0,
         "y": 0,
         "z": 14,

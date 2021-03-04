@@ -14,5 +14,5 @@ from tests.fixtures.payloads import umd_glad_alerts_payload, umd_tree_cover_loss
 def test_handler(mock_url, params, payload):
     mock_url.return_value = TEST_PNG
     response = handler(payload, {})
-
+    print(response)
     assert response["status"] == "success"

@@ -5,7 +5,7 @@
 
 def umd_tree_cover_loss_payload():
     dataset = "umd_tree_cover_loss"
-    version = "v1.7"
+    version = "v1.8"
     tcd = 30
     x = 1
     y = 1
@@ -25,7 +25,7 @@ def umd_tree_cover_loss_payload():
         "start_year": start_year,
         "end_year": end_year,
         "filter_type": "annual_loss",
-        "source": "tilecache",
+        # "source": "tilecache",
     }
 
     return params, payload
@@ -50,7 +50,7 @@ def umd_glad_alerts_payload():
     payload = {
         "dataset": dataset,
         "version": version,
-        "implementation": "dynamic",
+        "implementation": "default",
         "x": x,
         "y": y,
         "z": z,

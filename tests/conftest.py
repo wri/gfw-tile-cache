@@ -55,7 +55,12 @@ def create_test_tif():
     s3_client.upload_file(
         TEST_TIF,
         "gfw-data-lake-test",
-        "gfw_radd_alerts/v20201214/raster/epsg-3857/zoom_14/rgb_encoded/geotiff/000R_000C.tif",
+        "wur_radd_alerts/v20201214/raster/epsg-3857/zoom_14/default/geotiff/000R_000C.tif",
+    )
+    s3_client.upload_file(
+        TEST_TIF,
+        "gfw-data-lake-test",
+        "umd_tree_cover_loss/v1.8/raster/epsg-3857/zoom_12/tcd_30/geotiff/000R_000C.tif",
     )
 
 
@@ -104,7 +109,11 @@ def pytest_sessionfinish(session, exitstatus):
     s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
     s3_client.delete_object(
         Bucket="gfw-data-lake-test",
-        Key="gfw_radd_alerts/v20201214/raster/epsg-3857/zoom_14/rgb_encoded/geotiff/000R_000C.tif",
+        Key="wur_radd_alerts/v20201214/raster/epsg-3857/zoom_14/default/geotiff/000R_000C.tif",
+    )
+    s3_client.delete_object(
+        Bucket="gfw-data-lake-test",
+        Key="umd_tree_cover_loss/v1.8/raster/epsg-3857/zoom_12/tcd_30/geotiff/000R_000C.tif",
     )
 
 
@@ -125,7 +134,9 @@ def fixture_mock_get_dynamic_tile():
     """Mock lambda raster tile and return payload as byte obj instead of raster image.
     This will allow to verify if route service correctly process the payload."""
 
-    def _mock_get_dynamic_tile(payload: Dict[str, Any]):
+    def _mock_get_dynamic_tile(
+        payload: Dict[str, Any], implementation, background_tasks
+    ):
         response = {"data": payload, "status": "success"}
         return json.dumps(response).encode()
 

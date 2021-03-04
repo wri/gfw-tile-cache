@@ -13,9 +13,18 @@ from typing import Any, Dict, Tuple
 
 import aioboto3
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Response
+from botocore.exceptions import ClientError
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Response,
+)
 from fastapi.logger import logger
-from starlette.responses import StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 
 from ..settings.globals import GLOBALS
 from ..utils.aws import invoke_lambda
@@ -25,18 +34,19 @@ router = APIRouter()
 
 
 @router.get(
-    "/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",
+    "/{dataset}/{version}/dynamic/{z}/{x}/{y}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def raster_tile(
+async def dynamic_raster_tile(
     *,
     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
-    implementation: str = Path(
-        "default", description="Tile cache implementation name."
-    ),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
+    implementation: str = Query(
+        "default",
+        description="Tile cache implementation name for which dynamic tile should be rendered.",
+    ),
     background_tasks: BackgroundTasks,
 ) -> Response:
     """
@@ -54,19 +64,55 @@ async def raster_tile(
         "y": y,
         "z": z,
     }
-    # As per cloud front settings only `dynamic` implementations should make it to this endpoint.
-    png_data = await get_dynamic_tile(payload)
 
-    # Copy dynamically created tile o tile cache for later reuse.
+    return await get_dynamic_raster_tile(payload, implementation, background_tasks)
+
+
+@router.get(
+    "/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+)
+async def static_raster_tile(
+    *,
+    dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
+    implementation: str = Path(
+        "default", description="Tile cache implementation name."
+    ),
+    xyz: Tuple[int, int, int] = Depends(raster_xyz),
+    background_tasks: BackgroundTasks,
+) -> Response:
+    """
+    Generic raster tile.
+    """
+    # This route is only here for documentation purposes. Static raster tiles are served directly via cloud front.
+    pass
+
+
+async def get_dynamic_raster_tile(
+    payload, implementation, background_tasks: BackgroundTasks
+) -> StreamingResponse:
+
+    dataset = payload.get("dataset")
+    version = payload.get("version")
+    x = payload.get("x")
+    y = payload.get("y")
+    z = payload.get("z")
+
+    # As per cloud front settings only `dynamic` implementations should make it to this endpoint.
+    png_data = await get_lambda_tile(payload)
+
+    # Copy dynamically created tile to tile cache for later reuse.
     background_tasks.add_task(
         copy_tile,
         png_data,
-        f"{dataset}/{version}/default/{z}/{x}/{y}.png",
+        f"{dataset}/{version}/{implementation}/{z}/{x}/{y}.png",
     )
     return StreamingResponse(io.BytesIO(png_data), media_type="image/png")
 
 
-async def get_dynamic_tile(payload: Dict[str, Any]):
+async def get_lambda_tile(payload: Dict[str, Any]):
     """
     Invoke Lambda function to generate raster tile dynamically.
     """
@@ -122,3 +168,25 @@ async def copy_tile(data, key):
             key,
             ExtraArgs={"ContentType": "image/png", "CacheControl": "max-age=31536000"},
         )
+
+
+async def get_cached_response(payload, query_hash, background_tasks):
+
+    dataset = payload.get("dataset")
+    version = payload.get("version")
+    x = payload.get("x")
+    y = payload.get("y")
+    z = payload.get("z")
+    key = f"{dataset}/{version}/{query_hash}/{z}/{x}/{y}.png"
+
+    async with aioboto3.client(
+        "s3", region_name=GLOBALS.aws_region, endpoint_url=GLOBALS.aws_endpoint_uri
+    ) as s3_client:
+        try:
+            await s3_client.head_object(Bucket=GLOBALS.bucket, Key=key)
+        except ClientError:
+            logger.debug(f"No cached tile found for key {key}, call lambda function.")
+            return await get_dynamic_raster_tile(payload, query_hash, background_tasks)
+        else:
+            logger.debug(f"Redirecting to cached response {key}.")
+            return RedirectResponse(f"{GLOBALS.tile_cache_url}/{key}")

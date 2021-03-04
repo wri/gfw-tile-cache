@@ -1,8 +1,8 @@
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import mercantile
 import pendulum
-from fastapi import HTTPException, Path
+from fastapi import Depends, HTTPException, Path, Query
 from fastapi.logger import logger
 from shapely.geometry import box
 
@@ -85,12 +85,18 @@ async def static_dataset_dependency(dataset: StaticVectorTileCacheDatasets) -> s
     return dataset
 
 
+async def version_dependency(
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX)
+) -> str:
+    return version
+
+
 async def dynamic_vector_tile_cache_version_dependency(
     *,
     dataset: DynamicVectorTileCacheDatasets = Path(  # type: ignore
         ..., description=DynamicVectorTileCacheDatasets.__doc__
     ),
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    version: str = Depends(version_dependency),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -109,7 +115,7 @@ async def static_vector_tile_cache_version_dependency(
     dataset: StaticVectorTileCacheDatasets = Path(  # type: ignore
         ..., description=StaticVectorTileCacheDatasets.__doc__
     ),
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    version: str = Depends(version_dependency),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -128,7 +134,7 @@ async def raster_tile_cache_version_dependency(
     dataset: RasterTileCacheDatasets = Path(  # type: ignore
         ..., description=RasterTileCacheDatasets.__doc__
     ),
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    version: str = Depends(version_dependency),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -139,6 +145,17 @@ async def raster_tile_cache_version_dependency(
         )
     validate_tile_cache_version(dataset, version, TileCacheType.raster_tile_cache)
     return dataset, version
+
+
+async def optional_implementation_dependency(
+    implementation: Optional[str] = Query(
+        None,
+        description="Tile cache implementation name for which dynamic tile should be rendered. "
+        "This query parameter is mutually exclusive to all other query parameters. "
+        "If set other parameters will be ignored.",
+    )
+) -> Optional[str]:
+    return implementation
 
 
 def validate_tile_cache_version(dataset, version, tile_cache_type) -> None:

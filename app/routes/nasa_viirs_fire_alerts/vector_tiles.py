@@ -15,7 +15,7 @@ from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.nasa_viirs_fire_alerts.versions import (
-    Versions,
+    NASAViirsVersions,
     get_versions_enum,
 )
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
@@ -35,7 +35,7 @@ router = APIRouter()
 
 async def nasa_viirs_fire_alerts_version(
     version: get_versions_enum(),  # type: ignore
-) -> Versions:
+) -> NASAViirsVersions:
     if version == "latest":
         raise HTTPException(
             status_code=400,

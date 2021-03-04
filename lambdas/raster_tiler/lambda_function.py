@@ -258,10 +258,7 @@ def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
 
     logger.debug("Read data lake")
 
-    if implementation == "dynamic":
-        pixel_meaning: str = "rgb_encoded"
-    else:
-        pixel_meaning = implementation
+    pixel_meaning = implementation
 
     row, col, row_off, col_off = get_tile_location(int(x), int(y))
 

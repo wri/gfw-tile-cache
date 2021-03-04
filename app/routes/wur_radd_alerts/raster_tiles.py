@@ -12,21 +12,21 @@ from ..raster_tiles import (
 )
 
 router = APIRouter()
-umd_glad_alerts_versions: Type[Versions] = get_versions_enum(
-    "umd_glad_alerts", TileCacheType.raster_tile_cache
+wur_radd_alerts_versions: Type[Versions] = get_versions_enum(
+    "wur_radd_alerts", TileCacheType.raster_tile_cache
 )
 
 
 @router.get(
-    "/umd_glad_alerts/{version}/dynamic/{z}/{x}/{y}.png",
+    "/wur_radd_alerts/{version}/dynamic/{z}/{x}/{y}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def umd_glad_alerts_raster_tile(
+async def gfw_radd_alerts_raster_tile(
     *,
     version: get_versions_enum(
-        "umd_glad_alerts", TileCacheType.raster_tile_cache  # noqa: F821
+        "wur_radd_alerts", TileCacheType.raster_tile_cache  # noqa: F821
     ),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
@@ -44,9 +44,9 @@ async def umd_glad_alerts_raster_tile(
     background_tasks: BackgroundTasks,
 ) -> Response:
     """
-    UMD GLAD alerts raster tiles.
+    WUR RADD alerts raster tiles.
     """
-    dataset = "umd_glad_alerts"
+    dataset = "wur_radd_alerts"
     x, y, z = xyz
 
     payload = {
@@ -68,7 +68,7 @@ async def umd_glad_alerts_raster_tile(
             end_date=end_date,
             confirmed_only=confirmed_only,
             filter_type="deforestation_alerts",
-            source="tilecache",
+            source="datalake",
         )
         params = {
             "start_date": start_date,
@@ -76,4 +76,5 @@ async def umd_glad_alerts_raster_tile(
             "confirmed_only": confirmed_only,
         }
         query_hash = hash_query_params(params)
+
         return await get_cached_response(payload, query_hash, background_tasks)

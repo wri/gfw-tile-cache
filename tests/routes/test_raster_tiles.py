@@ -22,7 +22,9 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
     """
     try:
         response = client.get(
-            f"/gfw_radd_alerts/v20201214/dynamic/14/{x}/{y}.png", stream=True
+            f"/wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
+            params={"implementation": "default"},
+            stream=True,
         )
         assert response.status_code == 200
 
@@ -34,7 +36,7 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
         s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
         s3_client.download_fileobj(
             "gfw-tiles-test",
-            f"gfw_radd_alerts/v20201214/default/14/{x}/{y}.png",
+            f"wur_radd_alerts/v20201214/default/14/{x}/{y}.png",
             saved_bytes,
         )
         saved_bytes.seek(0)
@@ -51,7 +53,7 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
     """
     try:
         response = client.get(
-            f"/gfw_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
+            f"/wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
             params={"confirmed_only": confirmed_only},
             stream=True,
         )
@@ -66,7 +68,7 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
         # s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
         # s3_client.download_fileobj(
         #     "gfw-tiles-test",
-        #     f"gfw_radd_alerts/v20201214/default/14/{x}/{y}.png",
+        #     f"wur_radd_alerts/v20201214/default/14/{x}/{y}.png",
         #     saved_bytes,
         # )
         # saved_bytes.seek(0)
@@ -80,7 +82,7 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
 )
 def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     """Only testing if payload is correctly forwarded to lambda.
-    Lambda execution should be handled by a seperate test.
+    Lambda execution should be handled by a separate test.
     """
     dataset = payload["dataset"]
     version = payload["version"]
@@ -89,7 +91,7 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     z = payload["z"]
 
     # This will mock the lambda function and return the payload
-    mock_patch = f"app.routes.{dataset}.raster_tiles.get_dynamic_tile"
+    mock_patch = f"app.routes.{dataset}.raster_tiles.get_cached_response"
     with mock.patch(mock_patch) as mck:
         mck.side_effect = mock_get_dynamic_tile
 
