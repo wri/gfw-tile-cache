@@ -43,7 +43,7 @@ class Globals(BaseSettings):
         None, description="Database URL. Will be set by validatro"
     )
     aws_region: str = Field("us-east-1", description="AWS region")
-    aws_endpoint_uri: str = Field("", description="AWS service endpoint URL")
+    aws_endpoint_uri: str = Field(None, description="AWS service endpoint URL")
     lambda_host: Optional[str] = Field(None, description="AWS Lamdba host URL")
     tile_cache_url: Optional[str] = Field(None, description="Tile Cache URL")
     sql_request_timeout: int = Field(
