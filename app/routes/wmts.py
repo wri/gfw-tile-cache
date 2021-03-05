@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from fastapi.responses import RedirectResponse
 
 from ..models.enumerators.wmts import WmtsRequest
+from ..responses import XMLResponse
 from ..settings.globals import GLOBALS
 from . import raster_tile_cache_version_dependency
 
@@ -64,9 +65,8 @@ async def wmts(
     if REQUEST == WmtsRequest.get_capabilities:
         capabilities = get_capabilities(dataset, version, implementation)
         # With Python 3.9 we can use ET.indent() instead
-        return Response(
+        return XMLResponse(
             content=parseString(tostring(capabilities)).toprettyxml(),
-            media_type="application/xml",
         )
     elif REQUEST == WmtsRequest.get_tiles:
         if tileMatrixSet is None or tileCol is None or tileCol is None:

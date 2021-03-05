@@ -7,3 +7,7 @@ class VectorTileResponse(Response):
 
 class RasterTileResponse(Response):
     media_type = "image/png"
+
+
+class XMLResponse(Response):
+    media_type = "application/xml"
