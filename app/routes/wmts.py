@@ -37,7 +37,7 @@ for _set in [set.value for set in TileMatrixSet]:  # type: ignore
 
 
 @router.get(
-    "/{dataset}/{version}/default/wmts",
+    "/{dataset}/{version}/{implementation}/wmts",
     response_class=Response,
     tags=["Raster Tiles"],
     # response_description="PNG Raster Tile",
