@@ -29,6 +29,7 @@ resource "aws_lambda_function" "default" {
       DATA_LAKE_BUCKET    = var.data_lake_bucket_name
       LOG_LEVEL = var.log_level
       ENV       = var.environment
+      TILE_CACHE_URL = var.tile_cache_url
     }
   }
 }

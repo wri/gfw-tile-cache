@@ -27,7 +27,7 @@ jobs:
         coverage-reports: tests/cobertura.xml
 
     - name: Deploy production
-      if: success() && contains(github.ref, 'master')
+      if: success() && github.ref == 'refs/heads/production'
       env:
         ENV: production
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_production }}
@@ -38,7 +38,7 @@ jobs:
         ./scripts/infra apply
 
     - name: Deploy staging
-      if: success() && contains(github.ref, 'develop')
+      if: success() && github.ref == 'refs/heads/staging'
       env:
         ENV: staging
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_staging }}
@@ -49,7 +49,7 @@ jobs:
         ./scripts/infra apply
 
     - name: Deploy dev
-      if: success() && (! contains(github.ref, 'develop')) && (! contains(github.ref, 'master'))
+      if: success() && github.ref == 'refs/heads/dev'
       env:
         ENV: dev
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_dev }}

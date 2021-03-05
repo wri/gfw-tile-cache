@@ -54,7 +54,7 @@ module "orchestration" {
 module "content_delivery_network" {
   source             = "./modules/content_delivery_network"
   bucket_domain_name = module.storage.tiles_bucket_domain_name
-  certificate_arn    = var.environment == "dev" ? null : data.terraform_remote_state.core.outputs.acm_certificate
+  certificate_arn    = data.terraform_remote_state.core.outputs.acm_certificate
   environment        = var.environment
   name_suffix        = local.name_suffix
   project            = local.project
@@ -86,4 +86,5 @@ module "lambda_raster_tiler" {
   source_dir = "${path.root}/../lambdas/raster_tiler"
   tags       = local.tags
   data_lake_bucket_name = data.terraform_remote_state.core.outputs.data-lake_bucket
+  tile_cache_url = local.tile_cache_url
 }

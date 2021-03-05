@@ -168,3 +168,17 @@ INSERT INTO public.versions (dataset, version, is_latest, status)
 
 INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
     VALUES ('wur_radd_alerts', 'v20201214', 'Raster tile cache', '{}', '[]', '0637a11b-18f7-42de-9a15-a0ec488c09b7', 'saved', 'my_uri5', true, false);
+
+INSERT INTO public.datasets (dataset) VALUES ('umd_tree_cover_loss');
+INSERT INTO public.versions (dataset, version, is_latest, status)
+  VALUES ('umd_tree_cover_loss', 'v1.8', true, 'saved');
+
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('umd_tree_cover_loss', 'v1.8', 'Raster tile cache', '{}', '[]', '8086c7f5-5f2f-491f-8792-5fc67b6a7b96', 'saved', 'my_uri6', true, false);
+
+INSERT INTO public.datasets (dataset) VALUES ('umd_glad_alerts');
+INSERT INTO public.versions (dataset, version, is_latest, status)
+  VALUES ('umd_glad_alerts', 'v20210101', true, 'saved');
+
+INSERT INTO public.assets (dataset, version, asset_type, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('umd_glad_alerts', 'v20210101', 'Raster tile cache', '{}', '[]', '3ac4028e-798d-4854-9b5e-6a9771ed06ed', 'saved', 'my_uri7', true, false);
