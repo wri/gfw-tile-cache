@@ -26,7 +26,10 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
             params={"implementation": "default"},
             stream=True,
         )
-        assert response.status_code == 200
+
+        assert (
+            response.status_code == 200
+        ), f"Bad response for request {response.request.url}: {response.json()}"
 
         img = _response_to_img(response)
         _check_png(img, multiplier)
@@ -57,8 +60,10 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
             params={"confirmed_only": confirmed_only},
             stream=True,
         )
-        print("REQUEST: ", response.request)
-        assert response.status_code == 200
+
+        assert (
+            response.status_code == 200
+        ), f"Bad response for request {response.request.url}: {response.json()}"
 
         img = _response_to_img(response)
         _check_filtered_png(img, confirmed_only)
@@ -98,8 +103,10 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
         response = client.get(
             f"/{dataset}/{version}/dynamic/{z}/{x}/{y}.png", params=params, stream=True
         )
-        print(response.json())
-        assert response.status_code == 200
+
+        assert (
+            response.status_code == 200
+        ), f"Bad response for request {response.request.url}: {response.json()}"
 
         expected_response = {"data": payload, "status": "success"}
 

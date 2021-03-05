@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Optional, Tuple
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
+from aenum import Enum, extend_enum
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Response
 
+from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.attributes import TcdEnum
 from ...models.enumerators.tile_caches import TileCacheType
-from ...models.enumerators.versions import get_versions_enum
 from .. import optional_implementation_dependency, raster_xyz
 from ..raster_tiles import (
     get_cached_response,
@@ -15,18 +16,29 @@ from ..raster_tiles import (
 
 router = APIRouter()
 
+dataset = "umd_tree_cover_loss"
+
+
+class UmdTclVersions(str, Enum):
+    """UMD Tree Cover Loss versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+
+    latest = "latest"
+
+
+_versions = get_versions(dataset, TileCacheType.raster_tile_cache)
+for _version in _versions:
+    extend_enum(UmdTclVersions, _version, _version)
+
 
 @router.get(
-    "/umd_tree_cover_loss/{version}/dynamic/{z}/{x}/{y}.png",
+    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
 async def umd_tree_cover_loss_raster_tile(
     *,
-    version: get_versions_enum(
-        "umd_tree_cover_loss", TileCacheType.raster_tile_cache  # noqa: F821
-    ),
+    version: UmdTclVersions = Path(..., description=UmdTclVersions.__doc__),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_year: Optional[int] = Query(
         None, description="Start Year.", ge=2000, le=datetime.now().year - 1
@@ -42,7 +54,6 @@ async def umd_tree_cover_loss_raster_tile(
     UMD tree cover loss raster tile.
     """
 
-    dataset = "umd_tree_cover_loss"
     x, y, z = xyz
 
     payload = {

@@ -1,8 +1,9 @@
 from typing import List, Optional, Tuple
 from uuid import UUID
 
+from aenum import Enum, extend_enum
 from asyncpg import QueryCanceledError
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from fastapi.responses import ORJSONResponse
 
 from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
@@ -12,12 +13,11 @@ from ...crud.async_db.vector_tiles.filters import (
     geometry_filter,
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
+from ...crud.sync_db.tile_cache_assets import get_versions
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
-from ...models.enumerators.nasa_viirs_fire_alerts.versions import (
-    NASAViirsVersions,
-    get_versions_enum,
-)
+from ...models.enumerators.tile_caches import TileCacheType
+from ...models.enumerators.versions import Versions
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
@@ -32,10 +32,23 @@ from . import include_attributes, nasa_viirs_fire_alerts_filters
 
 router = APIRouter()
 
+dataset = "nasa_viirs_fire_alerts"
+
+
+class NasaViirsVersions(str, Enum):
+    """NASA Viirs Fire Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+
+    latest = "latest"
+
+
+_versions = get_versions(dataset, TileCacheType.dynamic_vector_tile_cache)
+for _version in _versions:
+    extend_enum(NasaViirsVersions, _version, _version)
+
 
 async def nasa_viirs_fire_alerts_version(
-    version: get_versions_enum(),  # type: ignore
-) -> NASAViirsVersions:
+    version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
+) -> Versions:
     if version == "latest":
         raise HTTPException(
             status_code=400,
@@ -45,14 +58,14 @@ async def nasa_viirs_fire_alerts_version(
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/dynamic/{z}/{x}/{y}.pbf",
+    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.pbf",
     response_class=VectorTileResponse,
     tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
 )
 async def nasa_viirs_fire_alerts_tile(
     response: Response,
-    version: str = Depends(nasa_viirs_fire_alerts_version),
+    version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
     bbox_z: Tuple[Bounds, int, int] = Depends(vector_xyz),
     geostore_id: Optional[UUID] = Query(
         None, description="Only show fire alerts within selected geostore area"
@@ -123,7 +136,7 @@ async def nasa_viirs_fire_alerts_tile(
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/max_alert__date",
+    f"/{dataset}/{{version}}/max_alert__date",
     response_class=ORJSONResponse,
     response_model=MaxDateResponse,
     response_description="Max alert date in selected dataset",
@@ -132,7 +145,7 @@ async def nasa_viirs_fire_alerts_tile(
 )
 async def max_date(
     response: Response,
-    version: str = Depends(nasa_viirs_fire_alerts_version),
+    version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
 ) -> MaxDateResponse:
     """
     Retrieve max alert date for NASA VIIRS fire alerts for a given version

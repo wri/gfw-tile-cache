@@ -395,6 +395,4 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     response["status"] = "success"
     response["data"] = png
 
-    logger.debug(response)
-
     return response

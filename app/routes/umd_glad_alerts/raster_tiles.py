@@ -1,9 +1,10 @@
-from typing import Optional, Tuple, Type
+from typing import Optional, Tuple
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
+from aenum import Enum, extend_enum
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Response
 
+from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
-from ...models.enumerators.versions import Versions, get_versions_enum
 from .. import DATE_REGEX, optional_implementation_dependency, raster_xyz
 from ..raster_tiles import (
     get_cached_response,
@@ -12,22 +13,30 @@ from ..raster_tiles import (
 )
 
 router = APIRouter()
-umd_glad_alerts_versions: Type[Versions] = get_versions_enum(
-    "umd_glad_alerts", TileCacheType.raster_tile_cache
-)
+
+dataset = "umd_glad_alerts"
+
+
+class UmdGladVersions(str, Enum):
+    """UMD Glad Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+
+    latest = "latest"
+
+
+_versions = get_versions(dataset, TileCacheType.raster_tile_cache)
+for _version in _versions:
+    extend_enum(UmdGladVersions, _version, _version)
 
 
 @router.get(
-    "/umd_glad_alerts/{version}/dynamic/{z}/{x}/{y}.png",
+    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
 async def umd_glad_alerts_raster_tile(
     *,
-    version: get_versions_enum(
-        "umd_glad_alerts", TileCacheType.raster_tile_cache  # noqa: F821
-    ),
+    version: UmdGladVersions = Path(..., description=UmdGladVersions.__doc__),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
@@ -46,7 +55,6 @@ async def umd_glad_alerts_raster_tile(
     """
     UMD GLAD alerts raster tiles.
     """
-    dataset = "umd_glad_alerts"
     x, y, z = xyz
 
     payload = {

@@ -5,20 +5,23 @@ from fastapi import APIRouter, Depends, Path, Response
 from ...models.pydantic.esri import VectorTileService
 from ...routes import DATE_REGEX, default_end, default_start
 from ...routes.esri_vector_tile_server import _get_vector_tile_server
-from ...routes.nasa_viirs_fire_alerts.vector_tiles import nasa_viirs_fire_alerts_version
+from ...routes.nasa_viirs_fire_alerts.vector_tiles import (
+    dataset,
+    nasa_viirs_fire_alerts_version,
+)
 
 router = APIRouter()
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/dynamic/{start_date}/{end_date}/VectorTileServer",
+    f"/{dataset}/{{version}}/dynamic/{{start_date}}/{{end_date}}/VectorTileServer",
     tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
 async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
     *,
     response: Response,
-    version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
+    version: str = Depends(nasa_viirs_fire_alerts_version),
     start_date: str = Path(
         ...,
         regex=DATE_REGEX,
@@ -54,18 +57,18 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
 
     # TODO: add scale factor to tile url
     return await _get_vector_tile_server(
-        "nasa_viirs_fire_alerts", version, "dynamic", query_params, levels=3
+        dataset, version, "dynamic", query_params, levels=3
     )
 
 
 @router.get(
-    "/nasa_viirs_fire_alerts/{version}/dynamic/VectorTileServer",
+    f"/{dataset}/{{version}}/dynamic/VectorTileServer",
     tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
 async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     *,
-    version: str = Depends(nasa_viirs_fire_alerts_version),  # type: ignore
+    version: str = Depends(nasa_viirs_fire_alerts_version),
 ):
     """
     Mock ESRI Vector Tile Server for NASA VIIRS fire alerts.
@@ -74,4 +77,4 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service(
     """
 
     # TODO: add scale factor to tile url
-    return await _get_vector_tile_server("nasa_viirs_fire_alerts", version, "dynamic")
+    return await _get_vector_tile_server(dataset, version, "dynamic")
