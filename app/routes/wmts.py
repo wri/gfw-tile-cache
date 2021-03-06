@@ -162,10 +162,10 @@ def get_operation(parent, operation_name, url):
     value.text = "KVP"
 
 
-def get_layer(parent, layer_name, implementation, formats, tile_matix_sets):
+def get_layer(parent, dataset, version, implementation, formats, tile_matix_sets):
     layer = SubElement(parent, "Layer")
     title = SubElement(layer, "ows:Title")
-    title.text = layer_name
+    title.text = dataset
     bbox = SubElement(layer, "ows:WGS84BoundingBox")
     lower_corner = SubElement(bbox, "ows:LowerCorner")
     lower_corner.text = "-180.0 -90.0"
@@ -175,6 +175,20 @@ def get_layer(parent, layer_name, implementation, formats, tile_matix_sets):
     style.set("isDefault", "true")
     identifier = SubElement(style, "ows:Identifier")
     identifier.text = implementation
+    simple_resource_url = SubElement(layer, "ResourceURL")
+    simple_resource_url.set("format", Format.png)
+    simple_resource_url.set("resourceType", "simpleProfileTile")
+    simple_resource_url.set(
+        "template",
+        f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}.png",
+    )
+    tile_resource_url = SubElement(layer, "ResourceURL")
+    tile_resource_url.set("format", Format.png)
+    tile_resource_url.set("resourceType", "tile")
+    tile_resource_url.set(
+        "template",
+        f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}.png",
+    )
     for format_name in formats:
         get_format(layer, format_name)
     for tile_matix_set in tile_matix_sets:
