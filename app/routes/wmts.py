@@ -107,14 +107,16 @@ def get_capabilities(
 ):
 
     capabilities = Element("Capabilities")
-    capabilities.set("version", "1.0.0")
     capabilities.set("xmlns", "http://www.opengis.net/wmts/1.0")
+    capabilities.set("xmlns:gml", "http://www.opengis.net/gml")
     capabilities.set("xmlns:ows", "http://www.opengis.net/ows/1.1")
     capabilities.set("xmlns:xlink", "http://www.w3.org/1999/xlink")
+    capabilities.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
     capabilities.set(
         "xsi:schemaLocation",
         "http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd",
     )
+    capabilities.set("version", "1.0.0")
     service_metadata = SubElement(capabilities, "ServiceMetadataURL")
     service_metadata.set(
         "xlink:href",
