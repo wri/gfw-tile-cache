@@ -64,8 +64,8 @@ async def wmts(
 
     if REQUEST == WmtsRequest.get_capabilities:
         capabilities = get_capabilities(dataset, version, implementation)
-        # With Python 3.9 we can use ET.indent() instead
         return XMLResponse(
+            # With Python 3.9 we can use ET.indent() instead
             content=parseString(tostring(capabilities)).toprettyxml(),
         )
     elif REQUEST == WmtsRequest.get_tiles:
@@ -82,6 +82,30 @@ async def wmts(
         return RedirectResponse(
             f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{z}/{x}/{y}.png"
         )
+
+
+@router.get(
+    "/{dataset}/{version}/{implementation}/wmts/1.0.0/WMTSCapabilities.xml",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    # response_description="PNG Raster Tile",
+)
+async def wmts_capabilities(
+    *,
+    dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
+    implementation: str = Path(..., description="Tile Cache implementation"),
+) -> XMLResponse:
+    """
+    WMTS Service
+    """
+    dataset, version = dv
+
+    capabilities = get_capabilities(dataset, version, implementation)
+
+    return XMLResponse(
+        # With Python 3.9 we can use ET.indent() instead
+        content=parseString(tostring(capabilities)).toprettyxml(),
+    )
 
 
 def get_capabilities(
