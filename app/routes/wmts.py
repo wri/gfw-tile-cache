@@ -142,7 +142,7 @@ def get_capabilities(
     get_operation(operation_metadata, "GetTile", url)
     get_operation(operation_metadata, "GetFeatureInfo", url)
     content = SubElement(capabilities, "Contents")
-    get_layer(content, dataset, formats, tile_matrix_sets)
+    get_layer(content, dataset, implementation, formats, tile_matrix_sets)
     for tile_matrix_set in tile_matrix_sets:
         get_tile_matrix_set(content, tile_matrix_set, max_zoom)
     return capabilities
@@ -162,7 +162,7 @@ def get_operation(parent, operation_name, url):
     value.text = "KVP"
 
 
-def get_layer(parent, layer_name, formats, tile_matix_sets):
+def get_layer(parent, layer_name, implementation, formats, tile_matix_sets):
     layer = SubElement(parent, "Layer")
     title = SubElement(layer, "ows:Title")
     title.text = layer_name
@@ -174,7 +174,7 @@ def get_layer(parent, layer_name, formats, tile_matix_sets):
     style = SubElement(layer, "Style")
     style.set("isDefault", "true")
     identifier = SubElement(style, "ows:Identifier")
-    identifier.text = "_null"
+    identifier.text = implementation
     for format_name in formats:
         get_format(layer, format_name)
     for tile_matix_set in tile_matix_sets:
@@ -206,7 +206,7 @@ def get_tile_matrix_set(parent, tile_matix_set_name, max_zoom):
 def get_tile_matrix(parent, tile_matrix_set: str, zoom: int):
     tile_matrix = SubElement(parent, "TileMatrix")
     identifier = SubElement(tile_matrix, "ows:Identifier")
-    identifier.text = f"{tile_matrix_set}:{zoom}"
+    identifier.text = f"{zoom}"
     scale_denominator = SubElement(tile_matrix, "ScaleDenominator")
     scale_denominator.text = str(base_scale[tile_matrix_set] / (2 ** zoom))
     top_left = SubElement(tile_matrix, "TopLeftCorner")
