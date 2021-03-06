@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import Element, SubElement, tostring
 
-from aenum import Enum, extend_enum
+from aenum import Enum
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from fastapi.responses import RedirectResponse
 
@@ -14,10 +14,6 @@ from . import raster_tile_cache_version_dependency
 router = APIRouter()
 
 
-def _to_key(value: str):
-    return value.lower().replace(":", "_")
-
-
 class Format(str, Enum):
     png = "image/png"
 
@@ -26,14 +22,7 @@ class TileMatrixSet(str, Enum):
     epsg_3857 = "EPSG:3857"
 
 
-class TileMatrix(str, Enum):
-    pass
-
-
 base_scale = {TileMatrixSet.epsg_3857: 5.590822639508929e8}
-for _set in [set.value for set in TileMatrixSet]:  # type: ignore
-    for zoom in range(0, 23):
-        extend_enum(TileMatrix, _to_key(_set), f"{_set}:{zoom}")
 
 
 @router.get(
@@ -52,7 +41,7 @@ async def wmts(
     tileMatrixSet: Optional[TileMatrixSet] = Query(
         None, description="Projection of tiles"
     ),
-    tileMatrix: Optional[TileMatrixSet] = Query(None, description="z index"),
+    tileMatrix: Optional[int] = Query(None, description="z index", ge=0, le=22),
     tileRow: Optional[int] = Query(None, description="y index", ge=0),
     tileCol: Optional[int] = Query(None, description="x index", ge=0),
     format: Optional[Format] = Query(None, description="Tile format"),
@@ -69,13 +58,13 @@ async def wmts(
             content=parseString(tostring(capabilities)).toprettyxml(),
         )
     elif REQUEST == WmtsRequest.get_tiles:
-        if tileMatrixSet is None or tileCol is None or tileCol is None:
+        if tileMatrix is None or tileCol is None or tileCol is None:
             raise HTTPException(
                 status_code=400,
                 detail="Must provide parameters tileMatrixSet, tileCol and tileRow with GetTile request.",
             )
 
-        z = int(tileMatrixSet.split(":")[2])
+        z = tileMatrix
         x = tileCol
         y = tileRow
 
@@ -116,20 +105,45 @@ def get_capabilities(
     tile_matrix_sets=[TileMatrixSet.epsg_3857],
     max_zoom=22,
 ):
-    url = f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/wmts"
+
     capabilities = Element("Capabilities")
     capabilities.set("version", "1.0.0")
     capabilities.set("xmlns", "http://www.opengis.net/wmts/1.0")
     capabilities.set("xmlns:ows", "http://www.opengis.net/ows/1.1")
     capabilities.set("xmlns:xlink", "http://www.w3.org/1999/xlink")
-    service_identification = SubElement(capabilities, "ows:ServiceIdentification")
+    get_service_identification(capabilities)
+    get_service_provider(capabilities)
+    get_operation_metadata(capabilities, dataset, version, implementation)
+    get_content(
+        capabilities,
+        dataset,
+        version,
+        implementation,
+        formats,
+        tile_matrix_sets,
+        max_zoom,
+    )
+    return capabilities
+
+
+def get_service_identification(parent):
+    service_identification = SubElement(parent, "ows:ServiceIdentification")
     title = SubElement(service_identification, "ows:Title")
     title.text = "GFW Web Map Tile Service"
     service_type = SubElement(service_identification, "ows:ServiceType")
     service_type.text = "OGC WMTS"
     service_type_version = SubElement(service_identification, "ows:ServiceTypeVersion")
     service_type_version.text = "1.0.0"
-    service_provider = SubElement(capabilities, "ows:ServiceProvider")
+    profile = SubElement(service_identification, "ows:Profile")
+    profile.text = "http://www.opengis.net/spec/wmts-simple/1.0/conf/simple-profile"
+    fees = SubElement(service_identification, "ows:Fees")
+    fees.text = "none"
+    access_constraints = SubElement(service_identification, "ows:AccessConstraints")
+    access_constraints.text = "none"
+
+
+def get_service_provider(parent):
+    service_provider = SubElement(parent, "ows:ServiceProvider")
     name = SubElement(service_provider, "ows:ProviderName")
     name.text = "Global Forest Watch"
     website = SubElement(service_provider, "ows:ProviderSite")
@@ -137,15 +151,24 @@ def get_capabilities(
     contact = SubElement(service_provider, "ows:ServiceContact")
     contact_name = SubElement(contact, "ows:IndividualName")
     contact_name.text = "GFW Engineering"
-    operation_metadata = SubElement(capabilities, "ows:OperationsMetadata")
+
+
+def get_operation_metadata(parent, dataset, version, implementation):
+    url = f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/wmts"
+
+    operation_metadata = SubElement(parent, "ows:OperationsMetadata")
     get_operation(operation_metadata, "GetCapabilities", url)
     get_operation(operation_metadata, "GetTile", url)
     get_operation(operation_metadata, "GetFeatureInfo", url)
-    content = SubElement(capabilities, "Contents")
-    get_layer(content, dataset, implementation, formats, tile_matrix_sets)
+
+
+def get_content(
+    parent, dataset, version, implementation, formats, tile_matrix_sets, max_zoom
+):
+    content = SubElement(parent, "Contents")
+    get_layer(content, dataset, version, implementation, formats, tile_matrix_sets)
     for tile_matrix_set in tile_matrix_sets:
         get_tile_matrix_set(content, tile_matrix_set, max_zoom)
-    return capabilities
 
 
 def get_operation(parent, operation_name, url):
