@@ -111,9 +111,19 @@ def get_capabilities(
     capabilities.set("xmlns", "http://www.opengis.net/wmts/1.0")
     capabilities.set("xmlns:ows", "http://www.opengis.net/ows/1.1")
     capabilities.set("xmlns:xlink", "http://www.w3.org/1999/xlink")
+    capabilities.set(
+        "xsi:schemaLocation",
+        "http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd",
+    )
+    service_metadata = SubElement(capabilities, "ServiceMetadataURL")
+    service_metadata.set(
+        "xlink:href",
+        f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/wmts/1.0.0/WMTSCapabilities.xml",
+    )
+
     get_service_identification(capabilities)
     get_service_provider(capabilities)
-    get_operation_metadata(capabilities, dataset, version, implementation)
+    # get_operation_metadata(capabilities, dataset, version, implementation)
     get_content(
         capabilities,
         dataset,
