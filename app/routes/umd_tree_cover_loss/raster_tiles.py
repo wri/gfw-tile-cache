@@ -114,7 +114,7 @@ async def wmts(
     styles = [style.value for style in TcdStyleEnum]  # type: ignore
     tile_url = f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}.png?style={{style}}"
     capabilities = get_capabilities(
-        dataset, version, implementation, styles=styles, tile_url=tile_url
+        dataset, version, implementation, styles=styles, tile_url=tile_url, max_zoom=12
     )
     return XMLResponse(
         # With Python 3.9 we can use ET.indent() instead
