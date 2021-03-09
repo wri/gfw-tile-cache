@@ -49,7 +49,7 @@ async def umd_tree_cover_loss_raster_tile(
     end_year: Optional[int] = Query(
         None, description="End Year.", ge=2000, le=datetime.now().year - 1
     ),
-    tcd: TcdEnum = Query(TcdEnum.thirty, description="Tree Cover Density threshold."),
+    tcd: TcdEnum = Query(TcdEnum.tcd_30, description="Tree Cover Density threshold."),
     style: Optional[TcdStyleEnum] = Query(
         None,
         description="Predefined WMTS style. "
