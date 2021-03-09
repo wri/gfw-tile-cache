@@ -5,14 +5,17 @@ from aenum import Enum, extend_enum
 from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Response
 
 from ...crud.sync_db.tile_cache_assets import get_versions
-from ...models.enumerators.attributes import TcdEnum
+from ...models.enumerators.attributes import TcdEnum, TcdStyleEnum
 from ...models.enumerators.tile_caches import TileCacheType
+from ...responses import XMLResponse
+from ...settings.globals import GLOBALS
 from .. import optional_implementation_dependency, raster_xyz
 from ..raster_tiles import (
     get_cached_response,
     get_dynamic_raster_tile,
     hash_query_params,
 )
+from ..wmts import get_capabilities
 
 router = APIRouter()
 
@@ -47,6 +50,11 @@ async def umd_tree_cover_loss_raster_tile(
         None, description="End Year.", ge=2000, le=datetime.now().year - 1
     ),
     tcd: TcdEnum = Query(TcdEnum.thirty, description="Tree Cover Density threshold."),
+    style: Optional[TcdStyleEnum] = Query(
+        None,
+        description="Predefined WMTS style. "
+        "This query parameter is mutually exclusive to all other query parameters.",
+    ),
     implementation: str = Depends(optional_implementation_dependency),
     background_tasks: BackgroundTasks,
 ) -> Response:
@@ -69,6 +77,11 @@ async def umd_tree_cover_loss_raster_tile(
         return await get_dynamic_raster_tile(payload, implementation, background_tasks)
 
     else:
+        if style:
+            tcd = TcdEnum[style]  # type: ignore
+            start_year = None
+            end_year = None
+
         payload.update(
             implementation=f"tcd_{tcd}",
             start_year=start_year,
@@ -80,3 +93,30 @@ async def umd_tree_cover_loss_raster_tile(
         query_hash = hash_query_params(params)
 
         return await get_cached_response(payload, query_hash, background_tasks)
+
+
+@router.get(
+    f"/{dataset}/{{version}}/dynamic/wmts/1.0.0/WMTSCapabilities.xml",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    # response_description="PNG Raster Tile",
+)
+async def wmts(
+    *,
+    version: UmdTclVersions = Path(..., description=UmdTclVersions.__doc__),
+) -> XMLResponse:
+    """
+    WMTS Service using resource-oriented implementation.
+
+    You can point your WMTS client directly to this XML document to discover the tile service.
+    """
+    implementation: str = "dynamic"
+    styles = [style.value for style in TcdStyleEnum]  # type: ignore
+    tile_url = f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}.png?style={{style}}"
+    capabilities = get_capabilities(
+        dataset, version, implementation, styles=styles, tile_url=tile_url
+    )
+    return XMLResponse(
+        # With Python 3.9 we can use ET.indent() instead
+        content=capabilities,
+    )

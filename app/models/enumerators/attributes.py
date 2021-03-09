@@ -6,10 +6,20 @@ class Attributes(str, Enum):
 
 
 class TcdEnum(str, Enum):
-    ten = "10"
-    fifteen = "15"
-    twenty = "20"
-    twentyfive = "25"
-    thirty = "30"
-    fifty = "50"
-    seventyfive = "75"
+    tcd_10 = "10"
+    tcd_15 = "15"
+    tcd_20 = "20"
+    tcd_25 = "25"
+    tcd_30 = "30"
+    tcd_50 = "50"
+    tcd_75 = "75"
+
+
+class TcdStyleEnum(str, Enum):
+    tcd_10 = "tcd_10"
+    tcd_15 = "tcd_15"
+    tcd_20 = "tcd_20"
+    tcd_25 = "tcd_25"
+    tcd_30 = "tcd_30"
+    tcd_50 = "tcd_50"
+    tcd_75 = "tcd_75"
