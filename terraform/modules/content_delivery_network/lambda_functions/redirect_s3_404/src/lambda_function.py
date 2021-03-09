@@ -16,11 +16,19 @@ def handler(event, context):
     # if S3 returns a 404 sets custom origin properties
     # custom origin is tile cache app. URL is passed via custom header set in cloud front
     # (env variables are not support for Lambda@Edge)
-    if int(response["status"]) == 404 and "default" in request["uri"]:
 
-        redirect_path = request["uri"].replace("default", "dynamic")
+    if int(response["status"]) == 404 and is_tile(request["uri"]):
+
+        implementation = get_implementation(request["uri"])
+
+        redirect_path = request["uri"].replace(implementation, "dynamic")
+
         if request["querystring"]:
-            redirect_path += f"?{request['querystring']}"
+            querystring = f"{request['querystring']}&implementation={implementation}"
+        else:
+            querystring = f"implementation={implementation}"
+
+        redirect_path += f"?{querystring}"
 
         headers["location"] = [{"key": "Location", "value": redirect_path}]
         headers["content-type"] = [{"key": "Content-Type", "value": "application/json"}]
@@ -33,3 +41,14 @@ def handler(event, context):
         }
 
     return response
+
+
+def is_tile(uri):
+    print("REQUEST URI", uri)
+    parts = uri.split("/")
+    return len(parts) == 7 and parts[6][-4:] in [".png", ".pbf"]
+
+
+def get_implementation(uri):
+    parts = uri.split("/")
+    return parts[3]

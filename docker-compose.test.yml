@@ -1,4 +1,4 @@
-version: "3"
+version: "3.7"
 
 services:
   app:
@@ -11,6 +11,8 @@ services:
       - ./app:/app/app:ro
       - ./lambdas:/app/lambdas:ro
       - ./tests:/app/tests
+      - ./terraform:/app/terraform
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DATABASE_RO=_test
       - DB_USER_RO=gfw
@@ -22,11 +24,17 @@ services:
       - AWS_SECRET_ACCESS_KEY=testing  # pragma: allowlist secret
       - AWS_SECURITY_TOKEN=testing  # pragma: allowlist secret
       - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
-      - RASTER_TILER_LAMBDA_NAME=testing
+      - AWS_ENDPOINT_URI=http://localstack:4566
+      - LOCALSTACK_HOSTNAME=localstack
+      - HTTPX_TIMEOUT=60
+      - RASTER_TILER_LAMBDA_NAME=test_project-lambda-tiler
       - ENV=test
-    entrypoint: wait_for_postgres.sh pytest --cov-report term --cov-report xml:/app/tests/cobertura.xml --cov=app --cov=lambdas
+      - BUCKET=gfw-tiles-test
+      - DATA_LAKE_BUCKET=gfw-data-lake-test
+    entrypoint: /app/tests/run_tests.sh
     depends_on:
       - test_database
+      - localstack
 
   test_database:
     container_name: gfw-tile-cache-test-database
@@ -41,6 +49,29 @@ services:
     volumes:
       - test_database_data:/var/lib/postgresql/data
     restart: on-failure
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - '443:443'
+      - '4563-4584:4563-4584'
+      - '8055:8080'
+      - '${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}'
+    environment:
+      - SERVICES=iam,lambda,sts,cloudwatch,events,s3,logs
+      - DEBUG=1
+      - DISABLE_EVENTS=1
+      - LAMBDA_DOCKER_NETWORK=gfw-tile-cache_test_default
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
+#      - DNS_ADDRESS=22.22.22.22
+      - LAMBDA_REMOTE_DOCKER=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - HOSTNAME_EXTERNAL=localstack
+      - HOSTNAME=localstack
+    volumes:
+      - "${TMPDIR:-./localstack}:/tmp/localstack"
+      - '/var/run/docker.sock:/var/run/docker.sock'
 
 volumes:
   test_database_data:

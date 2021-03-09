@@ -12,8 +12,7 @@ resource "aws_cloudfront_origin_access_identity" "tiles" {}
 
 resource "aws_cloudfront_distribution" "tiles" {
 
-  aliases = var.environment == "dev" ? null : [
-  var.tile_cache_url]
+  aliases = [var.tile_cache_url]
 
   enabled         = true
   http_version    = "http2"
@@ -128,33 +127,6 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  # TEST RADD data (only exist in dev)
-  # Can be deleted once RADD tile service is operational
-  ordered_cache_behavior {
-    allowed_methods        = local.methods
-    cached_methods         = local.methods
-    compress               = false
-    default_ttl            = 43200 # 12h
-    max_ttl                = 43200 # 12h
-    min_ttl                = 0
-    path_pattern           = "radd_alerts/tiles/latest/*"
-    smooth_streaming       = false
-    target_origin_id       = "static"
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      headers                 = local.headers
-      query_string            = false
-      query_string_cache_keys = []
-
-      cookies {
-        forward           = "none"
-        whitelisted_names = []
-      }
-    }
-  }
-
 
   # Latest default layers need to be rerouted and cache headers need to be rewritten
   # This cache bahavior sends the requests to a lambda@edge function which looks up the latest version
@@ -243,7 +215,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     default_ttl            = 31536000 # 1y
     max_ttl                = 31536000 # 1y
     min_ttl                = 0
-    path_pattern           = "umd_tree_cover_loss/v1.7/*"
+    path_pattern           = "umd_tree_cover_loss/v1.7/tcd*"
     smooth_streaming       = false
     target_origin_id       = "google-tiles"
     trusted_signers        = []
@@ -463,9 +435,9 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   viewer_certificate {
     acm_certificate_arn            = var.certificate_arn
-    cloudfront_default_certificate = var.environment == "dev" ? true : false
-    minimum_protocol_version       = var.environment == "dev" ? "TLSv1" : "TLSv1.1_2016"
-    ssl_support_method             = var.environment == "dev" ? null : "sni-only"
+    cloudfront_default_certificate = false
+    minimum_protocol_version       = "TLSv1.1_2016"
+    ssl_support_method             = "sni-only"
   }
 
 

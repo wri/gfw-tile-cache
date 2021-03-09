@@ -49,7 +49,8 @@ async def dynamic_esri_vector_tile_service(
     response_model=VectorTileService,
 )
 async def esri_vector_tile_service(
-    *, dv: Tuple[str, str] = Depends(static_vector_tile_cache_version_dependency),
+    *,
+    dv: Tuple[str, str] = Depends(static_vector_tile_cache_version_dependency),
 ):
     """
     Generic Mock ESRI Vector Tile Server.
@@ -70,7 +71,8 @@ async def esri_vector_tile_service(
     response_model=RootJson,
 )
 async def esri_root_json(
-    *, dv: Tuple[str, str] = Depends(static_vector_tile_cache_version_dependency),
+    *,
+    dv: Tuple[str, str] = Depends(static_vector_tile_cache_version_dependency),
 ):
     """
     ESRI root.json file with default layer style for use with ESRI JS API.

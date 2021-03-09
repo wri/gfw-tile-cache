@@ -1,8 +1,8 @@
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import mercantile
 import pendulum
-from fastapi import HTTPException, Path
+from fastapi import Depends, HTTPException, Path, Query
 from fastapi.logger import logger
 from shapely.geometry import box
 
@@ -16,8 +16,9 @@ from ..models.enumerators.tile_caches import TileCacheType
 from ..models.enumerators.versions import Versions
 from ..models.types import Bounds
 
-DATE_REGEX = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
-VERSION_REGEX = r"^v\d{1,8}\.?\d{1,3}\.?\d{1,3}$|^latest$"
+DATE_REGEX = r"^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
+VERSION_REGEX = r"^v\d{1,8}(\.\d{1,3}){0,2}?$|^latest$"
+XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
 
 
 def default_start():
@@ -43,7 +44,7 @@ async def vector_xyz(
     y: Union[int, str] = Path(
         ...,
         description="Tile grid row (integer >= 0) and optional scale factor (either @2x, @0.5x or @0.25x)",
-        regex="^\d+(@(2|0.5|0.25)x)?$",
+        regex=XYZ_REGEX,
     ),
 ) -> Tuple[Bounds, int, int]:
     if isinstance(y, str) and "@" in y:
@@ -84,12 +85,18 @@ async def static_dataset_dependency(dataset: StaticVectorTileCacheDatasets) -> s
     return dataset
 
 
+async def version_dependency(
+    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX)
+) -> str:
+    return version
+
+
 async def dynamic_vector_tile_cache_version_dependency(
     *,
     dataset: DynamicVectorTileCacheDatasets = Path(  # type: ignore
         ..., description=DynamicVectorTileCacheDatasets.__doc__
     ),
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    version: str = Depends(version_dependency),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -108,7 +115,7 @@ async def static_vector_tile_cache_version_dependency(
     dataset: StaticVectorTileCacheDatasets = Path(  # type: ignore
         ..., description=StaticVectorTileCacheDatasets.__doc__
     ),
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    version: str = Depends(version_dependency),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -127,7 +134,7 @@ async def raster_tile_cache_version_dependency(
     dataset: RasterTileCacheDatasets = Path(  # type: ignore
         ..., description=RasterTileCacheDatasets.__doc__
     ),
-    version: str = Path(..., description=Versions.__doc__, regex=VERSION_REGEX),
+    version: str = Depends(version_dependency),
 ) -> Tuple[str, str]:
     # Middleware should have redirected GET requests to latest version already.
     # Any other request method should not use `latest` keyword.
@@ -138,6 +145,17 @@ async def raster_tile_cache_version_dependency(
         )
     validate_tile_cache_version(dataset, version, TileCacheType.raster_tile_cache)
     return dataset, version
+
+
+async def optional_implementation_dependency(
+    implementation: Optional[str] = Query(
+        None,
+        description="Tile cache implementation name for which dynamic tile should be rendered. "
+        "This query parameter is mutually exclusive to all other query parameters. "
+        "If set other parameters will be ignored.",
+    )
+) -> Optional[str]:
+    return implementation
 
 
 def validate_tile_cache_version(dataset, version, tile_cache_type) -> None:

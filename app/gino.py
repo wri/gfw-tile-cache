@@ -27,7 +27,8 @@ class StarletteModelMixin:
         rv = await cls.get(*args, **kwargs)
         if rv is None:
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND, "{} is not found".format(cls.__name__),
+                status.HTTP_404_NOT_FOUND,
+                "{} is not found".format(cls.__name__),
             )
         return rv
 

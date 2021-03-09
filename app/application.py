@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
 from .gino import Gino, GinoEngine
-from .settings.globals import DATABASE_CONFIG, SQL_REQUEST_TIMEOUT
+from .settings.globals import GLOBALS
 
 READ_ENGINE: Optional[GinoEngine] = None
 SessionLocal: Optional[Session] = None
@@ -15,27 +15,33 @@ Base = declarative_base()
 
 app = FastAPI(title="GFW Tile Cache API", redoc_url="/")
 
+if not GLOBALS.database_config:
+    raise RuntimeError("No database url set.")
 
 db = Gino(
     app,
-    host=DATABASE_CONFIG.host,
-    port=DATABASE_CONFIG.port,
-    user=DATABASE_CONFIG.username,
-    password=DATABASE_CONFIG.password,
-    database=DATABASE_CONFIG.database,
+    host=GLOBALS.database_config.host,
+    port=GLOBALS.database_config.port,
+    user=GLOBALS.database_config.username,
+    password=GLOBALS.database_config.password,
+    database=GLOBALS.database_config.database,
     pool_min_size=5,
     pool_max_size=10,
-    kwargs=dict(server_settings=dict(statement_timeout=f"{SQL_REQUEST_TIMEOUT}")),
+    kwargs=dict(
+        server_settings=dict(statement_timeout=f"{GLOBALS.sql_request_timeout}")
+    ),
 )
 
 
 @contextmanager
 def get_synchronous_db() -> Iterator[Session]:
-
     global SessionLocal
 
+    if not GLOBALS.database_config:
+        raise RuntimeError("No database url set.")
+
     if SessionLocal is None:
-        db_conn = DATABASE_CONFIG.url
+        db_conn = GLOBALS.database_config.url
         engine = create_engine(db_conn, pool_size=5, max_overflow=0)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

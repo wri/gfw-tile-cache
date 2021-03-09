@@ -8,17 +8,17 @@ black = "*"
 flake8 = "*"
 pre-commit = "*"
 detect-secrets = "*"
-pillow = "==8.0.1"
+pillow = "==8.0.1" # same as lambda layer
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
-rasterio = "==1.1.8"
+rasterio = "==1.1.8" # same as lambda layer
 
 [packages]
 aiofiles = "*"
 aenum = "*"
 asyncpg = "*"
-boto3 = "==1.14.44"
+boto3 = "==1.16.52"  # aioboto3 dependency
 fastapi = "*"
 mercantile = "*"
 uvicorn = "*"
