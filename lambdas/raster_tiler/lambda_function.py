@@ -98,10 +98,12 @@ def apply_annual_loss_filter(
 
     red: ndarray = np.ones(intensity.shape).astype("uint8") * 228
     green: ndarray = (
-        np.ones(intensity.shape) * 102 + (72 - zoom) - (scaled_intensity * (3 / zoom))
+        np.ones(intensity.shape) * 102
+        + (72 - zoom)
+        - (scaled_intensity * (3 / max(zoom, 1)))
     ).astype("uint8")
     blue: ndarray = (
-        np.ones(intensity.shape) * 153 + (33 - zoom) - (intensity / zoom)
+        np.ones(intensity.shape) * 153 + (33 - zoom) - (intensity / max(zoom, 1))
     ).astype("uint8")
     alpha: ndarray = (
         (scaled_intensity if zoom < 13 else intensity) * start_year_mask * end_year_mask
