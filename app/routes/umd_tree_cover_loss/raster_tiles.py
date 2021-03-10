@@ -111,7 +111,8 @@ async def wmts(
     You can point your WMTS client directly to this XML document to discover the tile service.
     """
     implementation: str = "dynamic"
-    styles = [style.value for style in TcdStyleEnum]  # type: ignore
+    # styles = [style.value for style in TcdStyleEnum]  # type: ignore
+    styles = [TcdStyleEnum.tcd_50, TcdStyleEnum.tcd_30]
     tile_url = f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}.png?style={{style}}"
     capabilities = get_capabilities(
         dataset, version, implementation, styles=styles, tile_url=tile_url, max_zoom=12
