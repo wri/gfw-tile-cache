@@ -32,6 +32,7 @@ from .routes.nasa_viirs_fire_alerts import vector_tiles as viirs_vector_tiles
 from .routes.umd_tree_cover_loss import raster_tiles as umd_tree_cover_loss_raster_tiles
 from .routes.umd_glad_alerts import raster_tiles as umd_glad_alerts_raster_tiles
 from .routes.wur_radd_alerts import raster_tiles as wur_radd_alerts_raster_tiles
+from .routes.planet import raster_tiles as planet_raster_tiles
 from .routes import wmts
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
@@ -49,6 +50,7 @@ ROUTERS = (
     umd_tree_cover_loss_raster_tiles.router,
     umd_glad_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,
+    planet_raster_tiles.router,
     raster_tiles.router,
     wmts.router,
     viirs_esri_vector_tile_server.router,

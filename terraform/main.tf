@@ -46,7 +46,7 @@ module "orchestration" {
   auto_scaling_min_capacity    = var.auto_scaling_min_capacity
   security_group_ids           = [data.terraform_remote_state.core.outputs.postgresql_security_group_id]
   task_role_policies           = [module.lambda_raster_tiler.lambda_invoke_policy_arn, module.storage.s3_write_tiles_arn]
-  task_execution_role_policies = [data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn]
+  task_execution_role_policies = [data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn, data.terraform_remote_state.core.outputs.secrets_planet_api_key_policy_arn]
   container_definition         = data.template_file.container_definition.rendered
 }
 

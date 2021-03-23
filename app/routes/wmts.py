@@ -22,6 +22,10 @@ class TileMatrixSet(str, Enum):
 base_scale = {TileMatrixSet.epsg_3857: 5.590822639508929e8}
 
 #
+# This is a dynamic implemenation of WMTS. The resouce based implemenation seems to be better suited for our uses case.
+# Keeping this around for now, just as a reference.
+# But we might want to delete this section if we don't find a use case for this.
+#
 # @router.get(
 #     "/{dataset}/{version}/{implementation}/wmts",
 #     response_class=Response,
@@ -80,6 +84,7 @@ async def wmts(
     *,
     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
     implementation: str = Path(..., description="Tile Cache implementation"),
+    response: Response,
 ) -> XMLResponse:
     """
     WMTS Service using resource-oriented implementation.
@@ -88,10 +93,12 @@ async def wmts(
     """
     dataset, version = dv
 
-    capabilities = get_capabilities(dataset, version, implementation)
+    # TODO: verify if implementation for given d/v exist
+    #  Fetch max zoom level and add to capabilities call
 
+    capabilities = get_capabilities(dataset, version, implementation)
+    response.headers["Cache-Control"] = "max-age=7200"  # 2h
     return XMLResponse(
-        # With Python 3.9 we can use ET.indent() instead
         content=capabilities,
     )
 
@@ -102,7 +109,7 @@ def get_capabilities(
     implementation: str,
     formats: List[str] = [Format.png],
     tile_matrix_sets: List[str] = [TileMatrixSet.epsg_3857],
-    max_zoom: int = 22,
+    max_zoom: int = 14,
     styles: Optional[List[str]] = None,
     tile_url: Optional[str] = None,
 ):

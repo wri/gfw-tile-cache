@@ -90,32 +90,3 @@ async def umd_tree_cover_loss_raster_tile(
         query_hash = hash_query_params(params)
 
         return await get_cached_response(payload, query_hash, background_tasks)
-
-
-#
-# @router.get(
-#     f"/{dataset}/{{version}}/dynamic/wmts/1.0.0/WMTSCapabilities.xml",
-#     response_class=Response,
-#     tags=["Raster Tiles"],
-#     # response_description="PNG Raster Tile",
-# )
-# async def wmts(
-#     *,
-#     version: UmdTclVersions = Path(..., description=UmdTclVersions.__doc__),
-# ) -> XMLResponse:
-#     """
-#     WMTS Service using resource-oriented implementation.
-#
-#     You can point your WMTS client directly to this XML document to discover the tile service.
-#     """
-#     implementation: str = "dynamic"
-#     # styles = [style.value for style in TcdStyleEnum]  # type: ignore
-#     styles = [TcdStyleEnum.tcd_50, TcdStyleEnum.tcd_30]
-#     tile_url = f"{GLOBALS.tile_cache_url}/{dataset}/{version}/{implementation}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}.png?style={{style}}"
-#     capabilities = get_capabilities(
-#         dataset, version, implementation, styles=styles, tile_url=tile_url, max_zoom=12
-#     )
-#     return XMLResponse(
-#         # With Python 3.9 we can use ET.indent() instead
-#         content=capabilities,
-#     )
