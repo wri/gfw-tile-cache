@@ -45,7 +45,7 @@ class Globals(BaseSettings):
     aws_region: str = Field("us-east-1", description="AWS region")
     aws_endpoint_uri: str = Field(None, description="AWS service endpoint URL")
     lambda_host: Optional[str] = Field(None, description="AWS Lamdba host URL")
-    planet_api_key: str = Field(..., description="Planet Api key")
+    planet_api_key: Optional[str] = Field(None, description="Planet Api key")
     tile_cache_url: Optional[str] = Field(None, description="Tile Cache URL")
     sql_request_timeout: int = Field(
         58000, description="SQL timeout time (server side)"
