@@ -259,23 +259,28 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     return data
 
 
-def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwargs):
+def get_source_window(
+    dataset: str,
+    version: str,
+    implementation: str,
+    x: int,
+    y: int,
+    z: int,
+    over_zoom: Optional[int],
+) -> Tuple[str, Window]:
 
-    logger.debug("Read data lake")
-
-    pixel_meaning = implementation
-
-    tile = Tile(int(x), int(y), int(z))
-    if over_zoom and int(over_zoom) < int(z):
-        parent_tile = parent(tile, zoom=int(over_zoom))
+    tile = Tile(x, y, z)
+    if over_zoom is not None and over_zoom < z:
+        parent_tile = parent(tile, zoom=over_zoom)
         row, col, _, _ = get_tile_location(parent_tile.x, parent_tile.y)
-        _z = int(over_zoom)
+        _z = over_zoom
         tile_bounds = xy_bounds(tile)
 
         pixel_size = CE / math.pow(2, _z) / TILE_SIZE
 
-        top = CE / 2 + ((row * pixel_size) * TILE_SIZE ** 2)
-        left = -CE / 2 + ((col * pixel_size) * TILE_SIZE ** 2)
+        top = (CE / 2) - ((row * pixel_size) * (TILE_SIZE ** 2))
+        left = (-CE / 2) + ((col * pixel_size) * (TILE_SIZE ** 2))
+
         geotransform = (left, pixel_size, 0.0, top, 0.0, -pixel_size)
 
         window: Window = windows.from_bounds(
@@ -287,12 +292,28 @@ def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwarg
         )
     else:
         row, col, row_off, col_off = get_tile_location(tile.x, tile.y)
-        _z = int(z)
+        _z = z
         # We could use windows.from_bounds here as well,
         # however this approach is slightly more efficient
         window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
-    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{_z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{_z}/{implementation}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+
+    return src_tile, window
+
+
+def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwargs):
+
+    logger.debug("Read data lake")
+
+    if over_zoom is not None:
+        _over_zoom = int(over_zoom)
+    else:
+        _over_zoom = None
+
+    src_tile, window = get_source_window(
+        dataset, version, implementation, int(x), int(y), int(z), _over_zoom
+    )
 
     logger.debug(f"X, Y, Z: {(x, y, z)}")
     logger.debug(f"Window: {window}")

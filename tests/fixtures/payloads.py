@@ -3,11 +3,11 @@
 ####################
 
 
-def umd_tree_cover_loss_payload(x=1, y=1, z=12, tcd=30, start_year=2001, end_year=2010):
+def umd_tree_cover_loss_payload(
+    x=1, y=1, z=12, tcd=30, start_year=2001, end_year=2010, over_zoom=12
+):
     dataset = "umd_tree_cover_loss"
     version = "v1.8"
-
-    over_zoom = 12
 
     params = {"start_year": start_year, "end_year": end_year, "tcd": tcd}
 
@@ -29,12 +29,16 @@ def umd_tree_cover_loss_payload(x=1, y=1, z=12, tcd=30, start_year=2001, end_yea
 
 
 def umd_glad_alerts_payload(
-    x=1, y=1, z=12, start_date="2018-01-01", end_date="2019-01-01", confirmed_only=True
+    x=1,
+    y=1,
+    z=12,
+    start_date="2018-01-01",
+    end_date="2019-01-01",
+    confirmed_only=True,
+    over_zoom=14,
 ):
     dataset = "umd_glad_alerts"
     version = "v20210101"
-
-    over_zoom = 14
 
     params = {
         "start_date": start_date,
