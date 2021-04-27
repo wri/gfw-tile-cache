@@ -264,8 +264,8 @@ def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwarg
     pixel_meaning = implementation
 
     tile = Tile(int(x), int(y), int(z))
-    if over_zoom:
-        parent_tile = parent(tile, over_zoom)
+    if over_zoom and int(over_zoom) < int(z):
+        parent_tile = parent(tile, zoom=int(over_zoom))
         row, col, _, _ = get_tile_location(parent_tile.x, parent_tile.y)
         tile_bounds = bounds(tile)
         window: Window = windows.from_bounds(

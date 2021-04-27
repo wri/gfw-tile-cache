@@ -83,6 +83,7 @@ def test_read_data_lake():
         "y": 0,
         "z": 14,
         "unused": "test",
+        "over_zoom": 14,
     }
 
     data = read_data_lake(**input_data)

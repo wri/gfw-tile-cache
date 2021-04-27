@@ -12,6 +12,7 @@ def umd_tree_cover_loss_payload():
     z = 12
     start_year = 2001
     end_year = 2010
+    over_zoom = 12
 
     params = {"start_year": start_year, "end_year": end_year, "tcd": tcd}
 
@@ -25,6 +26,7 @@ def umd_tree_cover_loss_payload():
         "start_year": start_year,
         "end_year": end_year,
         "filter_type": "annual_loss",
+        "over_zoom": over_zoom
         # "source": "tilecache",
     }
 
@@ -40,6 +42,7 @@ def umd_glad_alerts_payload():
     start_date = "2018-01-01"
     end_date = "2019-01-01"
     confirmed_only = True
+    over_zoom = 14
 
     params = {
         "start_date": start_date,
@@ -59,6 +62,7 @@ def umd_glad_alerts_payload():
         "confirmed_only": confirmed_only,
         "filter_type": "deforestation_alerts",
         "source": "tilecache",
+        "over_zoom": over_zoom,
     }
 
     return params, payload

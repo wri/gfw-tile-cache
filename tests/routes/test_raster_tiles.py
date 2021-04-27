@@ -95,6 +95,8 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     y = payload["y"]
     z = payload["z"]
 
+    print(payload)
+
     # This will mock the lambda function and return the payload
     mock_patch = f"app.routes.{dataset}.raster_tiles.get_cached_response"
     with mock.patch(mock_patch) as mck:
