@@ -8,13 +8,13 @@ black = "*"
 flake8 = "*"
 pre-commit = "*"
 detect-secrets = "*"
-pillow = "==8.0.1" # same as lambda layer
+pillow = "==8.1.1" # same as lambda layer
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
 rasterio = "==1.1.8" # same as lambda layer
-mercantile = "*"
+mercantile = "==1.2.1" # same as lambda layer
 
 [packages]
 aiofiles = "*"
