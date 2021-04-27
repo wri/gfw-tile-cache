@@ -272,7 +272,7 @@ def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwarg
         _z = int(over_zoom)
         tile_bounds = xy_bounds(tile)
 
-        pixel_size = CE / math.pow(2, int(z)) / TILE_SIZE
+        pixel_size = CE / math.pow(2, _z) / TILE_SIZE
 
         top = CE / 2 + ((row * pixel_size) * TILE_SIZE ** 2)
         left = -CE / 2 + ((col * pixel_size) * TILE_SIZE ** 2)
