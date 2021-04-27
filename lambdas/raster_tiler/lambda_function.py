@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import math
 import os
 from datetime import date, datetime
 from io import BytesIO
@@ -13,7 +14,8 @@ from urllib.request import urlopen
 
 import numpy as np
 import rasterio
-from mercantile import Tile, bounds, parent
+from affine import Affine
+from mercantile import CE, Tile, parent, xy_bounds
 from numpy import ndarray
 from PIL import Image
 from rasterio import RasterioIOError, windows
@@ -267,17 +269,30 @@ def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwarg
     if over_zoom and int(over_zoom) < int(z):
         parent_tile = parent(tile, zoom=int(over_zoom))
         row, col, _, _ = get_tile_location(parent_tile.x, parent_tile.y)
-        tile_bounds = bounds(tile)
+        _z = int(over_zoom)
+        tile_bounds = xy_bounds(tile)
+
+        pixel_size = CE / math.pow(2, int(z)) / TILE_SIZE
+
+        top = CE / 2 + ((row * pixel_size) * TILE_SIZE ** 2)
+        left = -CE / 2 + ((col * pixel_size) * TILE_SIZE ** 2)
+        geotransform = (left, pixel_size, 0.0, top, 0.0, -pixel_size)
+
         window: Window = windows.from_bounds(
-            tile_bounds.west, tile_bounds.south, tile_bounds.east, tile_bounds.east
+            tile_bounds.left,
+            tile_bounds.bottom,
+            tile_bounds.right,
+            tile_bounds.top,
+            transform=Affine.from_gdal(*geotransform),
         )
     else:
         row, col, row_off, col_off = get_tile_location(tile.x, tile.y)
+        _z = int(z)
         # We could use windows.from_bounds here as well,
         # however this approach is slightly more efficient
         window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
-    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{_z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
 
     logger.debug(f"X, Y, Z: {(x, y, z)}")
     logger.debug(f"Window: {window}")

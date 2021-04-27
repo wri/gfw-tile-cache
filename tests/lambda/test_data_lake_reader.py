@@ -67,6 +67,38 @@ def test_get_tile_array():
     np.all(blue == 12)
 
 
+def test_get_tile_array_over_zoom():
+    """when requesting smaller windows, we should still receive 256x256 arrays"""
+
+    rgb = get_tile_array(TEST_TIF, Window(0, 0, 128, 128))
+    assert rgb.shape == (3, 256, 256)
+    red, green, blue = rgb
+    np.all(red == 1)
+    np.all(green == 2)
+    np.all(blue == 3)
+
+    data = get_tile_array(TEST_TIF, Window(0, 256, 128, 128))
+    assert data.shape == (3, 256, 256)
+    red, green, blue = rgb
+    np.all(red == 2)
+    np.all(green == 3)
+    np.all(blue == 6)
+
+    data = get_tile_array(TEST_TIF, Window(256, 0, 128, 128))
+    assert data.shape == (3, 256, 256)
+    red, green, blue = rgb
+    np.all(red == 3)
+    np.all(green == 6)
+    np.all(blue == 9)
+
+    data = get_tile_array(TEST_TIF, Window(256, 256, 128, 128))
+    assert data.shape == (3, 256, 256)
+    red, green, blue = rgb
+    np.all(red == 4)
+    np.all(green == 8)
+    np.all(blue == 12)
+
+
 def test_read_data_lake():
 
     s3_client = boto3.client("s3", endpoint_url=AWS_ENDPOINT_URI)
