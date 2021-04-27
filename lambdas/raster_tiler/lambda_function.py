@@ -13,9 +13,10 @@ from urllib.request import urlopen
 
 import numpy as np
 import rasterio
+from mercantile import Tile, bounds, parent
 from numpy import ndarray
 from PIL import Image
-from rasterio import RasterioIOError
+from rasterio import RasterioIOError, windows
 from rasterio.windows import Window
 
 ENV: str = os.environ.get("ENV", "dev")
@@ -256,19 +257,31 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     return data
 
 
-def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
+def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwargs):
 
     logger.debug("Read data lake")
 
     pixel_meaning = implementation
 
-    row, col, row_off, col_off = get_tile_location(int(x), int(y))
+    tile = Tile(int(x), int(y), int(z))
+    if over_zoom:
+        parent_tile = parent(tile, over_zoom)
+        row, col, _, _ = get_tile_location(parent_tile.x, parent_tile.y)
+        tile_bounds = bounds(tile)
+        window: Window = windows.from_bounds(
+            tile_bounds.west, tile_bounds.south, tile_bounds.east, tile_bounds.east
+        )
+    else:
+        row, col, row_off, col_off = get_tile_location(tile.x, tile.y)
+        # We could use windows.from_bounds here as well,
+        # however this approach is slightly more efficient
+        window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
     src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
-    window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
 
-    logger.info(f"X, Y, Z: {(x, y, z)}")
-    logger.info(f"SCR TILE: {src_tile}")
+    logger.debug(f"X, Y, Z: {(x, y, z)}")
+    logger.debug(f"Window: {window}")
+    logger.debug(f"SCR TILE: {src_tile}")
 
     try:
         tile = get_tile_array(src_tile, window)
@@ -351,7 +364,20 @@ def array_to_img(arr: np.ndarray) -> str:
 
 
 def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
-    """Handle tile requests."""
+    """Handle tile requests.
+
+    expected event model:
+
+    dataset: str
+    version: str
+    x: int
+    y: int
+    z: int
+    source: str = "datalake"
+    filter_type: Optional[str] = None
+    over_zoom: Optional[int] = None
+
+    """
 
     logger.debug(f"EVENT DATA: {json.dumps(event)}")
 

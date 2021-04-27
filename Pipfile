@@ -14,6 +14,7 @@ pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
 rasterio = "==1.1.8" # same as lambda layer
+mercantile = "*"
 
 [packages]
 aiofiles = "*"

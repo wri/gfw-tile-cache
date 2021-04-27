@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Response
 
-from ...crud.sync_db.tile_cache_assets import get_versions
+from ...crud.sync_db.tile_cache_assets import get_max_zoom, get_versions
 from ...models.enumerators.attributes import TcdEnum, TcdStyleEnum
 from ...models.enumerators.tile_caches import TileCacheType
 from .. import optional_implementation_dependency, raster_xyz
@@ -68,6 +68,9 @@ async def umd_tree_cover_loss_raster_tile(
         "x": x,
         "y": y,
         "z": z,
+        "over_zoom": get_max_zoom(
+            dataset, version, implementation, TileCacheType.raster_tile_cache
+        ),
     }
 
     if implementation:
@@ -84,6 +87,9 @@ async def umd_tree_cover_loss_raster_tile(
             start_year=start_year,
             end_year=end_year,
             filter_type="annual_loss",
+            over_zoom=get_max_zoom(
+                dataset, version, f"tcd_{tcd}", TileCacheType.raster_tile_cache
+            ),
         )
 
         params = {"start_year": start_year, "end_year": end_year, "tcd": tcd}

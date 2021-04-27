@@ -80,7 +80,8 @@ module "lambda_raster_tiler" {
   source      = "./modules/lambda_raster_tiler"
   environment = var.environment
   lambda_layers = [data.terraform_remote_state.lambda_layers.outputs.py38_pillow_801_arn,
-  data.terraform_remote_state.lambda_layers.outputs.py38_rasterio_118_arn]
+  data.terraform_remote_state.lambda_layers.outputs.py38_rasterio_118_arn,
+  data.terraform_remote_state.lambda_layers.outputs.py38_mercantile_121_arn]
   log_level  = var.log_level
   project    = local.project
   source_dir = "${path.root}/../lambdas/raster_tiler"

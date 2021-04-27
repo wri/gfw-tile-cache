@@ -109,7 +109,7 @@ def get_capabilities(
     implementation: str,
     formats: List[str] = [Format.png],
     tile_matrix_sets: List[str] = [TileMatrixSet.epsg_3857],
-    max_zoom: int = 14,
+    max_zoom: int = 22,
     styles: Optional[List[str]] = None,
     tile_url: Optional[str] = None,
 ):
