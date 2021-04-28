@@ -350,7 +350,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     cached_methods         = local.methods
     target_origin_id       = "dynamic"
     compress               = true
-    path_pattern           = "*/wmts"
+    path_pattern           = "*/wmts*"
     default_ttl            = 86400 # 24h
     max_ttl                = 86400 # 24h
     min_ttl                = 0
