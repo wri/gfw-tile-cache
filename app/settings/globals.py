@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import Dict, Optional, Union
 
 from pydantic import BaseSettings, Field, validator
 from starlette.datastructures import Secret
@@ -56,6 +56,17 @@ class Globals(BaseSettings):
     httpx_timeout: int = Field(
         30, description="Timeout for HTTPX requests used for async lambda calls."
     )
+    token: Optional[str] = Field(
+        None, description="GFW Data API token for service account."
+    )
+    api_key_name: str = Field("x-api-key", description="Header key name for API key.")
+
+    @validator("token", pre=True)
+    def get_token(cls, v: Union[Dict, str]) -> Optional[str]:
+        if isinstance(v, dict):
+            return v.get("token")
+        else:
+            return v
 
     @validator("reader_password", pre=True)
     def hide_password(cls, v: Optional[str]) -> Optional[Secret]:

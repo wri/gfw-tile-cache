@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .middleware import no_cache_response_header, TileCacheCORSMiddleware
+from .middleware import no_cache_response_header
 from .application import app
 from .routes import (
     esri_vector_tile_server,
@@ -62,90 +62,8 @@ for r in ROUTERS:
 ## Middleware
 #####################
 
-gfw_apps = [
-    "https://www.globalforestwatch.org",
-    "https://pro.globalforestwatch.org",
-    "https://forestwatcher.globalforestwatch.org",
-    "https://my.gfw-mapbuilder.org",
-    "cmr.forest-atlas.org",
-    "cmr.atlas-forestier.org",
-    "cmr.forestatlas.org",
-    "cmr.atlasforestier.org",
-    "caf.forest-atlas.org",
-    "caf.atlas-forestier.org",
-    "caf.forestatlas.org",
-    "caf.atlasforestier.org",
-    "rca.atlas-forestier.org",
-    "rca.atlasforestier.org",
-    "cod.forest-atlas.org",
-    "drc.forest-atlas.org",
-    "rdc.atlas-forestier.org",
-    "cod.atlas-forestier.org",
-    "cod.forestatlas.org",
-    "drc.forestatlas.org",
-    "rdc.atlasforestier.org",
-    "cod.atlasforestier.org",
-    "gnq.forest-atlas.org",
-    "gnq.atlas-forestier.org",
-    "gnq.atlas-forestal.org",
-    "gnq.forestatlas.org",
-    "gnq.atlasforestier.org",
-    "cog.forest-atlas.org",
-    "cog.atlas-forestier.org",
-    "cog.forestatlas.org",
-    "cog.atlasforestier.org",
-    "gab.forest-atlas.org",
-    "gab.atlas-forestier.org",
-    "gab.forestatlas.org",
-    "gab.atlasforestier.org",
-    "atlas.mepa.gov.ge",
-    "geo.forest-atlas.org",
-    "geo.forestatlas.org",
-    "lbr.forest-atlas.org",
-    "lbr.forestatlas.org",
-    "mdg.forest-atlas.org",
-    "mdg.atlas-forestier.org",
-    "mdg.forestatlas.org",
-    "mdg.atlasforestier.org",
-    "www.tierrasindigenas.org",
-    "tierrasindigenas.org",
-    "ind.restorationatlas.org",
-    "ind.restoration-atlas.org",
-    "india.restorationatlas.org",
-    "india.restoration-atlas.org",
-    "www.india.restorationatlas.org",
-    "sidhi.restorationatlas.org",
-    "sidhi.restoration-atlas.org",
-    "vp.restorationatlas.org",
-    "vp.restoration-atlas.org",
-    "eth.restorationatlas.org",
-    "eth.restoration-atlas.org",
-    "cmr.amenagement-territoire.org",
-    "cog.amenagement-territoire.org",
-    "cog.reddregistry.org",
-    "cog.registre-redd.org",
-    "www.restauracaovaledoparaiba.org.br",
-    "forum-florestal.doesntexist.org",
-    "monitoramentobahia.dialogoflorestal.org.br",
-]
-
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(
-    TileCacheCORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-    exclude_routes=[r"\/planet\/.*"],
-)
-app.add_middleware(
-    TileCacheCORSMiddleware,
-    allow_origins=gfw_apps,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    include_routes=[r"\/planet\/.*"],
-)
-
 app.add_middleware(BaseHTTPMiddleware, dispatch=no_cache_response_header)
 
 

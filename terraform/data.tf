@@ -31,6 +31,7 @@ data "template_file" "container_definition" {
 
     reader_secret_arn        = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_arn
     planet_secret_arn       = data.terraform_remote_state.core.outputs.secrets_planet_api_key_arn
+    token_secret_arn = data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_arn
     log_level                = var.log_level
     project                  = local.project
     environment              = var.environment

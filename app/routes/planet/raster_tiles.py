@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Response
 
 from app.routes import raster_xyz
 from app.settings.globals import GLOBALS
+from app.utils.authentication import is_valid_apikey
 
 router = APIRouter()
 
@@ -47,6 +48,7 @@ async def planet_raster_tile(
         PlanetImageMode.rgb,
         description="Image mode. `rgb`=Red|Gree|Blue, `cir` = Close Infra Red|Red|Green",
     ),
+    is_valid_apikey: bool = Depends(is_valid_apikey),
 ) -> Response:
     """
     A proxy for Planet Mosaic Tiles
