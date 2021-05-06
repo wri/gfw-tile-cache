@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Response
 
-from ...crud.sync_db.tile_cache_assets import get_versions
+from ...crud.sync_db.tile_cache_assets import get_max_zoom, get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from .. import DATE_REGEX, optional_implementation_dependency, raster_xyz
 from ..raster_tiles import (
@@ -64,6 +64,9 @@ async def umd_glad_alerts_raster_tile(
         "x": x,
         "y": y,
         "z": z,
+        "over_zoom": get_max_zoom(
+            dataset, version, implementation, TileCacheType.raster_tile_cache
+        ),
     }
 
     if implementation:
@@ -77,6 +80,9 @@ async def umd_glad_alerts_raster_tile(
             confirmed_only=confirmed_only,
             filter_type="deforestation_alerts",
             source="tilecache",
+            over_zoom=get_max_zoom(
+                dataset, version, "default", TileCacheType.raster_tile_cache
+            ),
         )
         params = {
             "start_date": start_date,

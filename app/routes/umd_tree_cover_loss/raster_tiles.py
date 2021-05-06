@@ -4,8 +4,8 @@ from typing import Optional, Tuple
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Response
 
-from ...crud.sync_db.tile_cache_assets import get_versions
-from ...models.enumerators.attributes import TcdEnum
+from ...crud.sync_db.tile_cache_assets import get_max_zoom, get_versions
+from ...models.enumerators.attributes import TcdEnum, TcdStyleEnum
 from ...models.enumerators.tile_caches import TileCacheType
 from .. import optional_implementation_dependency, raster_xyz
 from ..raster_tiles import (
@@ -46,7 +46,12 @@ async def umd_tree_cover_loss_raster_tile(
     end_year: Optional[int] = Query(
         None, description="End Year.", ge=2000, le=datetime.now().year - 1
     ),
-    tcd: TcdEnum = Query(TcdEnum.thirty, description="Tree Cover Density threshold."),
+    tcd: TcdEnum = Query(TcdEnum.tcd_30, description="Tree Cover Density threshold."),
+    style: Optional[TcdStyleEnum] = Query(
+        None,
+        description="Predefined WMTS style. "
+        "This query parameter is mutually exclusive to all other query parameters.",
+    ),
     implementation: str = Depends(optional_implementation_dependency),
     background_tasks: BackgroundTasks,
 ) -> Response:
@@ -63,17 +68,28 @@ async def umd_tree_cover_loss_raster_tile(
         "x": x,
         "y": y,
         "z": z,
+        "over_zoom": get_max_zoom(
+            dataset, version, implementation, TileCacheType.raster_tile_cache
+        ),
     }
 
     if implementation:
         return await get_dynamic_raster_tile(payload, implementation, background_tasks)
 
     else:
+        if style:
+            tcd = TcdEnum[style]  # type: ignore
+            start_year = None
+            end_year = None
+
         payload.update(
             implementation=f"tcd_{tcd}",
             start_year=start_year,
             end_year=end_year,
             filter_type="annual_loss",
+            over_zoom=get_max_zoom(
+                dataset, version, f"tcd_{tcd}", TileCacheType.raster_tile_cache
+            ),
         )
 
         params = {"start_year": start_year, "end_year": end_year, "tcd": tcd}

@@ -8,7 +8,13 @@ from tests.fixtures.payloads import umd_glad_alerts_payload, umd_tree_cover_loss
 
 
 @pytest.mark.parametrize(
-    "params, payload", [umd_tree_cover_loss_payload(), umd_glad_alerts_payload()]
+    "params, payload",
+    [
+        umd_tree_cover_loss_payload(),
+        umd_glad_alerts_payload(),
+        umd_tree_cover_loss_payload(z=13),
+        umd_glad_alerts_payload(z=15),
+    ],
 )
 @patch("lambdas.raster_tiler.lambda_function.urlopen")
 def test_handler(mock_url, params, payload):

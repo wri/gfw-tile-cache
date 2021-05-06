@@ -23,6 +23,7 @@ services:
       - LOG_LEVEL=debug
       - RASTER_TILER_LAMBDA_NAME=test
       - ENV=dev
+      - PLANET_API_KEY
     ports:
       - 8088:80
     entrypoint: wait_for_postgres.sh /start-reload.sh

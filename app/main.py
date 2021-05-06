@@ -7,14 +7,12 @@ import logging
 
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.logger import logger
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
-
 
 from .middleware import no_cache_response_header
 from .application import app
@@ -32,10 +30,11 @@ from .routes.nasa_viirs_fire_alerts import vector_tiles as viirs_vector_tiles
 from .routes.umd_tree_cover_loss import raster_tiles as umd_tree_cover_loss_raster_tiles
 from .routes.umd_glad_alerts import raster_tiles as umd_glad_alerts_raster_tiles
 from .routes.wur_radd_alerts import raster_tiles as wur_radd_alerts_raster_tiles
+from .routes.planet import raster_tiles as planet_raster_tiles
+from .routes import wmts
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
-
 
 ####################
 ## Routers
@@ -48,7 +47,9 @@ ROUTERS = (
     umd_tree_cover_loss_raster_tiles.router,
     umd_glad_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,
+    planet_raster_tiles.router,
     raster_tiles.router,
+    wmts.router,
     viirs_esri_vector_tile_server.router,
     esri_vector_tile_server.router,
     helpers.router,
@@ -57,19 +58,14 @@ ROUTERS = (
 for r in ROUTERS:
     app.include_router(r)
 
-
 #####################
 ## Middleware
 #####################
 
+
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.add_middleware(BaseHTTPMiddleware, dispatch=no_cache_response_header)
+
 
 #####################
 # Errors
@@ -99,7 +95,6 @@ async def rve_error_handler(request: Request, exc: RequestValidationError):
 #################
 
 app.mount("/static", StaticFiles(directory="/app/app/static"), name="static")
-
 
 #####################
 ## OpenAPI
@@ -142,7 +137,6 @@ def custom_openapi(openapi_prefix: str = ""):
 
 
 app.openapi = custom_openapi
-
 
 if __name__ == "__main__":
     import uvicorn

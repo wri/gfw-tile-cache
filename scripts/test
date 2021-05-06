@@ -28,16 +28,21 @@ if ! [ -f "tests/fixtures/python3.8-rasterio_1.1.8.zip" ]; then
     aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-rasterio_1.1.8.zip tests/fixtures/python3.8-rasterio_1.1.8.zip
 fi
 
-if ! [ -f "tests/fixtures/python3.8-pillow_8.0.1.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-pillow_8.0.1.zip tests/fixtures/python3.8-pillow_8.0.1.zip
+if ! [ -f "tests/fixtures/python3.8-pillow_8.1.1.zip" ]; then
+    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-pillow_8.0.1.zip tests/fixtures/python3.8-pillow_8.1.1.zip
 fi
+
+if ! [ -f "tests/fixtures/python3.8-mercantile_1.2.1.zip" ]; then
+    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-mercantile_1.2.1.zip tests/fixtures/python3.8-mercantile_1.2.1.zip
+fi
+
 
 if [ "${BUILD}" = true ]; then
   docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
 fi
 
 set +e
-docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test run --rm app tests/"$@"
+docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test run --rm app tests/"$@" -vv
 exit_code=$?
 docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test down --remove-orphans
 rm tests/terraform/terraform.tfstate*

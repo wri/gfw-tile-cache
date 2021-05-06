@@ -26,6 +26,8 @@ from fastapi import (
 from fastapi.logger import logger
 from fastapi.responses import RedirectResponse, StreamingResponse
 
+from ..crud.sync_db.tile_cache_assets import get_max_zoom
+from ..models.enumerators.tile_caches import TileCacheType
 from ..settings.globals import GLOBALS
 from ..utils.aws import invoke_lambda
 from . import raster_tile_cache_version_dependency, raster_xyz
@@ -63,6 +65,9 @@ async def dynamic_raster_tile(
         "x": x,
         "y": y,
         "z": z,
+        "over_zoom": get_max_zoom(
+            dataset, version, implementation, TileCacheType.raster_tile_cache
+        ),
     }
 
     return await get_dynamic_raster_tile(payload, implementation, background_tasks)
