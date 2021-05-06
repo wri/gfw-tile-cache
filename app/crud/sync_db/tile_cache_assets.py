@@ -140,3 +140,15 @@ def get_max_zoom(
             return tile_cache["max_zoom"]
 
     return None
+
+
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def get_implementations(dataset: str, version: str, asset_type: str) -> List[str]:
+    tile_caches = get_all_tile_caches()
+
+    implementations = [
+        tile_cache["implementation"]
+        for tile_cache in tile_caches[asset_type]
+        if (tile_cache["dataset"] == dataset and tile_cache["version"] == version)
+    ]
+    return implementations

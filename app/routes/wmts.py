@@ -2,8 +2,10 @@ from typing import List, Optional, Tuple
 from xml.etree.ElementTree import Element, SubElement
 
 from aenum import Enum
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
 
+from ..crud.sync_db.tile_cache_assets import get_implementations
+from ..models.enumerators.tile_caches import TileCacheType
 from ..responses import XMLResponse
 from ..settings.globals import GLOBALS
 from . import raster_tile_cache_version_dependency
@@ -93,8 +95,13 @@ async def wmts(
     """
     dataset, version = dv
 
-    # TODO: verify if implementation for given d/v exist
-    #  Fetch max zoom level and add to capabilities call
+    if implementation != "dynamic" and implementation not in get_implementations(
+        dataset, version, TileCacheType.raster_tile_cache
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Implementation does not exist for given dataset and version",
+        )
 
     capabilities = get_capabilities(dataset, version, implementation)
     response.headers["Cache-Control"] = "max-age=7200"  # 2h
