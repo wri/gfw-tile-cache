@@ -67,7 +67,7 @@ class Globals(BaseSettings):
     def get_token(cls, v: Optional[str]) -> Optional[str]:
         if v:
             try:
-                return json.loads(v).get("token")
+                return json.loads(v)["token"]
             except (JSONDecodeError, KeyError):
                 logger.error(
                     "Could not extract token from token secret. Set token to None."
