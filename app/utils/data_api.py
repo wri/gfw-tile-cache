@@ -1,3 +1,5 @@
+from typing import Optional
+
 from async_lru import alru_cache
 from fastapi import HTTPException
 from httpx import AsyncClient, ReadTimeout
@@ -7,12 +9,14 @@ from ..settings.globals import GLOBALS
 
 
 @alru_cache(maxsize=128)
-async def validate_apikey(api_key: str, origin: str) -> bool:
+async def validate_apikey(
+    api_key: str, origin: Optional[str], referrer: Optional[str]
+) -> bool:
     """Get RW Geostore geometry."""
 
     prefix = _env_prefix()
     headers = {"Authorization": f"Bearer {GLOBALS.token}"}
-    params = {"origin": origin}
+    params = {"origin": origin, "referrer": referrer}
     url = (
         f"https://{prefix}data-api.globalforestwatch.org/auth/apikey/{api_key}/validate"
     )
