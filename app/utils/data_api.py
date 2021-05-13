@@ -2,6 +2,7 @@ from typing import Optional
 
 from async_lru import alru_cache
 from fastapi import HTTPException
+from fastapi.logger import logger
 from httpx import AsyncClient, ReadTimeout
 from httpx import Response as HTTPXResponse
 
@@ -34,6 +35,10 @@ async def validate_apikey(
         )
 
     if response.status_code not in [200, 404]:
+        logger.error(
+            f"Data API return unexpected status code `{response.status_code}` when validating API key. "
+            f"Response message: `{response.text}`"
+        )
         raise HTTPException(
             status_code=500, detail="Call to authorization server failed."
         )
