@@ -21,7 +21,7 @@ async def validate_apikey(
     url = (
         f"https://{prefix}data-api.globalforestwatch.org/auth/apikey/{api_key}/validate"
     )
-
+    logger.info(f"Calling DATA API to validate API KEY using token {GLOBALS.token}")
     try:
         async with AsyncClient() as client:
             response: HTTPXResponse = await client.get(
