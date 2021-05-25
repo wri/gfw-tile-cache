@@ -4,7 +4,7 @@
 
 locals {
   methods = ["GET", "HEAD", "OPTIONS"]
-  headers = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+  headers = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "x-api-key", "Referer"]
   suffix  = var.environment == "production" ? "" : "-${var.environment}"
 }
 
