@@ -117,7 +117,7 @@ def pytest_sessionfinish(session, exitstatus):
     )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def client():
     """
     Test client for tile cache app
