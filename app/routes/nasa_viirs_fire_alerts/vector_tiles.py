@@ -13,21 +13,20 @@ from ...crud.async_db.vector_tiles.filters import (
     geometry_filter,
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
-from ...crud.async_db.vector_tiles.nasa_viirs_fire_alerts import SCHEMA
 from ...crud.sync_db.tile_cache_assets import get_versions
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
-from ...models.pydantic.date import MaxDateResponse
+from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
-from ...routes import (
-    DATE_REGEX,
-    Bounds,
-    validate_dates,
-    vector_xyz,
+from ...routes import DATE_REGEX, Bounds, validate_dates, vector_xyz
+from . import (
+    default_end,
+    default_start,
+    include_attributes,
+    nasa_viirs_fire_alerts_filters,
 )
-from . import include_attributes, nasa_viirs_fire_alerts_filters, default_start, default_end
 
 router = APIRouter()
 
@@ -150,7 +149,7 @@ async def max_date(
     Retrieve max alert date for NASA VIIRS fire alerts for a given version
     """
     try:
-        data = await get_max_date(version, SCHEMA)
+        data = await get_max_date(version)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

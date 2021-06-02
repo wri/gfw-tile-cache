@@ -1,30 +1,19 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 from uuid import UUID
 
 from aenum import Enum, extend_enum
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
-from fastapi.responses import ORJSONResponse
-from sqlalchemy.sql.elements import TextClause
 
 from ...crud.async_db.vector_tiles import umd_modis_burned_areas
 from ...crud.async_db.vector_tiles.filters import date_filter, geometry_filter
-from ...crud.async_db.vector_tiles.max_date import get_max_date
-from ...crud.async_db.vector_tiles.umd_modis_burned_areas import SCHEMA
 from ...crud.sync_db.tile_cache_assets import get_versions
-from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
-from ...models.pydantic.date import MaxDateResponse
 from ...responses import VectorTileResponse
-from ...routes import (
-    DATE_REGEX,
-    Bounds,
-    validate_dates,
-    vector_xyz,
-)
-from . import default_start, default_end
+from ...routes import DATE_REGEX, Bounds, validate_dates, vector_xyz
+from . import default_end, default_start
 
 router = APIRouter()
 
@@ -114,27 +103,3 @@ async def umd_modis_burned_areas_tile(
         )
     else:
         return tile
-
-
-@router.get(
-    f"/{dataset}/{{version}}/max_alert__date",
-    response_class=ORJSONResponse,
-    response_model=MaxDateResponse,
-    response_description="Max alert date in selected dataset",
-    deprecated=True,
-    tags=["Dynamic Vector Tiles"],
-)
-async def max_date(
-    response: Response,
-    version: UmdModisBurnedAreas = Path(..., description=UmdModisBurnedAreas.__doc__),
-) -> MaxDateResponse:
-    """
-    Retrieve max alert date for MOFID burned areas for a given version
-    """
-    try:
-        data = await get_max_date(version, SCHEMA)
-    except RecordNotFoundError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    response.headers["Cache-Control"] = "max-age=900"  # 15min
-    return MaxDateResponse(data=data)
