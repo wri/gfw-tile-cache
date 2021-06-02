@@ -23,7 +23,7 @@ XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
 
 def default_start():
     now = pendulum.now()
-    return now.subtract(weeks=1).to_date_string()
+    return now.subtract(months=1).to_date_string()
 
 
 def default_end():

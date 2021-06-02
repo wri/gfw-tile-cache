@@ -82,7 +82,7 @@ async def dynamic_vector_tile(
             if field["is_feature_info"] and field["field_name"] in include_attribute
         ]
 
-    query: Select = get_mvt_table(dataset, version, bbox, extent, columns, *filters)
+    query: Select = get_mvt_table(dataset, version, bbox, extent, columns, filters)
 
     try:
         tile = await get_tile(query, name=dataset, extent=extent)
