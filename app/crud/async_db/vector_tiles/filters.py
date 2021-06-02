@@ -39,10 +39,9 @@ def contextual_filter(**fields: Union[str, bool]) -> List[TextClause]:
 
 
 def date_filter(date_field: str, start_date: str, end_date: str) -> TextClause:
-    # f: TextClause = db.text(
-    #     f"{date_field} BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
-    # )
-    f: TextClause = db.text(f"{date_field} BETWEEN :start_date AND :end_date")
+    f: TextClause = db.text(
+        f"{date_field} BETWEEN TO_TIMESTAMP(:start_date,'YYYY-MM-DD') AND TO_TIMESTAMP(:end_date,'YYYY-MM-DD')"
+    )
     values: Dict[str, Any] = {"start_date": start_date, "end_date": end_date}
     f = f.bindparams(**values)
     return f
