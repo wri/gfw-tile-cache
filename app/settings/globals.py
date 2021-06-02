@@ -1,6 +1,8 @@
 import json
+from json import JSONDecodeError
 from typing import Optional
 
+from fastapi.logger import logger
 from pydantic import BaseSettings, Field, validator
 from starlette.datastructures import Secret
 
@@ -40,11 +42,12 @@ class Globals(BaseSettings):
         description="DB database name. Will be ignored if DB_READER_SECRET is set.",
     )
     database_config: Optional[DatabaseURL] = Field(
-        None, description="Database URL. Will be set by validatro"
+        None, description="Database URL. Will be set by validator"
     )
     aws_region: str = Field("us-east-1", description="AWS region")
     aws_endpoint_uri: str = Field(None, description="AWS service endpoint URL")
     lambda_host: Optional[str] = Field(None, description="AWS Lamdba host URL")
+    planet_api_key: Optional[str] = Field(None, description="Planet Api key")
     tile_cache_url: Optional[str] = Field(None, description="Tile Cache URL")
     sql_request_timeout: int = Field(
         58000, description="SQL timeout time (server side)"
@@ -55,6 +58,21 @@ class Globals(BaseSettings):
     httpx_timeout: int = Field(
         30, description="Timeout for HTTPX requests used for async lambda calls."
     )
+    token: Optional[str] = Field(
+        None, env="TOKEN_SECRET", description="GFW Data API token for service account."
+    )
+    api_key_name: str = Field("x-api-key", description="Header key name for API key.")
+
+    @validator("token", pre=True)
+    def get_token(cls, v: Optional[str]) -> Optional[str]:
+        if v:
+            try:
+                return json.loads(v)["token"]
+            except (JSONDecodeError, KeyError):
+                logger.error(
+                    "Could not extract token from token secret. Set token to None."
+                )
+        return None
 
     @validator("reader_password", pre=True)
     def hide_password(cls, v: Optional[str]) -> Optional[Secret]:

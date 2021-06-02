@@ -83,7 +83,13 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
 
 
 @pytest.mark.parametrize(
-    "params, payload", [umd_tree_cover_loss_payload(), umd_glad_alerts_payload()]
+    "params, payload",
+    [
+        umd_tree_cover_loss_payload(),
+        umd_glad_alerts_payload(),
+        umd_tree_cover_loss_payload(z=13),
+        umd_glad_alerts_payload(z=15),
+    ],
 )
 def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     """Only testing if payload is correctly forwarded to lambda.
@@ -94,6 +100,8 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     x = payload["x"]
     y = payload["y"]
     z = payload["z"]
+
+    print(payload)
 
     # This will mock the lambda function and return the payload
     mock_patch = f"app.routes.{dataset}.raster_tiles.get_cached_response"

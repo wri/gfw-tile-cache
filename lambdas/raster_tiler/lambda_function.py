@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import math
 import os
 from datetime import date, datetime
 from io import BytesIO
@@ -13,9 +14,11 @@ from urllib.request import urlopen
 
 import numpy as np
 import rasterio
+from affine import Affine
+from mercantile import CE, Tile, parent, xy_bounds
 from numpy import ndarray
 from PIL import Image
-from rasterio import RasterioIOError
+from rasterio import RasterioIOError, windows
 from rasterio.windows import Window
 
 ENV: str = os.environ.get("ENV", "dev")
@@ -98,10 +101,12 @@ def apply_annual_loss_filter(
 
     red: ndarray = np.ones(intensity.shape).astype("uint8") * 228
     green: ndarray = (
-        np.ones(intensity.shape) * 102 + (72 - zoom) - (scaled_intensity * (3 / zoom))
+        np.ones(intensity.shape) * 102
+        + (72 - zoom)
+        - (scaled_intensity * (3 / max(zoom, 1)))
     ).astype("uint8")
     blue: ndarray = (
-        np.ones(intensity.shape) * 153 + (33 - zoom) - (intensity / zoom)
+        np.ones(intensity.shape) * 153 + (33 - zoom) - (intensity / max(zoom, 1))
     ).astype("uint8")
     alpha: ndarray = (
         (scaled_intensity if zoom < 13 else intensity) * start_year_mask * end_year_mask
@@ -254,19 +259,65 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     return data
 
 
-def read_data_lake(dataset, version, implementation, x, y, z, **kwargs):
+def get_source_window(
+    dataset: str,
+    version: str,
+    implementation: str,
+    x: int,
+    y: int,
+    z: int,
+    over_zoom: Optional[int],
+) -> Tuple[str, Window]:
+
+    tile = Tile(x, y, z)
+    if over_zoom is not None and over_zoom < z:
+        parent_tile = parent(tile, zoom=over_zoom)
+        row, col, _, _ = get_tile_location(parent_tile.x, parent_tile.y)
+        _z = over_zoom
+        tile_bounds = xy_bounds(tile)
+
+        pixel_size = CE / math.pow(2, _z) / TILE_SIZE
+
+        top = (CE / 2) - ((row * pixel_size) * (TILE_SIZE ** 2))
+        left = (-CE / 2) + ((col * pixel_size) * (TILE_SIZE ** 2))
+
+        geotransform = (left, pixel_size, 0.0, top, 0.0, -pixel_size)
+
+        window: Window = windows.from_bounds(
+            tile_bounds.left,
+            tile_bounds.bottom,
+            tile_bounds.right,
+            tile_bounds.top,
+            transform=Affine.from_gdal(*geotransform),
+        )
+    else:
+        row, col, row_off, col_off = get_tile_location(tile.x, tile.y)
+        _z = z
+        # We could use windows.from_bounds here as well,
+        # however this approach is slightly more efficient
+        window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
+
+    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{_z}/{implementation}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
+
+    return src_tile, window
+
+
+def read_data_lake(dataset, version, implementation, x, y, z, over_zoom, **kwargs):
 
     logger.debug("Read data lake")
 
-    pixel_meaning = implementation
+    if over_zoom is not None:
+        _over_zoom = int(over_zoom)
+    else:
+        _over_zoom = None
 
-    row, col, row_off, col_off = get_tile_location(int(x), int(y))
+    src_tile, window = get_source_window(
+        dataset, version, implementation, int(x), int(y), int(z), _over_zoom
+    )
 
-    src_tile = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-3857/zoom_{z}/{pixel_meaning}/geotiff/{str(row).zfill(3)}R_{str(col).zfill(3)}C.tif"
-    window: Window = Window(col_off, row_off, TILE_SIZE, TILE_SIZE)
-
-    logger.info(f"X, Y, Z: {(x, y, z)}")
-    logger.info(f"SCR TILE: {src_tile}")
+    logger.debug(f"X, Y, Z: {(x, y, z)}")
+    logger.debug(f"Window: {window}")
+    logger.debug(f"SCR TILE: {src_tile}")
 
     try:
         tile = get_tile_array(src_tile, window)
@@ -349,7 +400,20 @@ def array_to_img(arr: np.ndarray) -> str:
 
 
 def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
-    """Handle tile requests."""
+    """Handle tile requests.
+
+    expected event model:
+
+    dataset: str
+    version: str
+    x: int
+    y: int
+    z: int
+    source: str = "datalake"
+    filter_type: Optional[str] = None
+    over_zoom: Optional[int] = None
+
+    """
 
     logger.debug(f"EVENT DATA: {json.dumps(event)}")
 
