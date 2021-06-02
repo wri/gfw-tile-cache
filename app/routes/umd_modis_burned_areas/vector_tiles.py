@@ -10,22 +10,21 @@ from sqlalchemy.sql.elements import TextClause
 from ...crud.async_db.vector_tiles import umd_modis_burned_areas
 from ...crud.async_db.vector_tiles.filters import date_filter, geometry_filter
 from ...crud.async_db.vector_tiles.max_date import get_max_date
+from ...crud.async_db.vector_tiles.umd_modis_burned_areas import SCHEMA
 from ...crud.sync_db.tile_cache_assets import get_versions
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
-from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
+from ...models.pydantic.date import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
     DATE_REGEX,
     Bounds,
-    default_end,
-    default_start,
     validate_dates,
     vector_xyz,
 )
-from . import include_attributes
+from . import default_start, default_end
 
 router = APIRouter()
 
@@ -33,7 +32,7 @@ dataset = "umd_modis_burned_areas"
 
 
 class UmdModisBurnedAreas(str, Enum):
-    """NASA Viirs Fire Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """MODIS burned areas versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 
@@ -84,13 +83,12 @@ async def umd_modis_burned_areas_tile(
         False,
         description="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
     ),
-    include_attribute: List[str] = Depends(include_attributes),
 ) -> VectorTileResponse:
     """"""
     bbox, _, extent = bbox_z
-    validate_dates(start_date, end_date, force_date_range)
+    validate_dates(start_date, end_date, default_end(), force_date_range)
 
-    filters: List[Optional[TextClause]] = [
+    filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
         date_filter("alert__date", start_date, end_date),
     ]
@@ -131,10 +129,10 @@ async def max_date(
     version: UmdModisBurnedAreas = Path(..., description=UmdModisBurnedAreas.__doc__),
 ) -> MaxDateResponse:
     """
-    Retrieve max alert date for NASA VIIRS fire alerts for a given version
+    Retrieve max alert date for MOFID burned areas for a given version
     """
     try:
-        data = await get_max_date(version)
+        data = await get_max_date(version, SCHEMA)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -4,6 +4,7 @@ import mercantile
 import pendulum
 from fastapi import Depends, HTTPException, Path, Query
 from fastapi.logger import logger
+from pendulum import DateTime
 from shapely.geometry import box
 
 from ..crud.sync_db.tile_cache_assets import get_versions
@@ -19,16 +20,6 @@ from ..models.types import Bounds
 DATE_REGEX = r"^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
 VERSION_REGEX = r"^v\d{1,8}(\.\d{1,3}){0,2}?$|^latest$"
 XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
-
-
-def default_start():
-    now = pendulum.now()
-    return now.subtract(months=1).to_date_string()
-
-
-def default_end():
-    now = pendulum.now()
-    return now.to_date_string()
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:
@@ -173,10 +164,10 @@ def validate_tile_cache_version(dataset, version, tile_cache_type) -> None:
     )
 
 
-def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
+def validate_dates(start_date: str, end_date: str, default_end: str, force_date_range) -> None:
     _start_date = pendulum.from_format(start_date, "YYYY-MM-DD")
     _end_date = pendulum.from_format(end_date, "YYYY-MM-DD")
-    _default_end = pendulum.from_format(default_end(), "YYYY-MM-DD")
+    _default_end = pendulum.from_format(default_end, "YYYY-MM-DD")
     if _start_date > _end_date:
         raise HTTPException(
             status_code=403, detail="Start date must be smaller or equal to end date."

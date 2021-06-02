@@ -13,22 +13,21 @@ from ...crud.async_db.vector_tiles.filters import (
     geometry_filter,
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
+from ...crud.async_db.vector_tiles.nasa_viirs_fire_alerts import SCHEMA
 from ...crud.sync_db.tile_cache_assets import get_versions
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
-from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
+from ...models.pydantic.date import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import (
     DATE_REGEX,
     Bounds,
-    default_end,
-    default_start,
     validate_dates,
     vector_xyz,
 )
-from . import include_attributes, nasa_viirs_fire_alerts_filters
+from . import include_attributes, nasa_viirs_fire_alerts_filters, default_start, default_end
 
 router = APIRouter()
 
@@ -102,7 +101,7 @@ async def nasa_viirs_fire_alerts_tile(
     Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
     bbox, _, extent = bbox_z
-    validate_dates(start_date, end_date, force_date_range)
+    validate_dates(start_date, end_date, default_end(), force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
@@ -151,7 +150,7 @@ async def max_date(
     Retrieve max alert date for NASA VIIRS fire alerts for a given version
     """
     try:
-        data = await get_max_date(version)
+        data = await get_max_date(version, SCHEMA)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

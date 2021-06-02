@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Type
 
+import pendulum
 from aenum import extend_enum
 from fastapi import Query
 
@@ -25,6 +26,16 @@ else:
 
 
 IncludedAttributes = Optional[List[included_attribute_type]]  # type: ignore
+
+
+def default_start():
+    now = pendulum.now()
+    return now.subtract(weeks=1).to_date_string()
+
+
+def default_end():
+    now = pendulum.now()
+    return now.to_date_string()
 
 
 async def include_attributes(
