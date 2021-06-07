@@ -26,5 +26,4 @@ async def get_tile(
     """
     order_by = [db.column("alert__date")]
     query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters, order_by)
-    alias = query.alias("mvt_table")
-    return await vector_tiles.get_tile(alias, SCHEMA, extent)
+    return await vector_tiles.get_tile(query, SCHEMA, extent)

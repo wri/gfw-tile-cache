@@ -6,7 +6,11 @@ from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 
 from ...crud.async_db.vector_tiles import umd_modis_burned_areas
-from ...crud.async_db.vector_tiles.filters import date_filter, geometry_filter
+from ...crud.async_db.vector_tiles.filters import (
+    date_filter,
+    filter_gt,
+    geometry_filter,
+)
 from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
@@ -74,13 +78,16 @@ async def umd_modis_burned_areas_tile(
     ),
 ) -> VectorTileResponse:
     """"""
-    bbox, _, extent = bbox_z
+    bbox, z, extent = bbox_z
     validate_dates(start_date, end_date, default_end(), force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
         date_filter("alert__date", start_date, end_date),
     ]
+
+    # if z < 7:
+    #     filters += [filter_gt("gfw_area__ha", 100)]
 
     # Remove empty filters
     filters = [f for f in filters if f is not None]
