@@ -86,8 +86,8 @@ async def umd_modis_burned_areas_tile(
         date_filter("alert__date", start_date, end_date),
     ]
 
-    # if z < 7:
-    #     filters += [filter_gt("gfw_area__ha", 100)]
+    if z < 7:
+        filters += [filter_gt("gfw_area__ha", 25)]
 
     # Remove empty filters
     filters = [f for f in filters if f is not None]
