@@ -1,27 +1,29 @@
 from typing import Optional, Tuple
 from uuid import UUID
 
+import pendulum
 from aenum import Enum, extend_enum
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 
-from ...crud.async_db.vector_tiles import umd_modis_burned_areas
+from ...application import db
+from ...crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ...crud.async_db.vector_tiles.filters import (
     date_filter,
     filter_gt,
     geometry_filter,
 )
-from ...crud.sync_db.tile_cache_assets import get_versions
+from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_versions
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
 from ...responses import VectorTileResponse
 from ...routes import DATE_REGEX, Bounds, validate_dates, vector_xyz
-from . import default_end, default_start
 
 router = APIRouter()
 
 dataset = "umd_modis_burned_areas"
+default_duration = pendulum.duration(months=3)
 
 
 class UmdModisBurnedAreas(str, Enum):
@@ -63,12 +65,12 @@ async def umd_modis_burned_areas_tile(
         "gfw", description="Origin service of geostore ID"
     ),
     start_date: str = Query(
-        default_start(),
+        default_start(dataset, default_duration),
         regex=DATE_REGEX,
         description="Only show alerts for given date and after",
     ),
     end_date: str = Query(
-        default_end(),
+        default_end(dataset),
         regex=DATE_REGEX,
         description="Only show alerts until given date. End date cannot be in the future.",
     ),
@@ -79,7 +81,7 @@ async def umd_modis_burned_areas_tile(
 ) -> VectorTileResponse:
     """"""
     bbox, z, extent = bbox_z
-    validate_dates(start_date, end_date, default_end(), force_date_range)
+    validate_dates(start_date, end_date, default_end(dataset), force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
@@ -96,13 +98,18 @@ async def umd_modis_burned_areas_tile(
     # as content might change after next update. For non-default values we can be certain,
     # that response will always be the same b/c we only add newer dates
     # and users are not allowed to query future dates
-    if start_date == default_start() or end_date == default_end():
+    if start_date == default_start(
+        dataset, default_duration
+    ) or end_date == default_end(dataset):
         response.headers["Cache-Control"] = "max-age=86400"  # 1d
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
 
     try:
-        tile = await umd_modis_burned_areas.get_tile(version, bbox, extent, filters)
+        schema = "umd_modis_burned_areas"
+        columns = [db.column("alert__date")]
+        query = get_mvt_table(schema, version, bbox, extent, columns, filters, columns)
+        tile = await get_tile(query, schema, extent)
     except QueryCanceledError:
         raise HTTPException(
             status_code=524,

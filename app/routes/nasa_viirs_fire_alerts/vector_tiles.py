@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 from uuid import UUID
 
+import pendulum
 from aenum import Enum, extend_enum
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
@@ -13,7 +14,7 @@ from ...crud.async_db.vector_tiles.filters import (
     geometry_filter,
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
-from ...crud.sync_db.tile_cache_assets import get_versions
+from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_versions
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
@@ -21,16 +22,12 @@ from ...models.enumerators.versions import Versions
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import DATE_REGEX, Bounds, validate_dates, vector_xyz
-from . import (
-    default_end,
-    default_start,
-    include_attributes,
-    nasa_viirs_fire_alerts_filters,
-)
+from . import include_attributes, nasa_viirs_fire_alerts_filters
 
 router = APIRouter()
 
 dataset = "nasa_viirs_fire_alerts"
+default_duration = pendulum.duration(weeks=1)
 
 
 class NasaViirsVersions(str, Enum):
@@ -72,12 +69,12 @@ async def nasa_viirs_fire_alerts_tile(
         "gfw", description="Origin service of geostore ID"
     ),
     start_date: str = Query(
-        default_start(),
+        default_start(dataset, default_duration),
         regex=DATE_REGEX,
         description="Only show alerts for given date and after",
     ),
     end_date: str = Query(
-        default_end(),
+        default_end(dataset),
         regex=DATE_REGEX,
         description="Only show alerts until given date. End date cannot be in the future.",
     ),
@@ -100,7 +97,7 @@ async def nasa_viirs_fire_alerts_tile(
     Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
     """
     bbox, _, extent = bbox_z
-    validate_dates(start_date, end_date, default_end(), force_date_range)
+    validate_dates(start_date, end_date, default_end(dataset), force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
@@ -115,7 +112,9 @@ async def nasa_viirs_fire_alerts_tile(
     # as content might change after next update. For non-default values we can be certain,
     # that response will always be the same b/c we only add newer dates
     # and users are not allowed to query future dates
-    if start_date == default_start() or end_date == default_end():
+    if start_date == default_start(
+        dataset, default_duration
+    ) or end_date == default_end(dataset):
         response.headers["Cache-Control"] = "max-age=7200"  # 2h
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year

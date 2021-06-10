@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List
 
 from fastapi.logger import logger
@@ -95,7 +94,7 @@ def _get_mvt_table(
     mvt_geom = db.literal_column(
         f"ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, {extent}, 0,false)"
     ).label("geom")
-    cols: List[ColumnClause] = deepcopy(columns)
+    cols: List[ColumnClause] = list(columns)
     cols.append(mvt_geom)
 
     src_table = db.table(table_name)

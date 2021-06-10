@@ -2,21 +2,21 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Path, Response
 
+from ...crud.sync_db.tile_cache_assets import default_end, default_start
 from ...models.pydantic.esri import VectorTileService
 from ...routes import DATE_REGEX
 from ...routes.esri_vector_tile_server import _get_vector_tile_server
 from ...routes.umd_modis_burned_areas.vector_tiles import (
     dataset,
+    default_duration,
     umd_modis_burned_areas_version,
-    default_start,
-    default_end
 )
 
 router = APIRouter()
 
 
 @router.get(
-    f"/{dataset}/{{version}}/dynamic/{{start_date}}/{{end_date}}/VectorTileServer",
+    f"/{dataset}/{{version}}/dynamic/{{start_dates}}/{{end_date}}/VectorTileServer",
     tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
@@ -52,7 +52,9 @@ async def umd_modis_burned_areas_esri_vector_tile_service_dates(
     # as content might change after next update. For non-default values we can be certain,
     # that response will always be the same b/c we only add newer dates
     # and users are not allowed to query future dates
-    if start_date == default_start() or end_date == default_end():
+    if start_date == default_start(
+        dataset, default_duration
+    ) or end_date == default_end(dataset):
         response.headers["Cache-Control"] = "max-age=7200"  # 2h
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
