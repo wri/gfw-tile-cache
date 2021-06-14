@@ -166,6 +166,7 @@ def get_latest_date(schema, version=None):
 
     for asset_type_caches in tile_caches.values():
         for tile_cache in asset_type_caches:
+            print(tile_cache)
             if tile_cache["dataset"] == schema:
                 if version and tile_cache["version"] == version:
                     return tile_cache["max_date"]
