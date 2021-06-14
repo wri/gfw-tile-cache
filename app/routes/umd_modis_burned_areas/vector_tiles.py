@@ -108,7 +108,7 @@ async def umd_modis_burned_areas_tile(
     try:
         schema = "umd_modis_burned_areas"
         columns = [db.column("alert__date")]
-        query = get_mvt_table(schema, version, bbox, extent, columns, filters, columns)
+        query = get_mvt_table(schema, version, bbox, extent, columns, filters)
         tile = await get_tile(query, schema, extent)
     except QueryCanceledError:
         raise HTTPException(

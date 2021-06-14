@@ -160,24 +160,28 @@ def get_implementations(dataset: str, version: str, asset_type: str) -> List[str
     return implementations
 
 
-async def get_latest_date(schema, version=None):
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def get_latest_date(schema, version=None):
     tile_caches = get_all_tile_caches()
 
-    for tile_cache in tile_caches.keys():
-        if tile_cache["dataset"] == schema:
-            if version and tile_cache["version"] == version:
-                return tile_cache["max_date"]
-            elif not version and tile_cache["is_latest"]:
-                return tile_cache["max_date"]
+    for asset_type_caches in tile_caches.values():
+        for tile_cache in asset_type_caches:
+            if tile_cache["dataset"] == schema:
+                if version and tile_cache["version"] == version:
+                    return tile_cache["max_date"]
+                elif not version and tile_cache["is_latest"]:
+                    return tile_cache["max_date"]
 
     return None
 
 
+@cached(cache=TTLCache(maxsize=100, ttl=900))
 def default_start(schema: str, delta: Duration):
     end_date = pendulum.parse(default_end(schema))
-    return end_date.subtract(delta).to_date_string()
+    return end_date.subtract(days=delta.days).to_date_string()
 
 
+@cached(cache=TTLCache(maxsize=100, ttl=900))
 def default_end(schema):
     latest_date = get_latest_date(schema)
     return latest_date if latest_date else pendulum.now().to_date_string()
