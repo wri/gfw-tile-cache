@@ -165,12 +165,10 @@ async def get_latest_date(schema, version=None):
 
     for tile_cache in tile_caches.keys():
         if tile_cache["dataset"] == schema:
-            if version:
-                if tile_cache["version"] == "version":
-                    return tile_cache["max_date"]
-            else:
-                if tile_cache["is_latest"]:
-                    return tile_cache["max_date"]
+            if version and tile_cache["version"] == version:
+                return tile_cache["max_date"]
+            elif not version and tile_cache["is_latest"]:
+                return tile_cache["max_date"]
 
     return None
 
