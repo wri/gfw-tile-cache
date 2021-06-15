@@ -17,12 +17,12 @@ def get_all_tile_caches():
     with get_synchronous_db() as db:
         rows = db.execute(
             f"""SELECT DISTINCT
-                    assets.asset_type,
-                    versions.dataset,
-                    versions.version,
+                    assets.asset_type as asset_type,
+                    versions.dataset as dataset,
+                    versions.version as version,
                     assets.creation_options->'implementation' as implementation,
-                    versions.is_latest,
-                    assets.fields,
+                    versions.is_latest as is_latest,
+                    assets.fields as fields,
                     assets.creation_options->'min_zoom' as min_zoom,
                     assets.creation_options->'max_zoom' as max_zoom,
                     assets.metadata->'content_date_range'->'min' as min_date,
@@ -41,17 +41,17 @@ def get_all_tile_caches():
     # tile_caches = rows
 
     for row in rows:
-        tile_caches[row[0]].append(
+        tile_caches[row.asset_type].append(
             {
-                "dataset": row[1],
-                "version": row[2],
-                "implementation": row[3],
-                "is_latest": row[4],
-                "fields": row[5],
-                "min_zoom": row[6],
-                "max_zoom": row[7],
-                "min_date": row[8],
-                "max_date": row[9],
+                "dataset": row.dataset,
+                "version": row.version,
+                "implementation": row.implementation,
+                "is_latest": row.is_latest,
+                "fields": row.fields,
+                "min_zoom": row.min_zoom,
+                "max_zoom": row.max_zoom,
+                "min_date": row.min_date,
+                "max_date": row.max_date,
             }
         )
 
