@@ -6,24 +6,24 @@ from ...crud.sync_db.tile_cache_assets import default_end, default_start
 from ...models.pydantic.esri import VectorTileService
 from ...routes import DATE_REGEX
 from ...routes.esri_vector_tile_server import _get_vector_tile_server
-from ...routes.nasa_viirs_fire_alerts.vector_tiles import (
+from ...routes.umd_modis_burned_areas.vector_tiles import (
     dataset,
     default_duration,
-    nasa_viirs_fire_alerts_version,
+    umd_modis_burned_areas_version,
 )
 
 router = APIRouter()
 
 
 @router.get(
-    f"/{dataset}/{{version}}/dynamic/{{start_date}}/{{end_date}}/VectorTileServer",
+    f"/{dataset}/{{version}}/dynamic/{{start_dates}}/{{end_date}}/VectorTileServer",
     tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
-async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
+async def umd_modis_burned_areas_esri_vector_tile_service_dates(
     *,
     response: Response,
-    version: str = Depends(nasa_viirs_fire_alerts_version),
+    version: str = Depends(umd_modis_burned_areas_version),
     start_date: str = Path(
         ...,
         regex=DATE_REGEX,
@@ -70,9 +70,9 @@ async def nasa_viirs_fire_alerts_esri_vector_tile_service_dates(
     tags=["ESRI Vector Tile Service"],
     response_model=VectorTileService,
 )
-async def nasa_viirs_fire_alerts_esri_vector_tile_service(
+async def umd_modis_burned_areas_esri_vector_tile_service(
     *,
-    version: str = Depends(nasa_viirs_fire_alerts_version),
+    version: str = Depends(umd_modis_burned_areas_version),
 ):
     """
     Mock ESRI Vector Tile Server for NASA VIIRS fire alerts.

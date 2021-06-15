@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional
 
+import pendulum
 from cachetools import TTLCache, cached
 from fastapi.logger import logger
+from pendulum import Duration
 
 from ...application import get_synchronous_db
 from ...models.enumerators.tile_caches import TileCacheType
@@ -22,7 +24,9 @@ def get_all_tile_caches():
                     versions.is_latest as is_latest,
                     assets.fields as fields,
                     assets.creation_options->'min_zoom' as min_zoom,
-                    assets.creation_options->'max_zoom' as max_zoom
+                    assets.creation_options->'max_zoom' as max_zoom,
+                    assets.metadata->'content_date_range'->'min' as min_date,
+                    assets.metadata->'content_date_range'->'max' as max_date
                    FROM versions
                     JOIN assets
                     ON versions.dataset = assets.dataset
@@ -46,6 +50,8 @@ def get_all_tile_caches():
                 "fields": row.fields,
                 "min_zoom": row.min_zoom,
                 "max_zoom": row.max_zoom,
+                "min_date": row.min_date,
+                "max_date": row.max_date,
             }
         )
 
@@ -152,3 +158,31 @@ def get_implementations(dataset: str, version: str, asset_type: str) -> List[str
         if (tile_cache["dataset"] == dataset and tile_cache["version"] == version)
     ]
     return implementations
+
+
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def get_latest_date(schema, version=None):
+    tile_caches = get_all_tile_caches()
+
+    for asset_type_caches in tile_caches.values():
+        for tile_cache in asset_type_caches:
+            print(tile_cache)
+            if tile_cache["dataset"] == schema:
+                if version and tile_cache["version"] == version:
+                    return tile_cache["max_date"]
+                elif not version and tile_cache["is_latest"]:
+                    return tile_cache["max_date"]
+
+    return None
+
+
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def default_start(schema: str, delta: Duration):
+    end_date = pendulum.parse(default_end(schema))
+    return end_date.subtract(days=delta.days).to_date_string()
+
+
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def default_end(schema):
+    latest_date = get_latest_date(schema)
+    return latest_date if latest_date else pendulum.now().to_date_string()

@@ -1,48 +1,44 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 from uuid import UUID
 
 import pendulum
 from aenum import Enum, extend_enum
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
-from fastapi.responses import ORJSONResponse
 
-from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
+from ...application import db
+from ...crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ...crud.async_db.vector_tiles.filters import (
-    contextual_filter,
     date_filter,
+    filter_gt,
     geometry_filter,
 )
-from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_versions
-from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
-from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
 from ...responses import VectorTileResponse
 from ...routes import DATE_REGEX, Bounds, validate_dates, vector_xyz
-from . import include_attributes, nasa_viirs_fire_alerts_filters
 
 router = APIRouter()
 
-dataset = "nasa_viirs_fire_alerts"
-default_duration = pendulum.duration(weeks=1)
+dataset = "umd_modis_burned_areas"
+default_duration = pendulum.duration(months=3)
 
 
-class NasaViirsVersions(str, Enum):
-    """NASA Viirs Fire Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+class UmdModisBurnedAreas(str, Enum):
+    """MODIS burned areas versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 
 
 _versions = get_versions(dataset, TileCacheType.dynamic_vector_tile_cache)
 for _version in _versions:
-    extend_enum(NasaViirsVersions, _version, _version)
+    extend_enum(UmdModisBurnedAreas, _version, _version)
 
 
-async def nasa_viirs_fire_alerts_version(
-    version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
+async def umd_modis_burned_areas_version(
+    version: UmdModisBurnedAreas = Path(..., description=UmdModisBurnedAreas.__doc__),
 ) -> Versions:
     if version == "latest":
         raise HTTPException(
@@ -58,9 +54,9 @@ async def nasa_viirs_fire_alerts_version(
     tags=["Dynamic Vector Tiles"],
     response_description="PBF Vector Tile",
 )
-async def nasa_viirs_fire_alerts_tile(
+async def umd_modis_burned_areas_tile(
     response: Response,
-    version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
+    version: UmdModisBurnedAreas = Path(..., description=UmdModisBurnedAreas.__doc__),
     bbox_z: Tuple[Bounds, int, int] = Depends(vector_xyz),
     geostore_id: Optional[UUID] = Query(
         None, description="Only show fire alerts within selected geostore area"
@@ -82,28 +78,18 @@ async def nasa_viirs_fire_alerts_tile(
         False,
         description="Bypass the build in limitation to query more than 90 days at a time. Use cautiously!",
     ),
-    high_confidence_only: Optional[bool] = Query(
-        False, title="Only show high confidence alerts"
-    ),
-    include_attribute: List[str] = Depends(include_attributes),
-    contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
 ) -> VectorTileResponse:
-    """
-    NASA VIIRS fire alerts vector tiles.
-    This dataset holds the full archive of NASA VIIRS fire alerts, starting in 2012. Latest version is updated daily.
-    Check `Max Date` endpoint to retrieve latest date in dataset.
-    You can query fire alerts for any time period of up to 90 days. By default, the last 7 days are displayed.
-    Use additional query parameters to further filter alerts.
-    Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
-    """
-    bbox, _, extent = bbox_z
+    """"""
+    bbox, z, extent = bbox_z
     validate_dates(start_date, end_date, default_end(dataset), force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
-        nasa_viirs_fire_alerts.confidence_filter(high_confidence_only),
         date_filter("alert__date", start_date, end_date),
-    ] + contextual_filter(**contextual_filters)
+    ]
+
+    if z < 7:
+        filters += [filter_gt("gfw_area__ha", 25)]
 
     # Remove empty filters
     filters = [f for f in filters if f is not None]
@@ -115,14 +101,15 @@ async def nasa_viirs_fire_alerts_tile(
     if start_date == default_start(
         dataset, default_duration
     ) or end_date == default_end(dataset):
-        response.headers["Cache-Control"] = "max-age=7200"  # 2h
+        response.headers["Cache-Control"] = "max-age=86400"  # 1d
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
 
     try:
-        tile = await nasa_viirs_fire_alerts.get_aggregated_tile(
-            version, bbox, extent, include_attribute, filters
-        )
+        schema = "umd_modis_burned_areas"
+        columns = [db.column("alert__date")]
+        query = get_mvt_table(schema, version, bbox, extent, columns, filters)
+        tile = await get_tile(query, schema, extent)
     except QueryCanceledError:
         raise HTTPException(
             status_code=524,
@@ -130,27 +117,3 @@ async def nasa_viirs_fire_alerts_tile(
         )
     else:
         return tile
-
-
-@router.get(
-    f"/{dataset}/{{version}}/max_alert__date",
-    response_class=ORJSONResponse,
-    response_model=MaxDateResponse,
-    response_description="Max alert date in selected dataset",
-    deprecated=True,
-    tags=["Dynamic Vector Tiles"],
-)
-async def max_date(
-    response: Response,
-    version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
-) -> MaxDateResponse:
-    """
-    Retrieve max alert date for NASA VIIRS fire alerts for a given version
-    """
-    try:
-        data = await get_max_date(version)
-    except RecordNotFoundError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    response.headers["Cache-Control"] = "max-age=900"  # 15min
-    return MaxDateResponse(data=data)
