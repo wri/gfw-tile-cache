@@ -52,7 +52,7 @@ services:
     restart: on-failure
 
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:0.12.11
     container_name: localstack
     ports:
       - '443:443'
@@ -65,7 +65,6 @@ services:
       - DISABLE_EVENTS=1
       - LAMBDA_DOCKER_NETWORK=gfw-tile-cache_test_default
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
-#      - DNS_ADDRESS=22.22.22.22
       - LAMBDA_REMOTE_DOCKER=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - HOSTNAME_EXTERNAL=localstack

@@ -62,6 +62,14 @@ def filter_between(field, low, high) -> TextClause:
     return f
 
 
+def filter_gt(field: str, value: Any) -> TextClause:
+    f: TextClause = db.text(f"{field} <= :{field}")
+    values: Dict[str, Any] = {f"{field}": value}
+    f = f.bindparams(**values)
+
+    return f
+
+
 def filter_intersects(field, geometry) -> TextClause:
     f: TextClause = db.text(
         f"ST_Intersects({field}, ST_SetSRID(ST_GeomFromGeoJSON(:geometry),4326))"

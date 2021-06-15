@@ -28,6 +28,7 @@ from .routes.nasa_viirs_fire_alerts import (
     esri_vector_tile_server as viirs_esri_vector_tile_server,
 )
 from .routes.nasa_viirs_fire_alerts import vector_tiles as viirs_vector_tiles
+from .routes.umd_modis_burned_areas import vector_tiles as burned_areas_tiles
 from .routes.umd_tree_cover_loss import raster_tiles as umd_tree_cover_loss_raster_tiles
 from .routes.umd_glad_alerts import raster_tiles as umd_glad_alerts_raster_tiles
 from .routes.wur_radd_alerts import raster_tiles as wur_radd_alerts_raster_tiles
@@ -43,6 +44,7 @@ logger.handlers = gunicorn_logger.handlers
 
 ROUTERS = (
     viirs_vector_tiles.router,
+    burned_areas_tiles.router,
     dynamic_vector_tiles.router,
     vector_tiles.router,
     umd_tree_cover_loss_raster_tiles.router,

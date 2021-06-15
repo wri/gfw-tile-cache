@@ -1,6 +1,7 @@
 from app.crud.sync_db.tile_cache_assets import (
     get_attributes,
     get_datasets,
+    get_latest_date,
     get_latest_version,
     get_versions,
 )
@@ -13,8 +14,9 @@ def test_get_static_datasets():
 
 
 def test_get_dynamic_datasets():
-    result = ["nasa_viirs_fire_alerts"]
-    assert result == get_datasets(TileCacheType.dynamic_vector_tile_cache)
+    result = ["nasa_viirs_fire_alerts", "umd_modis_burned_areas"]
+    datasets = get_datasets(TileCacheType.dynamic_vector_tile_cache)
+    assert result == list(sorted(datasets))
 
 
 def test_get_static_versions():
@@ -91,3 +93,8 @@ def test_get_non_existing_fields():
     assert result == get_attributes(
         "fails", "v2", TileCacheType.static_vector_tile_cache
     )
+
+
+def test_latest_date():
+    result = "2020-01-01"
+    assert result == get_latest_date("nasa_viirs_fire_alerts", "v202003")
