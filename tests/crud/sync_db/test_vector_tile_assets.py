@@ -15,7 +15,8 @@ def test_get_static_datasets():
 
 def test_get_dynamic_datasets():
     result = ["nasa_viirs_fire_alerts", "umd_modis_burned_areas"]
-    assert result == get_datasets(TileCacheType.dynamic_vector_tile_cache)
+    datasets = get_datasets(TileCacheType.dynamic_vector_tile_cache)
+    assert result == list(sorted(datasets))
 
 
 def test_get_static_versions():
