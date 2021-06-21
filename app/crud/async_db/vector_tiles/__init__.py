@@ -15,14 +15,17 @@ def get_mvt_table(
     bbox: Bounds,
     extent: int,
     columns: List[ColumnClause],
-    *filters: TextClause,
+    filters: List[TextClause],
+    order_by: List[ColumnClause] = [],
 ) -> Select:
 
     bounds: Select
 
     bounds = _get_bounds(*bbox)
 
-    query: Select = _get_mvt_table(schema_name, table_name, bounds, extent, *columns)
+    query: Select = _get_mvt_table(
+        schema_name, table_name, bounds, extent, columns, order_by
+    )
     return _filter_mvt_table(query, *filters)
 
 
@@ -81,7 +84,8 @@ def _get_mvt_table(
     table_name: str,
     bounds: Select,
     extent: int,
-    *columns: ColumnClause,
+    columns: List[ColumnClause],
+    order_by: List[ColumnClause] = [],
 ) -> Select:
     """
     Create MVT Geom query
@@ -98,10 +102,14 @@ def _get_mvt_table(
     src_table = src_table.alias("t")
 
     bound_filter = db.text("ST_Intersects(t.geom_wm, bounds.geom)")
-
-    return (
+    query = (
         db.select(cols).select_from(src_table).select_from(bounds).where(bound_filter)
     )
+
+    if order_by:
+        query = query.order_by(*order_by)
+
+    return query
 
 
 def _filter_mvt_table(query: Select, *filters: TextClause) -> Select:

@@ -26,17 +26,21 @@ if latest_version:
 
 
 async def get_tile(
-    version: str, bbox: Bounds, extent: int, *filters: TextClause
+    version: str, bbox: Bounds, extent: int, filters: List[TextClause]
 ) -> VectorTileResponse:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
     """
-    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
+    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters)
     return await vector_tiles.get_tile(query, SCHEMA, extent)
 
 
 async def get_aggregated_tile(
-    version: str, bbox: Bounds, extent: int, attributes: List[str], *filters: TextClause
+    version: str,
+    bbox: Bounds,
+    extent: int,
+    attributes: List[str],
+    filters: List[TextClause],
 ) -> VectorTileResponse:
     """
     Make SQL query to PostgreSQL and return vector tile in PBF format.
@@ -64,7 +68,7 @@ async def get_aggregated_tile(
         "frp__MW": db.literal_column('sum("frp__MW")').label("frp__MW"),
     }
 
-    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, *filters)
+    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters)
     columns = [
         db.column("geom"),
         db.literal_column("count(*)").label("count"),
