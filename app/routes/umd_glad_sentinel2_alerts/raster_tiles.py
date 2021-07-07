@@ -10,18 +10,18 @@ from ..dynamic_deforestation_alerts_tile import get_dynamic_deforestation_alert_
 
 router = APIRouter()
 
-dataset = "wur_radd_alerts"
+dataset = "umd_glad_sentinel2_alerts"
 
 
-class WurRaddVersions(str, Enum):
-    """UMD Tree Cover Loss versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+class UmdGladSentinel2Versions(str, Enum):
+    """UMD Glad Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 
 
 _versions = get_versions(dataset, TileCacheType.raster_tile_cache)
 for _version in _versions:
-    extend_enum(WurRaddVersions, _version, _version)
+    extend_enum(UmdGladSentinel2Versions, _version, _version)
 
 
 @router.get(
@@ -30,9 +30,11 @@ for _version in _versions:
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def gfw_radd_alerts_raster_tile(
+async def umd_glad_alerts_raster_tile(
     *,
-    version: WurRaddVersions = Path(..., description=WurRaddVersions.__doc__),
+    version: UmdGladSentinel2Versions = Path(
+        ..., description=UmdGladSentinel2Versions.__doc__
+    ),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
@@ -49,7 +51,7 @@ async def gfw_radd_alerts_raster_tile(
     background_tasks: BackgroundTasks,
 ) -> Response:
     """
-    WUR RADD alerts raster tiles.
+    UMD GLAD Sentinel 2 alerts raster tiles.
     """
 
     return await get_dynamic_deforestation_alert_tile(
