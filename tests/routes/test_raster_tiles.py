@@ -104,7 +104,10 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     print(payload)
 
     # This will mock the lambda function and return the payload
-    mock_patch = f"app.routes.{dataset}.raster_tiles.get_cached_response"
+    if dataset == "umd_tree_cover_loss":
+        mock_patch = f"app.routes.{dataset}.raster_tiles.get_cached_response"
+    else:
+        mock_patch = "app.routes.dynamic_deforestation_alerts_tile.get_cached_response"
     with mock.patch(mock_patch) as mck:
         mck.side_effect = mock_get_dynamic_tile
 

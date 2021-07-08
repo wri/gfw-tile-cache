@@ -37,7 +37,7 @@ def umd_glad_alerts_payload(
     confirmed_only=True,
     over_zoom=14,
 ):
-    dataset = "umd_glad_alerts"
+    dataset = "umd_glad_landsat_alerts"
     version = "v20210101"
 
     params = {
@@ -57,7 +57,7 @@ def umd_glad_alerts_payload(
         "end_date": end_date,
         "confirmed_only": confirmed_only,
         "filter_type": "deforestation_alerts",
-        "source": "tilecache",
+        "source": "datalake",
         "over_zoom": over_zoom,
     }
 
