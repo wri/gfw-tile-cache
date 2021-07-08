@@ -14,12 +14,12 @@ black = "*"
 flake8 = "*"
 pre-commit = "*"
 detect-secrets = "*"
-pillow = "==8.1.1" # same as lambda layer
+pillow = "==8.3.1" # same as lambda layer
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.1.8" # same as lambda layer
+rasterio = "==1.2.6" # same as lambda layer
 mercantile = "==1.2.1" # same as lambda layer
 
 [packages]
@@ -30,7 +30,7 @@ boto3 = "===1.17.49"  # aioboto3 dependency
 fastapi = "*"
 mercantile = "*"
 uvicorn = "*"
-pendulum = "==2.0.5"
+pendulum = "*"
 pyproj = "*"
 SQLAlchemy = "*"
 shapely = "*"
@@ -39,9 +39,9 @@ async_lru = "*"
 geojson = "*"
 orjson = "*"
 cachetools = "*"
-psycopg2-binary = "*"
+psycopg2 = "*"
 gino = "*"
-gino_starlette = {version=">=0.1.2", index="pypi-test"}
+gino_starlette = "*"
 httpx = "*"
 aioboto3 = "*"
 httpx-auth = "*"
