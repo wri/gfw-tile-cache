@@ -3,6 +3,12 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
+[[source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "pypi-test"
+
+
 [dev-packages]
 black = "*"
 flake8 = "*"
@@ -35,7 +41,7 @@ orjson = "*"
 cachetools = "*"
 psycopg2-binary = "*"
 gino = "*"
-gino_starlette = "*"
+gino_starlette = {version=">=0.1.2", index="pypi-test"}
 httpx = "*"
 aioboto3 = "*"
 httpx-auth = "*"

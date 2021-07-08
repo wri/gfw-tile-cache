@@ -129,8 +129,8 @@ def pytest_sessionfinish(session, exitstatus):
 @pytest.fixture(autouse=True)
 def client():
     """
-    Set up a clean database before running a test
-    Run all migrations before test and downgrade afterwards
+    Test client for tile cache app
+
     """
     from app.main import app
 
