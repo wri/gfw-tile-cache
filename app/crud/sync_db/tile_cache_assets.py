@@ -160,6 +160,20 @@ def get_implementations(dataset: str, version: str, asset_type: str) -> List[str
     return implementations
 
 
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def get_dataset_tile_caches(dataset: str, version: str ) -> List[str]:
+    tile_caches = get_all_tile_caches()
+    tile_caches_list = sum(list(tile_caches.values()), [])  # merging all tile cache type values
+
+    dataset_tile_caches = [
+        tile_cache
+        for tile_cache in tile_caches_list
+        if tile_cache["dataset"] == dataset and tile_cache["version"] == version
+    ]
+
+    return dataset_tile_caches
+
+
 @cached(cache=TTLCache(maxsize=100, ttl=86400))
 def get_latest_date(schema, version=None):
     tile_caches = get_all_tile_caches()
