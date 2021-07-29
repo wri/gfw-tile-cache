@@ -164,7 +164,9 @@ def get_implementations(dataset: str, version: str, asset_type: str) -> List[str
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=900))
-def get_dataset_tile_caches(dataset: str, version: str) -> List[Dict]:
+def get_dataset_tile_caches(
+    dataset: str, version: str, implementation: str
+) -> List[Dict]:
     tile_caches = get_all_tile_caches()
     tile_caches_list: List[Dict] = sum(
         list(tile_caches.values()), []
@@ -173,7 +175,9 @@ def get_dataset_tile_caches(dataset: str, version: str) -> List[Dict]:
     dataset_tile_caches = [
         tile_cache
         for tile_cache in tile_caches_list
-        if tile_cache["dataset"] == dataset and tile_cache["version"] == version
+        if tile_cache["dataset"] == dataset
+        and tile_cache["version"] == version
+        and tile_cache["implementation"]
     ]
 
     return dataset_tile_caches

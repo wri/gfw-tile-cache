@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from ..crud.sync_db.tile_cache_assets import get_dataset_tile_caches
-# from . import raster_tile_cache_version_dependency
 
 router = APIRouter()
 
@@ -15,19 +14,15 @@ template_dir = os.path.join(
 templates = Jinja2Templates(directory=template_dir)
 
 
-@router.get("/{dataset}/{version}/{implementation}/preview", response_class=HTMLResponse)
+@router.get(
+    "/{dataset}/{version}/{implementation}/preview", response_class=HTMLResponse
+)
 async def get_tile_caches(
-    *,
-    request: Request,
-    dataset: str,
-    version: str,
-    # dv: Depends(raster_tile_cache_version_dependency),
-    implementation
+    *, request: Request, dataset: str, version: str, implementation
 ):
     """Map preview of availabe tile caches for a dataset."""
 
-    # dataset, version = dv
-    tile_caches = get_dataset_tile_caches(dataset, version)
+    tile_caches = get_dataset_tile_caches(dataset, version, implementation)
 
     return templates.TemplateResponse(
         "tile_preview.html", context={"tiles": tile_caches, "request": request}
