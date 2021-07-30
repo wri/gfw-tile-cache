@@ -34,11 +34,12 @@ geojson = "*"
 orjson = "*"
 cachetools = "*"
 psycopg2-binary = "*"
-gino = "*"
+gino = {extras = ["psycopg2"],version = "<1.1"}  # >v1.1 tries to add mysqlclient
 gino_starlette = "*"
 httpx = "*"
-aioboto3 = "*"
+aioboto3 = "==8.3.0"    # resolve version conflict with pinned boto3
 httpx-auth = "*"
+jinja2 = "*"
 
 [requires]
 python_version = "3.8"
