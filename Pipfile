@@ -3,17 +3,23 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
+[[source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "pypi-test"
+
+
 [dev-packages]
 black = "*"
 flake8 = "*"
 pre-commit = "*"
 detect-secrets = "*"
-pillow = "==8.1.1" # same as lambda layer
+pillow = "==8.3.1" # same as lambda layer
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.1.8" # same as lambda layer
+rasterio = "==1.2.6" # same as lambda layer
 mercantile = "==1.2.1" # same as lambda layer
 
 [packages]
@@ -24,7 +30,7 @@ boto3 = "==1.16.52"  # aioboto3 dependency
 fastapi = "*"
 mercantile = "*"
 uvicorn = "*"
-pendulum = "==2.0.5"
+pendulum = "*"
 pyproj = "*"
 SQLAlchemy = "*"
 shapely = "*"

@@ -159,7 +159,9 @@ def hash_query_params(params: Dict[str, Any]) -> str:
 
 async def copy_tile(data, key):
     """Copy tile to S3"""
-    async with aioboto3.client(
+
+    session = aioboto3.Session()
+    async with session.client(
         "s3", region_name=GLOBALS.aws_region, endpoint_url=GLOBALS.aws_endpoint_uri
     ) as s3_client:
         logger.info(f"Uploading to S3 bucket: {GLOBALS.bucket} key: {key}")
@@ -184,7 +186,8 @@ async def get_cached_response(payload, query_hash, background_tasks):
     z = payload.get("z")
     key = f"{dataset}/{version}/{query_hash}/{z}/{x}/{y}.png"
 
-    async with aioboto3.client(
+    session = aioboto3.Session()
+    async with session.client(
         "s3", region_name=GLOBALS.aws_region, endpoint_url=GLOBALS.aws_endpoint_uri
     ) as s3_client:
         try:
