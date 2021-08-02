@@ -6,8 +6,7 @@ ARG ENV
 RUN apt-get -y update && apt-get -y --no-install-recommends install \
         make gcc libc-dev libgeos-dev musl-dev libpq-dev libffi-dev
 
-RUN pip install --upgrade pip && pip install pipenv==2020.6.2
-
+RUN pip install --upgrade pip && pip install pipenv==2021.5.29
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 
