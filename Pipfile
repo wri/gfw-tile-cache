@@ -8,7 +8,6 @@ url = "https://test.pypi.org/simple"
 verify_ssl = true
 name = "pypi-test"
 
-
 [dev-packages]
 black = "*"
 flake8 = "*"
@@ -39,12 +38,13 @@ async_lru = "*"
 geojson = "*"
 orjson = "*"
 cachetools = "*"
-psycopg2 = "*"
-gino = "*"
+psycopg2-binary = "*"
+gino = {extras = ["psycopg2"],version = "<1.1"}
 gino_starlette = "*"
 httpx = "*"
-aioboto3 = "*"
+aioboto3 = "===9.0.0"
 httpx-auth = "*"
+jinja2 = "*"
 
 [requires]
 python_version = "3.8"
