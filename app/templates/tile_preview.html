@@ -70,51 +70,8 @@
 
 
 <script>
-    const tileCaches = {{ tiles|tojson }}
-    const sources = {
-        'carto-dark': {
-            'type': 'raster',
-            'tiles': [
-                "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-                "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-                "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-                "https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-            ]
-        },
-    }
-
-    for (const tile of tileCaches) {
-        const dataset = tile['dataset']
-        sources[dataset] = {}
-        sources[dataset]['type'] = tile.asset_type.toLowerCase().includes('vector') ?
-            'vector' : 'raster'
-        sources[dataset]['tiles'] = [tile['asset_uri']]
-    }
-
-    const layers = [
-        {
-            id: 'carto-dark-layer',
-            type: 'raster',
-            source: 'carto-dark',
-            minzoom: 0,
-            maxzoom: 22
-        },
-    ]
-
-    const dataLayers = tileCaches.map(function(tile) {
-        return {
-            id: `${tile['dataset']}-layer`,
-            type: tile.asset_type.toLowerCase().includes('vector') ? 'fill' : 'raster',
-            source: tile['dataset'],
-            minzoom: tile['min_zoom'],
-            maxzoom: tile['max_zoom'],
-            'source-layer': tile['dataset'],
-            paint: {
-                'fill-color': '#0080ff', // blue color fill
-                'fill-opacity': 0.5
-            }
-        }
-    })
+    const sources = {{ sources|tojson }}
+    const layers = {{ layers|tojson }}
 
     var map = new mapboxgl.Map({
         'container': 'map',
@@ -123,7 +80,7 @@
         'style': {
             'version': 8,
             'sources': sources,
-            'layers': layers.concat(dataLayers)                  
+            'layers': layers,
         }
 });
 //    map.addControl(new mapboxgl.NavigationControl());
@@ -146,7 +103,7 @@
 //            .addTo(map);
 //    });
 //
-//   
+//
 //    // Change the cursor to a pointer when the mouse is over the states layer.
 //    map.on('mouseenter', 'viirs-points', function () {
 //        map.getCanvas().style.cursor = 'pointer';
@@ -157,7 +114,7 @@
 //        map.getCanvas().style.cursor = '';
 //    });
 
-    
+
 
 </script>
 

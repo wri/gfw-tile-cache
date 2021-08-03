@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a72dc02e1cc490cdadae6ba70b7b49f9125c35607a45d44f5471f4371ad0b4f6"
+            "sha256": "34d0ab5de4be5215fc76ebd66a892a53de9e73c3188cb8048340c4f05b8d43d8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -35,7 +35,7 @@
                 "sha256:b3cf9904dfa59f8556d85d31ae5e8293becadea4fc2732b68c85719f2a90015d"
             ],
             "index": "pypi",
-            "version": "==8.3.0"
+            "version": "===9.0.0"
         },
         "aiobotocore": {
             "extras": [
@@ -172,7 +172,7 @@
                 "sha256:d5ef160442925f5944e4cde88589f0f195f6c284f05613114fc6bbc35e342fa7"
             ],
             "index": "pypi",
-            "version": "==1.16.52"
+            "version": "===1.17.49"
         },
         "botocore": {
             "hashes": [
@@ -704,7 +704,7 @@
                 "sha256:39fb8672126159acb139a7718dd10806104dec1e2f0f6c88aab05d17df10c8d4",
                 "sha256:f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f"
             ],
-            "markers": "python_version != '3.4'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
             "version": "==1.26.6"
         },
         "uvicorn": {
@@ -1327,7 +1327,7 @@
                 "sha256:39fb8672126159acb139a7718dd10806104dec1e2f0f6c88aab05d17df10c8d4",
                 "sha256:f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f"
             ],
-            "markers": "python_version != '3.4'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
             "version": "==1.26.6"
         },
         "virtualenv": {

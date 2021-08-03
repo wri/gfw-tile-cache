@@ -8,7 +8,6 @@ url = "https://test.pypi.org/simple"
 verify_ssl = true
 name = "pypi-test"
 
-
 [dev-packages]
 black = "*"
 flake8 = "*"
@@ -26,7 +25,7 @@ mercantile = "==1.2.1" # same as lambda layer
 aiofiles = "*"
 aenum = "*"
 asyncpg = "*"
-boto3 = "==1.16.52"  # aioboto3 dependency
+boto3 = "===1.17.49"  # aioboto3 dependency
 fastapi = "*"
 mercantile = "*"
 uvicorn = "*"
@@ -40,10 +39,10 @@ geojson = "*"
 orjson = "*"
 cachetools = "*"
 psycopg2-binary = "*"
-gino = {extras = ["psycopg2"],version = "<1.1"}  # >v1.1 tries to add mysqlclient
+gino = {extras = ["psycopg2"],version = "<1.1"}
 gino_starlette = "*"
 httpx = "*"
-aioboto3 = "==8.3.0"    # resolve version conflict with pinned boto3
+aioboto3 = "===9.0.0"
 httpx-auth = "*"
 jinja2 = "*"
 
