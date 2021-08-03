@@ -370,6 +370,31 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+  # send all tile cache preview requests to tile cache app
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    target_origin_id       = "dynamic"
+    compress               = true
+    path_pattern           = "*/preview*"
+    default_ttl            = 300 # 5min for now..switch to 24h
+    max_ttl                = 300 # 5min for now..switch to 24h
+    min_ttl                = 0
+    smooth_streaming       = false
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = true
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
 
 
   # send all planet tile request to tile cache app
