@@ -38,7 +38,6 @@ async_lru = "*"
 geojson = "*"
 orjson = "*"
 cachetools = "*"
-psycopg2-binary = "*"
 gino = {extras = ["psycopg2"],version = "<1.1"}
 gino_starlette = "*"
 httpx = "*"
