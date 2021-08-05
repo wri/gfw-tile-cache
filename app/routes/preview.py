@@ -61,14 +61,16 @@ async def get_tile_caches(
             sources[dataset] = style_specs["sources"][dataset]
         else:
             sources[dataset] = {
-                "type": "vector" if "vector" in tile["assset_type"] else "raster",
+                "type": "vector"
+                if "vector" in tile["asset_type"].lower()
+                else "raster",
                 "tiles": [tile["asset_uri"]],
             }
             layers.append(
                 {
                     "id": f"{tile['dataset']}-layer",
                     "type": "fill"
-                    if "vector" in tile.asset_type["asset_type"]
+                    if "vector" in tile["asset_type"].lower()
                     else "raster",
                     "source": tile["dataset"],
                     "minzoom": tile["min_zoom"],
