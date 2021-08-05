@@ -66,22 +66,21 @@ async def get_tile_caches(
                 else "raster",
                 "tiles": [tile["asset_uri"]],
             }
-            layers.append(
-                {
-                    "id": f"{tile['dataset']}-layer",
-                    "type": "fill"
-                    if "vector" in tile["asset_type"].lower()
-                    else "raster",
-                    "source": tile["dataset"],
-                    "minzoom": tile["min_zoom"],
-                    "maxzoom": tile["max_zoom"],
-                    "source-layer": tile["dataset"],
-                    "paint": {
-                        "fill-color": "#0080ff",  # blue color fill
-                        "fill-opacity": 0.5,
-                    },
+            layer_style = {
+                "id": f"{tile['dataset']}-layer",
+                "type": "fill" if "vector" in tile["asset_type"].lower() else "raster",
+                "source": tile["dataset"],
+                "minzoom": tile["min_zoom"],
+                "maxzoom": tile["max_zoom"],
+                "source-layer": tile["dataset"],
+            }
+
+            if "vector" in tile["asset_type"].lower():
+                layer_style["paint"] = {
+                    "fill-color": "#0080ff",  # blue color fill
+                    "fill-opacity": 0.5,
                 }
-            )
+            layers.append(layer_style)
 
     return templates.TemplateResponse(
         "tile_preview.html",
