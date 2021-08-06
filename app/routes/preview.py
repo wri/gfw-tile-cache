@@ -1,7 +1,7 @@
 import json
 import os
 
-import boto3
+import aioboto3
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -50,39 +50,54 @@ async def get_tile_cache_preview(
     ]
     for tile in tile_caches:
         if tile["asset_type"] == "Static vector tile cache":
-            client = boto3.client("s3")
-            root_json_key = f"{dataset}/{version}/{implementation}/root.json"
-            style_spec_data = client.get_object(
-                Bucket=GLOBALS.bucket, Key=root_json_key
-            )
-            style_specs = json.load(style_spec_data["Body"])
-
+            style_specs = await get_static_vector_style(tile)
             layers = [*layers, *style_specs["layers"]]
             sources[dataset] = style_specs["sources"][dataset]
         else:
-            sources[dataset] = {
-                "type": "vector"
-                if "vector" in tile["asset_type"].lower()
-                else "raster",
-                "tiles": [tile["asset_uri"]],
-            }
-            layer_style = {
-                "id": f"{tile['dataset']}-layer",
-                "type": "fill" if "vector" in tile["asset_type"].lower() else "raster",
-                "source": tile["dataset"],
-                "minzoom": tile["min_zoom"],
-                "maxzoom": tile["max_zoom"],
-                "source-layer": tile["dataset"],
-            }
-
-            if "vector" in tile["asset_type"].lower():
-                layer_style["paint"] = {
-                    "fill-color": "#0080ff",  # blue color fill
-                    "fill-opacity": 0.5,
-                }
-            layers.append(layer_style)
+            mapbox_style = generate_mapbox_style(tile)
+            sources[dataset] = mapbox_style["source"]
+            layers.append(mapbox_style["layer"])
 
     return templates.TemplateResponse(
         "tile_preview.html",
         context={"sources": sources, "layers": layers, "request": request},
     )
+
+
+async def get_static_vector_style(tile):
+    "Fetch static vector tile cache style specification from s3"
+    root_json_key = (
+        f"{tile['dataset']}/{tile['version']}/{tile['implementation']}/root.json"
+    )
+    session = aioboto3.Session()
+    async with session.client(
+        "s3", region_name=GLOBALS.aws_region, endpoint_url=GLOBALS.aws_endpoint_uri
+    ) as s3_client:
+        s3_object = await s3_client.get_object(Bucket=GLOBALS.bucket, Key=root_json_key)
+        data = await s3_object["Body"].read()
+
+        return json.loads(data)
+
+
+async def generate_mapbox_style(tile):
+    "Construct default tile source and layer style for Mapbox rendering"
+    source = {
+        "type": "vector" if "vector" in tile["asset_type"].lower() else "raster",
+        "tiles": [tile["asset_uri"]],
+    }
+    layer = {
+        "id": f"{tile['dataset']}-layer",
+        "type": "fill" if "vector" in tile["asset_type"].lower() else "raster",
+        "source": tile["dataset"],
+        "minzoom": tile["min_zoom"],
+        "maxzoom": tile["max_zoom"],
+        "source-layer": tile["dataset"],
+    }
+
+    if "vector" in tile["asset_type"].lower():
+        layer["paint"] = {
+            "fill-color": "#0080ff",  # blue color fill
+            "fill-opacity": 0.5,
+        }
+
+    return {"source": source, "layer": layer}
