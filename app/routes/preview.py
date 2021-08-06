@@ -20,7 +20,7 @@ templates = Jinja2Templates(directory=template_dir)
 @router.get(
     "/{dataset}/{version}/{implementation}/preview", response_class=HTMLResponse
 )
-async def get_tile_caches(
+async def get_tile_cache_preview(
     *, request: Request, dataset: str, version: str, implementation
 ):
     """Map preview of availabe tile caches for a dataset."""
