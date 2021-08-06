@@ -26,7 +26,6 @@ async def get_tile_cache_preview(
     """Map preview of availabe tile caches for a dataset."""
 
     tile_caches = get_dataset_tile_caches(dataset, version, implementation)
-
     sources = {
         "carto-dark": {
             "type": "raster",
@@ -50,11 +49,11 @@ async def get_tile_cache_preview(
     ]
     for tile in tile_caches:
         if tile["asset_type"] == "Static vector tile cache":
-            style_specs = await get_static_vector_style(tile)
+            style_specs = await get_static_vector_tile_cache_style_spec(tile)
             layers = [*layers, *style_specs["layers"]]
             sources[dataset] = style_specs["sources"][dataset]
         else:
-            mapbox_style = generate_mapbox_style(tile)
+            mapbox_style = get_default_style_spec(tile)
             sources[dataset] = mapbox_style["source"]
             layers.append(mapbox_style["layer"])
 
@@ -64,7 +63,7 @@ async def get_tile_cache_preview(
     )
 
 
-async def get_static_vector_style(tile):
+async def get_static_vector_tile_cache_style_spec(tile):
     "Fetch static vector tile cache style specification from s3"
     root_json_key = (
         f"{tile['dataset']}/{tile['version']}/{tile['implementation']}/root.json"
@@ -79,7 +78,7 @@ async def get_static_vector_style(tile):
         return json.loads(data)
 
 
-async def generate_mapbox_style(tile):
+async def get_default_style_spec(tile):
     "Construct default tile source and layer style for Mapbox rendering"
     source = {
         "type": "vector" if "vector" in tile["asset_type"].lower() else "raster",
