@@ -78,7 +78,7 @@ async def get_static_vector_tile_cache_style_spec(tile):
         return json.loads(data)
 
 
-async def get_default_style_spec(tile):
+def get_default_style_spec(tile):
     "Construct default tile source and layer style for Mapbox rendering"
     source = {
         "type": "vector" if "vector" in tile["asset_type"].lower() else "raster",
