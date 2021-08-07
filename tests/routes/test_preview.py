@@ -1,6 +1,9 @@
-from app.routes.preview import get_static_vector_tile_cache_style_spec
+import pytest
+
+from app.routes.preview import get_default_style_spec
 
 
+@pytest.mark.skip(reason="Need to set up s3 mocking")
 def test_tile_cache_preview(client):
     """
     Test tile cache preview page returns success response
@@ -32,7 +35,7 @@ def test_generate_default_mapbox_style():
         "asset_uri": "my_uri7",
     }
 
-    mapbox_style = get_static_vector_tile_cache_style_spec(tile)
+    mapbox_style = get_default_style_spec(tile)
 
     assert mapbox_style["source"] == {"type": "raster", "tiles": "my_uri7"}
 
