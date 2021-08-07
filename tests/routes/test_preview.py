@@ -37,7 +37,7 @@ def test_generate_default_mapbox_style():
 
     mapbox_style = get_default_style_spec(tile)
 
-    assert mapbox_style["source"] == {"type": "raster", "tiles": "my_uri7"}
+    assert mapbox_style["source"] == {"type": "raster", "tiles": ["my_uri7"]}
 
     assert mapbox_style["layer"] == {
         "id": "umd_glad_landsat_alerts-layer",
