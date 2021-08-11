@@ -45,5 +45,5 @@ def test_generate_default_mapbox_style():
         "source": "umd_glad_landsat_alerts",
         "minzoom": 0,
         "maxzoom": 12,
-        "source_layer": "umd_glad_landsat_alerts",
+        "source-layer": "umd_glad_landsat_alerts",
     }
