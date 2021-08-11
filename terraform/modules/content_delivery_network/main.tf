@@ -377,8 +377,8 @@ resource "aws_cloudfront_distribution" "tiles" {
     target_origin_id       = "dynamic"
     compress               = true
     path_pattern           = "*/preview*"
-    default_ttl            = 300 # 5min for now..switch to 24h
-    max_ttl                = 300 # 5min for now..switch to 24h
+    default_ttl            = 86400 # 24h
+    max_ttl                = 86400 # 24h
     min_ttl                = 0
     smooth_streaming       = false
     trusted_signers        = []
