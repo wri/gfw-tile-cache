@@ -2,7 +2,8 @@ import json
 import os
 
 import aioboto3
-from fastapi import APIRouter, Request
+from botocore.exceptions import ClientError
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -23,7 +24,7 @@ templates = Jinja2Templates(directory=template_dir)
 async def get_tile_cache_preview(
     *, request: Request, dataset: str, version: str, implementation
 ):
-    """Map preview of availabe tile caches for a dataset."""
+    """Map preview of available tile caches for a dataset."""
 
     tile_caches = get_dataset_tile_caches(dataset, version, implementation)
     sources = {
@@ -49,13 +50,20 @@ async def get_tile_cache_preview(
     ]
     for tile in tile_caches:
         if tile["asset_type"] == "Static vector tile cache":
-            style_specs = await get_static_vector_tile_cache_style_spec(tile)
-            layers = [*layers, *style_specs["layers"]]
-            sources[dataset] = style_specs["sources"][dataset]
+            try:
+                style_specs = await get_static_vector_tile_cache_style_spec(tile)
+            except ClientError:
+                style_specs = get_default_style_spec(tile)
         else:
-            mapbox_style = get_default_style_spec(tile)
-            sources[dataset] = mapbox_style["source"]
-            layers.append(mapbox_style["layer"])
+            style_specs = get_default_style_spec(tile)
+
+        layers = [*layers, *style_specs["layers"]]
+        sources[dataset] = style_specs["sources"][dataset]
+
+    if len(layers) == 1:
+        raise HTTPException(
+            status_code=404, detail="No tile caches available for this dataset."
+        )
 
     return templates.TemplateResponse(
         "tile_preview.html",
@@ -80,10 +88,12 @@ async def get_static_vector_tile_cache_style_spec(tile):
 
 def get_default_style_spec(tile):
     "Construct default tile source and layer style for Mapbox rendering"
-    source = {
+    sources = dict()
+    sources[tile["dataset"]] = {
         "type": "vector" if "vector" in tile["asset_type"].lower() else "raster",
         "tiles": [tile["asset_uri"]],
     }
+
     layer = {
         "id": f"{tile['dataset']}-layer",
         "type": "fill" if "vector" in tile["asset_type"].lower() else "raster",
@@ -99,4 +109,4 @@ def get_default_style_spec(tile):
             "fill-opacity": 0.5,
         }
 
-    return {"source": source, "layer": layer}
+    return {"sources": sources, "layers": [layer]}

@@ -1,9 +1,6 @@
-import pytest
-
 from app.routes.preview import get_default_style_spec
 
 
-@pytest.mark.skip(reason="Need to set up s3 mocking")
 def test_tile_cache_preview(client):
     """
     Test tile cache preview page returns success response
@@ -37,9 +34,12 @@ def test_generate_default_mapbox_style():
 
     mapbox_style = get_default_style_spec(tile)
 
-    assert mapbox_style["source"] == {"type": "raster", "tiles": ["my_uri7"]}
+    assert mapbox_style["sources"][tile["dataset"]] == {
+        "type": "raster",
+        "tiles": ["my_uri7"],
+    }
 
-    assert mapbox_style["layer"] == {
+    assert mapbox_style["layers"][0] == {
         "id": "umd_glad_landsat_alerts-layer",
         "type": "raster",
         "source": "umd_glad_landsat_alerts",
