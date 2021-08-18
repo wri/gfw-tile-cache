@@ -18,6 +18,7 @@ def get_all_tile_caches():
         rows = db.execute(
             f"""SELECT DISTINCT
                     assets.asset_type as asset_type,
+                    assets.asset_uri as asset_uri,
                     versions.dataset as dataset,
                     versions.version as version,
                     assets.creation_options->'implementation' as implementation,
@@ -52,6 +53,8 @@ def get_all_tile_caches():
                 "max_zoom": row.max_zoom,
                 "min_date": row.min_date,
                 "max_date": row.max_date,
+                "asset_uri": row.asset_uri,
+                "asset_type": row.asset_type,
             }
         )
 
@@ -158,6 +161,26 @@ def get_implementations(dataset: str, version: str, asset_type: str) -> List[str
         if (tile_cache["dataset"] == dataset and tile_cache["version"] == version)
     ]
     return implementations
+
+
+@cached(cache=TTLCache(maxsize=100, ttl=900))
+def get_dataset_tile_caches(
+    dataset: str, version: str, implementation: str
+) -> List[Dict]:
+    tile_caches = get_all_tile_caches()
+    tile_caches_list: List[Dict] = sum(
+        list(tile_caches.values()), []
+    )  # merging all tile cache type values
+
+    dataset_tile_caches = [
+        tile_cache
+        for tile_cache in tile_caches_list
+        if tile_cache["dataset"] == dataset
+        and tile_cache["version"] == version
+        and tile_cache["implementation"]
+    ]
+
+    return dataset_tile_caches
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=86400))

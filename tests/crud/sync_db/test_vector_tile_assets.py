@@ -1,5 +1,6 @@
 from app.crud.sync_db.tile_cache_assets import (
     get_attributes,
+    get_dataset_tile_caches,
     get_datasets,
     get_latest_date,
     get_latest_version,
@@ -98,3 +99,12 @@ def test_get_non_existing_fields():
 def test_latest_date():
     result = "2020-01-01"
     assert result == get_latest_date("nasa_viirs_fire_alerts", "v202003")
+
+
+def test_get_dataset_tile_caches():
+    tile_caches = get_dataset_tile_caches(
+        "umd_glad_landsat_alerts", "v20210101", "default"
+    )
+
+    assert len(tile_caches) == 1
+    assert tile_caches[0]["asset_uri"] == "my_uri7"
