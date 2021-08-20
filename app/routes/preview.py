@@ -1,3 +1,6 @@
+"""
+Mapbox GL based interactive map preview of vector or raster tile cache.
+"""
 import json
 import os
 
@@ -19,7 +22,9 @@ templates = Jinja2Templates(directory=template_dir)
 
 
 @router.get(
-    "/{dataset}/{version}/{implementation}/preview", response_class=HTMLResponse
+    "/{dataset}/{version}/{implementation}/preview",
+    response_class=HTMLResponse,
+    tags=["Tile Cache Preview"],
 )
 async def get_tile_cache_preview(
     *, request: Request, dataset: str, version: str, implementation
