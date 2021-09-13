@@ -167,6 +167,7 @@ tags_metadata = [
         "name": "ESRI Vector Tile Service",
         "description": esri_vector_tile_server.__doc__,
     },
+    {"name": "Tile Cache Preview", "description": preview.__doc__},
 ]
 
 
@@ -187,6 +188,7 @@ def custom_openapi(openapi_prefix: str = ""):
         {"name": "Vector Tiles API", "tags": ["Dynamic Vector Tiles", "Vector Tiles"]},
         {"name": "Raster Tiles API", "tags": ["Raster Tiles"]},
         {"name": "ESRI Vector Tile Server API", "tags": ["ESRI Vector Tile Service"]},
+        {"name": "Map Preview", "tags": ["Tile Cache Preview"]},
     ]
 
     app.openapi_schema = openapi_schema
