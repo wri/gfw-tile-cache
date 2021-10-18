@@ -43,7 +43,7 @@ logger.setLevel(log_level[ENV])
 
 
 # !Note: To ease deployment I kept all functions within this one module.
-# Ideally the different sections in this file would live in seperate modules.
+# Ideally the different sections in this file would live in separate modules.
 # However, it would require to deploy the lambda function differently.
 # Depending on how complex this modules becomes, we need to refactor it accordingly.
 
