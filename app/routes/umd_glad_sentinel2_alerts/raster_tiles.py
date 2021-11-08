@@ -14,7 +14,7 @@ dataset = "umd_glad_sentinel2_alerts"
 
 
 class UmdGladSentinel2Versions(str, Enum):
-    """UMD Glad Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """UMD Glad Sentinel 2 Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 

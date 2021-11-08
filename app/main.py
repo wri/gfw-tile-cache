@@ -135,7 +135,7 @@ async def rve_error_handler(
 @app.exception_handler(Exception)
 async def catch_all_handler(request: Request, exc: Exception) -> ORJSONResponse:
     """Use JSEND protocol for validation errors."""
-    # FixMe: While the exception is correctly formatted, this still throus the actual exception.
+    # FixMe: While the exception is correctly formatted, this still throws the actual exception.
     #  this might be related to https://github.com/tiangolo/fastapi/issues/2750
     #  other ways to catch any uncaught exception did not work
     #  - creating a custom router resulting in catching any exception, even 422 errors
