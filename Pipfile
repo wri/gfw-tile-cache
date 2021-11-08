@@ -12,7 +12,6 @@ verify_ssl = true
 black = "==21.9b0"  # Pin to avoid having to allow pre-releases
 detect-secrets = "*"
 flake8 = "*"
-mercantile = "==1.2.1" # same as lambda layer
 pillow = "==8.3.1" # same as lambda layer
 pre-commit = "*"
 pytest = "*"
@@ -25,7 +24,7 @@ rasterio = "==1.2.10" # same as lambda layer
 aioboto3 = "*"
 aiobotocore = {extras = ["boto3"], version="<2.0.0"}
 aiofiles = "*"
-aenum = "*"
+aenum = "<3.0"
 async_lru = "*"
 asyncpg = "*"
 cachetools = "*"
@@ -36,6 +35,7 @@ gino_starlette = "*"
 httpx = "*"
 httpx-auth = "*"
 jinja2 = "*"
+mercantile = "==1.2.1" # same as lambda layer
 orjson = "*"
 pendulum = "*"
 psycopg2 = "*"

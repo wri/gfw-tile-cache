@@ -30,7 +30,7 @@ for _version in _versions:
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def umd_glad_alerts_raster_tile(
+async def umd_glad_sentinel2_alerts_raster_tile(
     *,
     version: UmdGladSentinel2Versions = Path(
         ..., description=UmdGladSentinel2Versions.__doc__
