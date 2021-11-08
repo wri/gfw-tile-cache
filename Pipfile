@@ -23,7 +23,7 @@ rasterio = "==1.2.10" # same as lambda layer
 
 [packages]
 aioboto3 = "*"
-aiobotocore = {extras = ["boto3"]}
+aiobotocore = {extras = ["boto3"], version="<2.0.0"}
 aiofiles = "*"
 aenum = "*"
 async_lru = "*"
