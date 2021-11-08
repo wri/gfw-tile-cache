@@ -4,7 +4,6 @@ import mercantile
 import pendulum
 from fastapi import Depends, HTTPException, Path, Query
 from fastapi.logger import logger
-from pendulum import DateTime
 from shapely.geometry import box
 
 from ..crud.sync_db.tile_cache_assets import get_versions
@@ -164,7 +163,9 @@ def validate_tile_cache_version(dataset, version, tile_cache_type) -> None:
     )
 
 
-def validate_dates(start_date: str, end_date: str, default_end: str, force_date_range) -> None:
+def validate_dates(
+    start_date: str, end_date: str, default_end: str, force_date_range
+) -> None:
     _start_date = pendulum.from_format(start_date, "YYYY-MM-DD")
     _end_date = pendulum.from_format(end_date, "YYYY-MM-DD")
     _default_end = pendulum.from_format(default_end, "YYYY-MM-DD")

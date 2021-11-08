@@ -15,7 +15,7 @@ class Globals(BaseSettings):
         None,
         description="AWS Secret String. As of writing, Fargate doesn't support to fetch secrets by key. Only entire secret object can be obtained",
     )
-    bucket: Optional[str] = Field(None, description="Tile Cache bucket name")
+    bucket: Optional[str] = Field("gfw-tiles-dev", description="Tile Cache bucket name")
     reader_username: Optional[str] = Field(
         None,
         env="DB_USER_RO",
