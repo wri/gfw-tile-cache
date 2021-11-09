@@ -4,49 +4,49 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [[source]]
+name = "pypi-test"
 url = "https://test.pypi.org/simple"
 verify_ssl = true
-name = "pypi-test"
 
 [dev-packages]
-black = "*"
-flake8 = "*"
-pre-commit = "*"
+black = "==21.9b0"  # Pin to avoid having to allow pre-releases
 detect-secrets = "*"
+flake8 = "*"
 pillow = "==8.3.1" # same as lambda layer
+pre-commit = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.2.6" # same as lambda layer
-mercantile = "==1.2.1" # same as lambda layer
+rasterio = "==1.2.10" # same as lambda layer
 
 [packages]
+aioboto3 = "*"
+aiobotocore = {extras = ["boto3"], version="<2.0.0"}
 aiofiles = "*"
-aenum = "*"
-asyncpg = "*"
-boto3 = "===1.17.49"  # aioboto3 dependency
-fastapi = "*"
-mercantile = "*"
-uvicorn = "*"
-pendulum = "*"
-pyproj = "*"
-SQLAlchemy = "*"
-shapely = "*"
-requests = "*"
+aenum = "<3.0"
 async_lru = "*"
-geojson = "*"
-orjson = "*"
+asyncpg = "*"
 cachetools = "*"
-gino = {extras = ["psycopg2"],version = "<1.1"}
+fastapi = "<0.69"
+geojson = "*"
+gino = "*"
 gino_starlette = "*"
 httpx = "*"
-aioboto3 = "===9.0.0"
 httpx-auth = "*"
 jinja2 = "*"
+mercantile = "==1.2.1" # same as lambda layer
+orjson = "*"
+pendulum = "*"
+psycopg2 = "*"
+pyproj = "*"
+requests = "*"
+SQLAlchemy = "*"
+shapely = "*"
+uvicorn = "*"
 
 [requires]
 python_version = "3.8"
 
 [pipenv]
-allow_prereleases = true
+allow_prereleases = false
