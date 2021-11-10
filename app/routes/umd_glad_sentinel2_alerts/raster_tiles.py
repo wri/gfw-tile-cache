@@ -14,7 +14,7 @@ dataset = "umd_glad_sentinel2_alerts"
 
 
 class UmdGladSentinel2Versions(str, Enum):
-    """UMD Glad Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """UMD Glad Sentinel 2 Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 
@@ -30,7 +30,7 @@ for _version in _versions:
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def umd_glad_alerts_raster_tile(
+async def umd_glad_sentinel2_alerts_raster_tile(
     *,
     version: UmdGladSentinel2Versions = Path(
         ..., description=UmdGladSentinel2Versions.__doc__

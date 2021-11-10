@@ -14,7 +14,7 @@ dataset = "umd_glad_landsat_alerts"
 
 
 class UmdGladLandsatVersions(str, Enum):
-    """UMD Glad Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """UMD Glad Landsat Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 
@@ -51,7 +51,7 @@ async def umd_glad_alerts_raster_tile(
     background_tasks: BackgroundTasks,
 ) -> Response:
     """
-    UMD GLAD alerts raster tiles.
+    UMD GLAD Landsat alerts raster tiles.
     """
     return await get_dynamic_deforestation_alert_tile(
         dataset,

@@ -14,7 +14,7 @@ dataset = "wur_radd_alerts"
 
 
 class WurRaddVersions(str, Enum):
-    """UMD Tree Cover Loss versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """WUR RADD Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
 
     latest = "latest"
 
@@ -30,7 +30,7 @@ for _version in _versions:
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def gfw_radd_alerts_raster_tile(
+async def wur_radd_alerts_raster_tile(
     *,
     version: WurRaddVersions = Path(..., description=WurRaddVersions.__doc__),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
