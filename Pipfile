@@ -12,7 +12,7 @@ verify_ssl = true
 black = "==21.9b0"  # Pin to avoid having to allow pre-releases
 detect-secrets = "*"
 flake8 = "*"
-pillow = "==8.3.1" # same as lambda layer
+pillow = "==8.3.2" # same as lambda layer
 pre-commit = "*"
 pytest = "*"
 pytest-asyncio = "*"
