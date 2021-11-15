@@ -8,7 +8,8 @@ terraform/*
 terraform/.terraform/*
 .git
 tests/*
-venv/*
+venv*
+.venv*
 *.egg-info
 *.tif
 cc-test-reporter

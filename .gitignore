@@ -101,7 +101,8 @@ debug.py
 gfw-data-lake-dev/*
 gfw-data-lake/*
 
-venv/*
+venv*
+.venv*
 
 cc-test-reporter
 terraform/.terraform/*
