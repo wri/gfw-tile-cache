@@ -127,7 +127,7 @@ async def get_lambda_tile(payload: Dict[str, Any]):
         logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
-    logger.debug(response.text)
+    # logger.debug(f"Response from lambda: {response.text}")
 
     data = json.loads(response.text)
     if data.get("status") == "success":

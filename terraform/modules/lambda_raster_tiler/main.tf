@@ -11,7 +11,8 @@ data "archive_file" "default" {
 
 
 resource "aws_lambda_function" "default" {
-  # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
+  # Function was imported from core module and we need first to detach it
+  # from cloud front, wait until all replicas are deleted and then rename it
 
   function_name    = "${var.project}-lambda-tiler"
   filename         = data.archive_file.default.output_path

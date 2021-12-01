@@ -22,9 +22,9 @@ XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:
-    logger.debug(f"{x},{y},{z}")
+    logger.debug(f"Coordinates (X, Y, Z): {x},{y},{z}")
     left, bottom, right, top = mercantile.xy_bounds(x, y, z)
-    logger.debug(f"{left},{bottom},{right},{top}")
+    logger.debug(f"Bounds (Left, Bottom, Right, Top): {left},{bottom},{right},{top}")
     return box(left, bottom, right, top).bounds
 
 
