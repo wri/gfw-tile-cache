@@ -236,13 +236,18 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
 
     logger.debug("Get Tile Array")
 
-    gdal_env = {}
+    # gdal_env = {}
     if AWS_ENDPOINT_HOST:
         gdal_env = {
             "AWS_HTTPS": "NO",
             "AWS_VIRTUAL_HOSTING": False,
             "AWS_S3_ENDPOINT": AWS_ENDPOINT_HOST,
             "GDAL_DISABLE_READDIR_ON_OPEN": "NO",
+        }
+    else:
+        gdal_env = {
+            "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+            # "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
         }
 
     logger.debug(f"GDAL_ENV: f{gdal_env}")
