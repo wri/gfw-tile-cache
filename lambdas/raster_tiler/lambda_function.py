@@ -236,7 +236,8 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
 
     logger.debug("Get Tile Array")
 
-    # gdal_env = {}
+    # if running lambda in localstack, need to use special docker IP address
+    # provided in env to reach localstack
     if AWS_ENDPOINT_HOST:
         gdal_env = {
             "AWS_HTTPS": "NO",
@@ -247,11 +248,9 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
     else:
         gdal_env = {
             "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
-            # "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
         }
 
     logger.debug(f"GDAL_ENV: f{gdal_env}")
-    # if running lambda in localstack, need to use special docker IP address provided in env to reach localstack
     with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
