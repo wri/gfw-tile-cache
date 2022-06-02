@@ -59,12 +59,12 @@ variable "auto_scaling_max_capacity" {
 }
 
 variable "fargate_cpu" {
-  default     = 256
+  default     = 1024
   type        = number
   description = "vCPU for service."
 }
 variable "fargate_memory" {
-  default     = 1024
+  default     = 2048
   type        = number
   description = "Memory for service in MB."
 }
@@ -74,7 +74,7 @@ variable "auto_scaling_cooldown" {
   description = "Time in seconds to pass before scaling up or down again."
 }
 variable "auto_scaling_max_cpu_util" {
-  default     = 75
+  default     = 50
   type        = number
   description = "CPU usage percentage which will trigger autoscaling event."
 }
