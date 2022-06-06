@@ -20,7 +20,7 @@ resource "aws_lambda_function" "default" {
   layers           = var.lambda_layers
   runtime          = "python3.8"
   handler          = "lambda_function.handler"
-  memory_size      = 128
+  memory_size      = 256
   timeout          = 30
   publish          = true
   tags             = var.tags
