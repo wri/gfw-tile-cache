@@ -74,7 +74,7 @@ def scale_intensity(zoom: int) -> Callable:
     b = scale_range[0]
 
     def scale_pow(x: ndarray) -> ndarray:
-        return m * x ** exp + b
+        return m * x**exp + b
 
     return scale_pow
 
@@ -87,7 +87,7 @@ def apply_annual_loss_filter(
 
     zoom = int(z)
 
-    intensity, _, year = data
+    intensity, _, year = data[:3]
     scale_pow: Callable = scale_intensity(zoom)
     scaled_intensity: ndarray = scale_pow(intensity).astype("uint8")
 
@@ -282,8 +282,8 @@ def get_source_window(
 
         pixel_size = CE / math.pow(2, _z) / TILE_SIZE
 
-        top = (CE / 2) - ((row * pixel_size) * (TILE_SIZE ** 2))
-        left = (-CE / 2) + ((col * pixel_size) * (TILE_SIZE ** 2))
+        top = (CE / 2) - ((row * pixel_size) * (TILE_SIZE**2))
+        left = (-CE / 2) + ((col * pixel_size) * (TILE_SIZE**2))
 
         geotransform = (left, pixel_size, 0.0, top, 0.0, -pixel_size)
 

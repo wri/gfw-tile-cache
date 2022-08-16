@@ -29,14 +29,14 @@ def test_scale_intensity():
 
 def test_apply_annual_loss_filter():
     # Create test data
-
     intensity = (np.ones((4, 3)) * 100).astype("uint8")
+    all_zeros = (np.zeros((4, 3))).astype("uint8")
     year_2000 = (np.zeros((1, 3))).astype("uint8")
     year_2005 = (np.ones((1, 3)) * 5).astype("uint8")
     year_2010 = (np.ones((1, 3)) * 10).astype("uint8")
     year_2015 = (np.ones((1, 3)) * 15).astype("uint8")
     years = np.vstack([year_2000, year_2005, year_2010, year_2015])
-    input_data = np.array([intensity, intensity, years])
+    input_data = np.array([intensity, all_zeros, years])
 
     result = apply_annual_loss_filter(
         input_data, z="12", start_year="2000", end_year="2020"
@@ -73,6 +73,30 @@ def test_apply_annual_loss_filter():
     assert np.all(alpha[1] == 100)
     assert np.all(alpha[2] == 100)
     assert np.all(alpha[3] == 100)
+
+    result = apply_annual_loss_filter(
+        input_data, z="10", start_year="2001", end_year="2020"
+    )
+    red, green, blue, alpha = result
+    assert np.all(red == 228)
+    assert np.all(green == 122)
+    assert np.all(blue == 166)
+    assert np.all(alpha[0] == 0)
+    assert np.all(alpha[1] == 138)
+    assert np.all(alpha[2] == 138)
+    assert np.all(alpha[3] == 138)
+
+
+def test_apply_annual_loss_filter_ignores_alpha_channel_already_in_data():
+    intensity = (np.ones((4, 3)) * 100).astype("uint8")
+    all_zeros = (np.zeros((4, 3))).astype("uint8")
+    year_2000 = (np.zeros((1, 3))).astype("uint8")
+    year_2005 = (np.ones((1, 3)) * 5).astype("uint8")
+    year_2010 = (np.ones((1, 3)) * 10).astype("uint8")
+    year_2015 = (np.ones((1, 3)) * 15).astype("uint8")
+    years = np.vstack([year_2000, year_2005, year_2010, year_2015])
+    static_alpha = (np.ones((4, 3)) * 255).astype("uint8")
+    input_data = np.array([intensity, all_zeros, years, static_alpha])
 
     result = apply_annual_loss_filter(
         input_data, z="10", start_year="2001", end_year="2020"
