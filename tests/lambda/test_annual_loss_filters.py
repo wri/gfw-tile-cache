@@ -27,8 +27,7 @@ def test_scale_intensity():
     assert scale_zoom_2(255) == 255
 
 
-def test_apply_annual_loss_filter():
-    # Create test data
+def _create_tcl_3band_data():
     intensity = (np.ones((4, 3)) * 100).astype("uint8")
     all_zeros = (np.zeros((4, 3))).astype("uint8")
     year_2000 = (np.zeros((1, 3))).astype("uint8")
@@ -36,7 +35,22 @@ def test_apply_annual_loss_filter():
     year_2010 = (np.ones((1, 3)) * 10).astype("uint8")
     year_2015 = (np.ones((1, 3)) * 15).astype("uint8")
     years = np.vstack([year_2000, year_2005, year_2010, year_2015])
-    input_data = np.array([intensity, all_zeros, years])
+    return np.array([intensity, all_zeros, years])
+
+
+def _create_tcl_4band_data():
+    """
+    This creates Tree Cover Loss (TCL) test data >= v1.9.
+    In this version, a 4th band is created as an 'alpha' channel for year_intensity symbology
+    https://github.com/wri/gfw-data-api/commit/d3c32ac8f9378bdcd50584b020e02d557860cbef
+    """
+    tcl_3band_data = _create_tcl_3band_data()
+    tcl_4th_band = (np.ones((4, 3)) * 255).astype("uint8")
+    return np.append(tcl_3band_data, [tcl_4th_band], axis=0)
+
+
+def test_apply_annual_loss_filter():
+    input_data = _create_tcl_3band_data()
 
     result = apply_annual_loss_filter(
         input_data, z="12", start_year="2000", end_year="2020"
@@ -88,16 +102,7 @@ def test_apply_annual_loss_filter():
 
 
 def test_apply_annual_loss_filter_ignores_alpha_channel_already_in_data():
-    intensity = (np.ones((4, 3)) * 100).astype("uint8")
-    all_zeros = (np.zeros((4, 3))).astype("uint8")
-    year_2000 = (np.zeros((1, 3))).astype("uint8")
-    year_2005 = (np.ones((1, 3)) * 5).astype("uint8")
-    year_2010 = (np.ones((1, 3)) * 10).astype("uint8")
-    year_2015 = (np.ones((1, 3)) * 15).astype("uint8")
-    years = np.vstack([year_2000, year_2005, year_2010, year_2015])
-    static_alpha = (np.ones((4, 3)) * 255).astype("uint8")
-    input_data = np.array([intensity, all_zeros, years, static_alpha])
-
+    input_data = _create_tcl_4band_data()
     result = apply_annual_loss_filter(
         input_data, z="10", start_year="2001", end_year="2020"
     )
