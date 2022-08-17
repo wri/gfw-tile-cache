@@ -45,5 +45,7 @@ set +e
 docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test run --rm app tests/"$@" -vv
 exit_code=$?
 docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test down --remove-orphans
-rm tests/terraform/terraform.tfstate*
+rm -rf tests/terraform/terraform.tfstate* \
+       tests/terraform/.terraform.lock.hcl \
+       tests/terraform/.terraform/modules/modules.json
 exit $exit_code
