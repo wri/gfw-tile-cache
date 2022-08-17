@@ -85,55 +85,64 @@ def test_blue_band_gains_intensity_as_zoom_decreases():
     assert np.all(zoomed_in[blue] < zoomed_out[blue])
 
 
-def test_apply_annual_loss_filter():
+def test_only_years_within_specified_range_are_visible():
     input_data = _create_tcl_3band_data()
 
-    result = apply_annual_loss_filter(
-        input_data, z="12", start_year="2000", end_year="2020"
-    )
+    result = _apply_filter_with(input_data, start_year="2006", end_year="2014")
     alpha = result[3]
-    assert np.all(alpha[0] == 0)
-    assert np.all(alpha[1] == 100)
-    assert np.all(alpha[2] == 100)
-    assert np.all(alpha[3] == 100)
+    year_2000, year_2005, year_2010, year_2015 = alpha
+    transparent = 0
 
-    result = apply_annual_loss_filter(
-        input_data, z="12", start_year="2006", end_year="2014"
-    )
-    alpha = result[3]
-    assert np.all(alpha[0] == 0)
-    assert np.all(alpha[1] == 0)
-    assert np.all(alpha[2] == 100)
-    assert np.all(alpha[3] == 0)
+    assert np.all(year_2000 == transparent)
+    assert np.all(year_2005 == transparent)
+    assert np.all(year_2010 != transparent)
+    assert np.all(year_2015 == transparent)
 
-    result = apply_annual_loss_filter(
-        input_data, z="12", start_year=None, end_year=None
-    )
-    alpha = result[3]
-    assert np.all(alpha[0] == 0)
-    assert np.all(alpha[1] == 100)
-    assert np.all(alpha[2] == 100)
-    assert np.all(alpha[3] == 100)
 
-    result = apply_annual_loss_filter(
-        input_data, z="10", start_year="2001", end_year="2020"
-    )
+def test_multiple_years_are_visible():
+    input_data = _create_tcl_3band_data()
+
+    result = _apply_filter_with(input_data, start_year="2000", end_year="2020")
     alpha = result[3]
-    assert np.all(alpha[0] == 0)
-    assert np.all(alpha[1] == 138)
-    assert np.all(alpha[2] == 138)
-    assert np.all(alpha[3] == 138)
+    year_2000, year_2005, year_2010, year_2015 = alpha
+    transparent = 0
+
+    assert np.all(year_2000 == transparent)
+    assert np.all(year_2005 != transparent)
+    assert np.all(year_2010 != transparent)
+    assert np.all(year_2015 != transparent)
+
+
+def test_transparency_increases_with_zoom_level():
+    input_data = _create_tcl_3band_data()
+
+    zoom_in = _apply_filter_with(input_data, zoom_level="12")
+    zoom_out = _apply_filter_with(input_data, zoom_level="10")
+    alpha = 3
+    year_2015 = 3
+
+    assert np.all(zoom_in[alpha][year_2015] < zoom_out[alpha][year_2015])
+
+
+def test_years_visible_when_no_start_or_end_year_is_given():
+    input_data = _create_tcl_3band_data()
+
+    result = _apply_filter_with(input_data, start_year=None, end_year=None)
+    alpha = result[3]
+    year_2000, year_2005, year_2010, year_2015 = alpha
+    transparent = 0
+
+    assert np.all(year_2000 == transparent)
+    assert np.all(year_2005 != transparent)
+    assert np.all(year_2010 != transparent)
+    assert np.all(year_2015 != transparent)
 
 
 def test_apply_annual_loss_filter_ignores_alpha_channel_already_in_data():
     input_data_3band = _create_tcl_3band_data()
     input_data_4band = _create_tcl_4band_data()
 
-    result_3band = _apply_filter_with(
-        input_data_3band, zoom_level="10", start_year="2001", end_year="2020"
-    )
-    result_4band = _apply_filter_with(
-        input_data_4band, zoom_level="10", start_year="2001", end_year="2020"
-    )
+    result_3band = _apply_filter_with(input_data_3band)
+    result_4band = _apply_filter_with(input_data_4band)
 
     assert np.all(result_3band == result_4band)
