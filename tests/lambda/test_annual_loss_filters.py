@@ -7,7 +7,6 @@ from lambdas.raster_tiler.lambda_function import (
 
 
 def test_scale_intensity():
-
     scale_zoom_12 = scale_intensity(12)
     assert scale_zoom_12(0) == 0
     assert scale_zoom_12(50) == 50
@@ -55,7 +54,7 @@ def _apply_filter_with(data, zoom_level="10", start_year=None, end_year=None):
     )
 
 
-def test_red_band_intensity_is_invariant_with_zoom_level():
+def test_red_band_magnitude_is_invariant_with_zoom_level():
     input_data = _create_tcl_3band_data()
     red = 0
 
@@ -65,7 +64,7 @@ def test_red_band_intensity_is_invariant_with_zoom_level():
     assert np.all(zoomed_in[red] == zoomed_out[red])
 
 
-def test_green_band_gains_intensity_as_zoom_increases():
+def test_green_band_gains_magnitude_as_zoom_increases():
     input_data = _create_tcl_3band_data()
     green = 1
 
@@ -75,7 +74,7 @@ def test_green_band_gains_intensity_as_zoom_increases():
     assert np.all(zoomed_in[green] > zoomed_out[green])
 
 
-def test_blue_band_gains_intensity_as_zoom_decreases():
+def test_blue_band_gains_magnitude_as_zoom_decreases():
     input_data = _create_tcl_3band_data()
     blue = 2
 
