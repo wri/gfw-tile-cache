@@ -9,16 +9,16 @@ url = "https://test.pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "==21.9b0"  # Pin to avoid having to allow pre-releases
+black = "==22.6.0"  # Pin to avoid having to allow pre-releases
 detect-secrets = "*"
 flake8 = "*"
-pillow = "==8.3.1" # same as lambda layer
+pillow = "==9.2.0" # same as lambda layer
 pre-commit = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.2.10" # same as lambda layer
+rasterio = "==1.3.2" # same as lambda layer
 
 [packages]
 aioboto3 = "*"
@@ -28,7 +28,7 @@ aenum = "<3.0"
 async_lru = "*"
 asyncpg = "*"
 cachetools = "*"
-fastapi = "<0.69"
+fastapi = "*"
 geojson = "*"
 gino = "*"
 gino_starlette = "*"
@@ -41,9 +41,10 @@ pendulum = "*"
 psycopg2 = "*"
 pyproj = "*"
 requests = "*"
-SQLAlchemy = "*"
+SQLAlchemy = "<1.4"
 shapely = "*"
-uvicorn = "*"
+starlette = "*"  # "<0.15"
+uvicorn = {version = "*", extras = ["standard"]}
 
 [requires]
 python_version = "3.8"

@@ -11,7 +11,8 @@ data "archive_file" "default" {
 
 
 resource "aws_lambda_function" "default" {
-  # Function was imported from core module and we need first to detach it from cloud front, wait until all replicas are deleted and then rename it
+  # Function was imported from core module and we need first to detach it
+  # from cloud front, wait until all replicas are deleted and then rename it
 
   function_name    = "${var.project}-lambda-tiler"
   filename         = data.archive_file.default.output_path
@@ -26,7 +27,7 @@ resource "aws_lambda_function" "default" {
   tags             = var.tags
   environment {
     variables = {
-      DATA_LAKE_BUCKET    = var.data_lake_bucket_name
+      DATA_LAKE_BUCKET = var.data_lake_bucket_name
       LOG_LEVEL = var.log_level
       ENV       = var.environment
       TILE_CACHE_URL = var.tile_cache_url
@@ -82,7 +83,6 @@ resource "aws_iam_role_policy_attachment" "read_s3" {
 }
 
 
-
 data "template_file" "iam_lambda_invoke" {
   template = file("${path.module}/templates/lambda_invoke_policy.json.tmpl")
   vars = {
@@ -92,6 +92,5 @@ data "template_file" "iam_lambda_invoke" {
 
 resource "aws_iam_policy" "lambda_invoke" {
   name = "${aws_lambda_function.default.function_name}-invoke"
-  //  policy = data.template_file.iam_lambda_invoke.rendered
   policy = data.template_file.iam_lambda_invoke.rendered
 }

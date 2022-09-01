@@ -39,7 +39,7 @@ services:
 
   test_database:
     container_name: gfw-tile-cache-test-database
-    image: postgis/postgis:11-3.0-alpine
+    image: postgis/postgis:12-2.5-alpine
     ports:
       - 54322:5432
     environment:
