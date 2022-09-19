@@ -34,7 +34,7 @@ gino = "*"
 gino_starlette = "*"
 httpx = "*"
 httpx-auth = "*"
-jinja2 = "*"
+jinja2 = "<3.0"
 mercantile = "==1.2.1" # same as lambda layer
 orjson = "*"
 pendulum = "*"
