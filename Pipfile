@@ -18,7 +18,7 @@ pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.3.3" # same as lambda layer
+rasterio = "==1.3.4" # same as lambda layer
 
 [packages]
 aioboto3 = "*"
