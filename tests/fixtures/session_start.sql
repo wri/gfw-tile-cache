@@ -135,7 +135,7 @@ GRANT ALL ON TABLE public.geostore TO gfw;
 
 DROP TABLE IF EXISTS public.version_metadata CASCADE;
 
-CREATE TABLE public.version_metadsata
+CREATE TABLE public.version_metadata
 (
     created_on timestamp without time zone DEFAULT now(),
     updated_on timestamp without time zone DEFAULT now(),
