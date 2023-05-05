@@ -150,7 +150,6 @@ CREATE TABLE public.version_metadsata
     description character,
     resolution numeric,
     geographic_coverage character,
-    updated_on character,
     citation character,
     scale character,
     CONSTRAINT datasets_pkey PRIMARY KEY (id),
