@@ -133,6 +133,41 @@ ALTER TABLE public.geostore
 
 GRANT ALL ON TABLE public.geostore TO gfw;
 
+DROP TABLE IF EXISTS public.version_metadata CASCADE;
+
+CREATE TABLE public.version_metadsata
+(
+    created_on timestamp without time zone DEFAULT now(),
+    updated_on timestamp without time zone DEFAULT now(),
+    id uuid NOT NULL,
+    title character
+    dataset character
+    version character
+    content_date date,
+    content_start_date date,
+    content_end_date date,
+    last_update date,
+    description character
+    resolution numeric
+    geographic_coverage character
+    updated_on character
+    citation character
+    scale character
+    CONSTRAINT datasets_pkey PRIMARY KEY (id)
+    CONSTRAINT fk FOREIGN KEY (dataset, version)
+        REFERENCES public.versions (dataset, version) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public.version_metadata
+    OWNER to gfw;
+
+GRANT ALL ON TABLE public.datasets TO gfw;
 -- GRANT SELECT ON TABLE public.geostore TO gfw_readonly;
 
 -- Index: geostore_gfw_geostore_id_idx
@@ -148,18 +183,23 @@ CREATE INDEX geostore_gfw_geostore_id_idx
 INSERT INTO public.datasets (dataset) VALUES ('nasa_viirs_fire_alerts');
 INSERT INTO public.versions (dataset, version, is_latest, status)
   VALUES ('nasa_viirs_fire_alerts', 'v202003', true, 'saved');
-INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
-    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Geo database table', '{}', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true, true);
-INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
-    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{"min_zoom": 0, "max_zoom": 12, "field_attributes": null}', '{"content_date_range": {"max": "2020-01-01", "min": "2019-01-01"}}', '[{"field_name":"dynamic_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri2', true, false);
+INSERT INTO public.assets (dataset, version, asset_type, creation_options, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Geo database table', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri', true, true);
+INSERT INTO public.assets (dataset, version, asset_type, creation_options, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', 'Dynamic vector tile cache', '{"min_zoom": 0, "max_zoom": 12, "field_attributes": null}', '[{"field_name":"dynamic_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri2', true, false);
+INSERT INTO public.version_metadata (dataset, version, content_start_date, content_end_date)
+    VALUES ('nasa_viirs_fire_alerts', 'v202003', '2020-01-01', '2019-01-01')
 
 INSERT INTO public.datasets (dataset) VALUES ('umd_modis_burned_areas');
 INSERT INTO public.versions (dataset, version, is_latest, status)
   VALUES ('umd_modis_burned_areas', 'v202003', true, 'saved');
+INSERT INTO public.version_metadata (dataset, version, content_start_date, content_end_date)
+    VALUES ('umd_modis_burned_areas', 'v202003', '2020-01-01', '2019-01-01')
+
 INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
     VALUES ('umd_modis_burned_areas', 'v202003', 'Geo database table', '{}', '{}', '[{"field_name":"test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '327fdd68-2d07-4ced-99f1-69e7f74b20b7', 'saved', 'my_uri8', true, true);
-INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
-    VALUES ('umd_modis_burned_areas', 'v202003', 'Dynamic vector tile cache', '{"min_zoom": 0, "max_zoom": 12, "field_attributes": null}', '{"content_date_range": {"max": "2020-01-01", "min": "2019-01-01"}}', '[{"field_name":"dynamic_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri9', true, false);
+INSERT INTO public.assets (dataset, version, asset_type, creation_options, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('umd_modis_burned_areas', 'v202003', 'Dynamic vector tile cache', '{"min_zoom": 0, "max_zoom": 12, "field_attributes": null}', '[{"field_name":"dynamic_test", "field_alias": "TEST", "field_type": "text", "field_description": null, "is_feature_info": true, "is_filter": false}]', '33fd3dee-8f21-4ee6-9a90-e2bd2e1d5533', 'saved', 'my_uri9', true, false);
 
 INSERT INTO public.datasets (dataset) VALUES ('wdpa_protected_areas');
 INSERT INTO public.versions (dataset, version, is_latest, status)
