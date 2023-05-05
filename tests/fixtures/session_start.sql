@@ -140,20 +140,20 @@ CREATE TABLE public.version_metadsata
     created_on timestamp without time zone DEFAULT now(),
     updated_on timestamp without time zone DEFAULT now(),
     id uuid NOT NULL,
-    title character
-    dataset character
-    version character
+    title character,
+    dataset character,
+    version character,
     content_date date,
     content_start_date date,
     content_end_date date,
     last_update date,
-    description character
-    resolution numeric
-    geographic_coverage character
-    updated_on character
-    citation character
-    scale character
-    CONSTRAINT datasets_pkey PRIMARY KEY (id)
+    description character,
+    resolution numeric,
+    geographic_coverage character,
+    updated_on character,
+    citation character,
+    scale character,
+    CONSTRAINT datasets_pkey PRIMARY KEY (id),
     CONSTRAINT fk FOREIGN KEY (dataset, version)
         REFERENCES public.versions (dataset, version) MATCH SIMPLE
         ON UPDATE NO ACTION
