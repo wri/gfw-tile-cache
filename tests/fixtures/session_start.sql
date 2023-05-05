@@ -152,7 +152,7 @@ CREATE TABLE public.version_metadsata
     geographic_coverage character,
     citation character,
     scale character,
-    CONSTRAINT datasets_pkey PRIMARY KEY (id),
+    CONSTRAINT version_meta_pkey PRIMARY KEY (id),
     CONSTRAINT fk FOREIGN KEY (dataset, version)
         REFERENCES public.versions (dataset, version) MATCH SIMPLE
         ON UPDATE NO ACTION
