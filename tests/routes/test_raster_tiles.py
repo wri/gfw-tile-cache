@@ -83,6 +83,7 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
     finally:
         _get_logs()
 
+
 @pytest.mark.skip("Skip to deploy metadata fixes")
 @pytest.mark.parametrize(
     "params, payload",

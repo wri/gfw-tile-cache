@@ -1,4 +1,5 @@
 import pytest
+
 from app.routes.preview import get_default_style_spec
 
 

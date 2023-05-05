@@ -106,6 +106,7 @@ def test_latest_date():
     result = "2020-01-01"
     assert result == get_latest_date("nasa_viirs_fire_alerts", "v202003")
 
+
 @pytest.mark.skip("Skip to deploy metadata fixes")
 def test_get_dataset_tile_caches():
     tile_caches = get_dataset_tile_caches(
