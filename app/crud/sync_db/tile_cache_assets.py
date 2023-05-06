@@ -53,8 +53,12 @@ def get_all_tile_caches():
                 "fields": row.fields,
                 "min_zoom": row.min_zoom,
                 "max_zoom": row.max_zoom,
-                "min_date": row.min_date.strftime('%Y-%m-%d'),
-                "max_date": row.max_date.strftime('%Y-%m-%d'),
+                "min_date": row.min_date.strftime("%Y-%m-%d")
+                if row.min_date is not None
+                else None,
+                "max_date": row.max_date.strftime("%Y-%m-%d")
+                if row.max_date is not None
+                else None,
                 "asset_uri": row.asset_uri,
                 "asset_type": row.asset_type,
             }
