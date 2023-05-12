@@ -28,12 +28,13 @@ def get_all_tile_caches():
                     assets.creation_options->'max_zoom' as max_zoom,
                     version_metadata.content_start_date as min_date,
                     version_metadata.content_end_date as max_date
-                   FROM versions
-                    JOIN assets
+                   FROM assets
+                    JOIN versions
                     ON versions.dataset = assets.dataset
                         AND versions.version = assets.version
-                    JOIN version_metadata
-                    ON versions.version = version_metadata.version
+                    LEFT JOIN version_metadata
+                    ON versions.dataset = version_metadata.dataset
+                        AND versions.version = version_metadata.version
                    WHERE assets.asset_type IN {str(tuple([e.value for e in list(TileCacheType)])).replace('"', "'")}
                     AND assets.status = 'saved'"""
         ).fetchall()
