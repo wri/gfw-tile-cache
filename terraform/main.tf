@@ -20,7 +20,7 @@ locals {
 
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.3.0"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.3"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
   tag        = local.container_tag
@@ -28,7 +28,7 @@ module "container_registry" {
 
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.3.0"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.2.3"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
@@ -87,9 +87,9 @@ module "lambda_raster_tiler" {
   source      = "./modules/lambda_raster_tiler"
   environment = var.environment
   lambda_layers = [
-    data.terraform_remote_state.lambda_layers.outputs.py38_pillow_930_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py38_rasterio_134_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py38_mercantile_121_arn
+    data.terraform_remote_state.lambda_layers.outputs.py310_pillow_950_arn,
+    data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_134_arn,
+    data.terraform_remote_state.lambda_layers.outputs.py310_mercantile_121_arn
   ]
   log_level  = var.log_level
   project    = local.project

@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-slim
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10-slim
 
 # Optional build argument for different environments
 ARG ENV
@@ -6,7 +6,7 @@ ARG ENV
 RUN apt-get -y update && apt-get -y --no-install-recommends install \
         make gcc libc-dev libgeos-dev musl-dev libpq-dev libffi-dev
 
-RUN pip install --upgrade pip && pip install pipenv
+RUN pip install --upgrade pip && pip install pipenv==v2022.11.30
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 

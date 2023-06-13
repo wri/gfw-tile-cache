@@ -9,10 +9,10 @@ url = "https://test.pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "==22.6.0"  # Pin to avoid having to allow pre-releases
+black = "==22.12.0"  # Pin to avoid having to allow pre-releases
 detect-secrets = "*"
 flake8 = "*"
-pillow = "==9.3.0" # same as lambda layer
+pillow = "==9.5.0" # same as lambda layer
 pre-commit = "*"
 pytest = "*"
 pytest-asyncio = "*"
@@ -47,7 +47,7 @@ starlette = "<0.15"
 uvicorn = {version = "*", extras = ["standard"]}
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"
 
 [pipenv]
 allow_prereleases = false

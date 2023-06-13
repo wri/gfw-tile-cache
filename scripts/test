@@ -24,16 +24,16 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if ! [ -f "tests/fixtures/python3.8-rasterio_1.1.8.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-rasterio_1.1.8.zip tests/fixtures/python3.8-rasterio_1.1.8.zip
+if ! [ -f "tests/fixtures/python3.10-rasterio_1.3.4.zip" ]; then
+    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-rasterio_1.3.4.zip tests/fixtures/python3.10-rasterio_1.3.4.zip
 fi
 
-if ! [ -f "tests/fixtures/python3.8-pillow_8.1.1.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-pillow_8.0.1.zip tests/fixtures/python3.8-pillow_8.1.1.zip
+if ! [ -f "tests/fixtures/python3.10-pillow_9.5.0.zip" ]; then
+    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-pillow_9.5.0.zip tests/fixtures/python3.10-pillow_9.5.0.zip
 fi
 
-if ! [ -f "tests/fixtures/python3.8-mercantile_1.2.1.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.8-mercantile_1.2.1.zip tests/fixtures/python3.8-mercantile_1.2.1.zip
+if ! [ -f "tests/fixtures/python3.10-mercantile_1.2.1.zip" ]; then
+    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-mercantile_1.2.1.zip tests/fixtures/python3.10-mercantile_1.2.1.zip
 fi
 
 
