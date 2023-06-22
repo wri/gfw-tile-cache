@@ -26,12 +26,15 @@ def get_all_tile_caches():
                     assets.fields as fields,
                     assets.creation_options->'min_zoom' as min_zoom,
                     assets.creation_options->'max_zoom' as max_zoom,
-                    assets.metadata->'content_date_range'->'min' as min_date,
-                    assets.metadata->'content_date_range'->'max' as max_date
-                   FROM versions
-                    JOIN assets
+                    version_metadata.content_start_date as min_date,
+                    version_metadata.content_end_date as max_date
+                   FROM assets
+                    JOIN versions
                     ON versions.dataset = assets.dataset
                         AND versions.version = assets.version
+                    LEFT JOIN version_metadata
+                    ON versions.dataset = version_metadata.dataset
+                        AND versions.version = version_metadata.version
                    WHERE assets.asset_type IN {str(tuple([e.value for e in list(TileCacheType)])).replace('"', "'")}
                     AND assets.status = 'saved'"""
         ).fetchall()
@@ -51,8 +54,12 @@ def get_all_tile_caches():
                 "fields": row.fields,
                 "min_zoom": row.min_zoom,
                 "max_zoom": row.max_zoom,
-                "min_date": row.min_date,
-                "max_date": row.max_date,
+                "min_date": row.min_date.strftime("%Y-%m-%d")
+                if row.min_date is not None
+                else None,
+                "max_date": row.max_date.strftime("%Y-%m-%d")
+                if row.max_date is not None
+                else None,
                 "asset_uri": row.asset_uri,
                 "asset_type": row.asset_type,
             }
