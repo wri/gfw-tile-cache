@@ -3,11 +3,6 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-[[source]]
-name = "pypi-test"
-url = "https://test.pypi.org/simple"
-verify_ssl = true
-
 [dev-packages]
 black = "==22.12.0"  # Pin to avoid having to allow pre-releases
 detect-secrets = "*"
@@ -18,7 +13,7 @@ pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.3.4" # same as lambda layer
+rasterio = "==1.3.7" # same as lambda layer
 
 [packages]
 aioboto3 = "*"
