@@ -571,7 +571,7 @@ resource "aws_lambda_function" "redirect_latest_tile_cache" {
   filename         = data.archive_file.redirect_latest_tile_cache.output_path
   source_code_hash = data.archive_file.redirect_latest_tile_cache.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
-  runtime          = "python3.10"
+  runtime          = "python3.9"
   handler          = "lambda_function.handler"
   memory_size      = 128
   timeout          = 3
@@ -585,7 +585,7 @@ resource "aws_lambda_function" "redirect_s3_404" {
   filename         = data.archive_file.redirect_s3_404.output_path
   source_code_hash = data.archive_file.redirect_s3_404.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
-  runtime          = "python3.10"
+  runtime          = "python3.9"
   handler          = "lambda_function.handler"
   memory_size      = 128
   timeout          = 3
@@ -599,7 +599,7 @@ resource "aws_lambda_function" "response_header_cache_control" {
   filename         = data.archive_file.response_header_cache_control.output_path
   source_code_hash = data.archive_file.response_header_cache_control.output_base64sha256
   role             = aws_iam_role.lambda_edge_cloudfront.arn
-  runtime          = "python3.10"
+  runtime          = "python3.9"
   handler          = "lambda_function.handler"
   memory_size      = 128
   timeout          = 3
