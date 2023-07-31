@@ -541,6 +541,16 @@ resource "aws_iam_policy" "create_cloudfront_invalidation" {
 
 }
 
+data "local_file" "lambda_cloudwatch" {
+  filename = "${path.root}/policies/cloudwatch_log_policy.json.tpl"
+}
+
+resource "aws_iam_role_policy" "lambda_cloudwatch" {
+  name   = "${var.project}-cloudwatch_log_policy${var.name_suffix}"
+  policy = data.local_file.lambda_cloudwatch.content
+  role = aws_iam_role.lambda_edge_cloudfront.name
+
+}
 
 #########################
 ## Lambda@Edge Functions
@@ -644,33 +654,3 @@ resource "aws_iam_role_policy_attachment" "s3_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
 
-##################
-## Logging
-##################
-
-
-data "aws_regions" "current" {
-  all_regions = true
-}
-
-
-resource "aws_cloudwatch_log_group" "lambda_redirect_latest" {
-  count = length(tolist(data.aws_regions.current.names))
-
-  name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_latest_tile_cache${var.name_suffix}"
-  retention_in_days = var.log_retention
-}
-
-resource "aws_cloudwatch_log_group" "redirect_s3_404" {
-  count = length(tolist(data.aws_regions.current.names))
-
-  name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-redirect_s3_404${var.name_suffix}"
-  retention_in_days = var.log_retention
-}
-
-resource "aws_cloudwatch_log_group" "response_header_cache_control" {
-  count = length(tolist(data.aws_regions.current.names))
-
-  name              = "/aws/lambda/${tolist(data.aws_regions.current.names)[count.index]}.${var.project}-response_header_cache_control${var.name_suffix}"
-  retention_in_days = var.log_retention
-}
