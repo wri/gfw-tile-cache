@@ -63,9 +63,9 @@ class TileNotFoundError(Exception):
 
 
 def scale_intensity(zoom: int) -> Callable:
-    """
-    Simplified implementing of d3.scalePow()
-    Assuming that both domain and range always start with 0
+    """Simplified implementing of d3.scalePow().
+
+    Assuming that both domain and range always start with 0.
     """
     exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
     domain = (0, 255)
@@ -121,7 +121,8 @@ def apply_annual_loss_filter(
 
 
 def days_since_bog(d: date) -> int:
-    """Convert date into number of days since 2014-12-31 (beginning of GLAD)."""
+    """Convert date into number of days since 2014-12-31 (beginning of
+    GLAD)."""
 
     baseyear = 2015
     year = d.year
@@ -140,6 +141,7 @@ def get_alpha_band(
     confirmed_only: Optional[bool],
 ) -> ndarray:
     """Compute alpha value based on RGB encoding and applied filters.
+
     Expecting 3D array.
     """
 
@@ -360,7 +362,7 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
 
 def seperate_bands(arr: ndarray) -> ndarray:
 
-    logger.debug("Store bands in seperate arrays")
+    logger.debug("Store bands in separate arrays")
     # convert data from (height, width, bands) to (bands, height, width)
     shape = arr.shape
     return arr.transpose((2, 1, 0)).reshape(shape[::-1])
@@ -378,7 +380,7 @@ def combine_bands(arr: ndarray) -> ndarray:
 
 
 def array_to_img(arr: np.ndarray) -> str:
-    """Convert a numpy array to an base64 encoded img."""
+    """Convert a numpy array to a base64 encoded img."""
 
     logger.debug("Convert array into image")
 
@@ -416,7 +418,6 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     source: str = "datalake"
     filter_type: Optional[str] = None
     over_zoom: Optional[int] = None
-
     """
 
     logger.debug(f"EVENT DATA: {json.dumps(event)}")
