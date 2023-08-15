@@ -88,7 +88,7 @@ module "lambda_raster_tiler" {
   environment = var.environment
   lambda_layers = [
     data.terraform_remote_state.lambda_layers.outputs.py310_pillow_950_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_137_arn,
+    data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_138_arn,
     data.terraform_remote_state.lambda_layers.outputs.py310_mercantile_121_arn
   ]
   log_level  = var.log_level
