@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">=0.13"
+  required_version = ">= 0.13, < 0.14"
 }
 
 provider "aws" {
@@ -17,10 +17,9 @@ provider "aws" {
     cloudwatchlogs = "http://localstack:4566"
     sts = "http://localstack:4566"
     cloudwatchevents = "http://localstack:4566"
-    secretsmanager = "http://localstack:4566"
+    secretsmanager = "http://localstack:4566"  # pragma: allowlist secret
   }
 }
-
 
 
 resource "aws_s3_bucket" "data_lake_test" {
@@ -41,19 +40,19 @@ resource "aws_s3_bucket" "tiles_test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "py310_rasterio_134" {
+resource "aws_s3_bucket_object" "py310_rasterio_138" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.8-rasterio_1.1.8.zip"
-  source = "../fixtures/python3.10-rasterio_1.3.4.zip"
-  etag   = filemd5("../fixtures/python3.10-rasterio_1.3.4.zip")
+  key    = "lambda_layers/python3.10-rasterio_1.3.8.zip"
+  source = "../fixtures/python3.10-rasterio_1.3.8.zip"
+  etag   = filemd5("../fixtures/python3.10-rasterio_1.3.8.zip")
 }
 
-resource "aws_lambda_layer_version" "py310_rasterio_134" {
-  layer_name          = substr("py310_rasterio_134", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py310_rasterio_134.bucket
-  s3_key              = aws_s3_bucket_object.py310_rasterio_134.key
+resource "aws_lambda_layer_version" "py310_rasterio_138" {
+  layer_name          = substr("py310_rasterio_138", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.py310_rasterio_138.bucket
+  s3_key              = aws_s3_bucket_object.py310_rasterio_138.key
   compatible_runtimes = ["python3.10"]
-  source_code_hash    = filebase64sha256("../fixtures/python3.10-rasterio_1.3.4.zip")
+  source_code_hash    = filebase64sha256("../fixtures/python3.10-rasterio_1.3.8.zip")
 }
 
 resource "aws_s3_bucket_object" "py310_pillow_950" {
@@ -92,7 +91,7 @@ module "lambda_raster_tiler" {
   environment = "test"
   lambda_layers = [
     aws_lambda_layer_version.py310_pillow_950.arn,
-    aws_lambda_layer_version.py310_rasterio_134.arn,
+    aws_lambda_layer_version.py310_rasterio_138.arn,
     aws_lambda_layer_version.py310_mercantile_121.arn]
   log_level  = "debug"
   project    = "test_project"
