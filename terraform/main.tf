@@ -20,7 +20,7 @@ locals {
 
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.5"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.4"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
   tag        = local.container_tag
@@ -28,7 +28,7 @@ module "container_registry" {
 
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.5"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.2.4"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
