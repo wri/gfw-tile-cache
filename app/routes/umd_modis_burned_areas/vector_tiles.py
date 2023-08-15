@@ -81,7 +81,7 @@ async def umd_modis_burned_areas_tile(
 ) -> VectorTileResponse:
     """"""
     bbox, z, extent = bbox_z
-    validate_dates(start_date, end_date, default_end(dataset), force_date_range)
+    validate_dates(start_date, end_date, force_date_range)
 
     filters = [
         await geometry_filter(geostore_id, bbox, geostore_origin),
