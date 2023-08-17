@@ -19,7 +19,7 @@ resource "aws_lambda_function" "default" {
   source_code_hash = data.archive_file.default.output_base64sha256
   role             = aws_iam_role.default.arn
   layers           = var.lambda_layers
-  runtime          = "python3.10"
+  runtime          = "python3.8"
   handler          = "lambda_function.handler"
   memory_size      = 256
   timeout          = 30
