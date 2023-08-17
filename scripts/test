@@ -24,8 +24,8 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if ! [ -f "tests/fixtures/python3.10-rasterio_1.3.4.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-rasterio_1.3.4.zip tests/fixtures/python3.10-rasterio_1.3.4.zip
+if ! [ -f "tests/fixtures/python3.10-rasterio_1.3.8.zip" ]; then
+    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-rasterio_1.3.8.zip tests/fixtures/python3.10-rasterio_1.3.8.zip
 fi
 
 if ! [ -f "tests/fixtures/python3.10-pillow_9.5.0.zip" ]; then
