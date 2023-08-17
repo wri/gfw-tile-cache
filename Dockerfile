@@ -14,10 +14,10 @@ RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
 	     echo "Install all dependencies" && \
 	     apt-get install -y --no-install-recommends git postgresql-client lsb-release && \
 	     pipenv install --system --deploy --ignore-pipfile --dev && \
-         apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common && \
-         curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-		 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
-         apt update && apt install -y terraform=0.13.7; \
+         apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl gnupg-agent software-properties-common && \
+         curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+		 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
+         apt update && apt install -y --no-install-recommends terraform=0.13.7; \
 	else \
 	     echo "Install production dependencies only" && \
 	     pipenv install --system --deploy; \
