@@ -52,11 +52,11 @@ services:
     restart: on-failure
 
   localstack:
-    image: localstack/localstack:0.12.20
+    image: localstack/localstack:0.14.5
     container_name: localstack
     ports:
       - '443:443'
-      - '4563-4584:4563-4584'
+      - '4510-4559:4510-4559'
       - '8055:8080'
       - '${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}'
     environment:
