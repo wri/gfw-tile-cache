@@ -23,7 +23,7 @@ aenum = "<3.0"
 async_lru = "*"
 asyncpg = "*"
 cachetools = "*"
-fastapi = "*"
+fastapi = "<0.68"
 geojson = "*"
 gino = "*"
 gino_starlette = "*"
@@ -38,7 +38,7 @@ pyproj = "*"
 requests = "*"
 SQLAlchemy = "<1.4"
 shapely = "*"
-starlette = "*"
+starlette = "<0.15"
 uvicorn = {version = "*", extras = ["standard"]}
 
 [requires]
