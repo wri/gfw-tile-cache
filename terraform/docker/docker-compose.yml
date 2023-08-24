@@ -7,10 +7,9 @@ services:
       - $HOME/.aws:/root/.aws:ro
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - ENV=dev
+      - ENV
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_REGION=us-east-1
-      - AWS_DEFAULT_PROFILE=gfw-dev
     working_dir: /usr/local/src
     entrypoint: infra
