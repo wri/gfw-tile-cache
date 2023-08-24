@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.8"
 
 services:
   app:
@@ -16,14 +16,14 @@ services:
     environment:
       - DATABASE_RO=_test
       - DB_USER_RO=gfw
-      - DB_PASSWORD_RO=postgres  # pragma: allowlist secret
+      - DB_PASSWORD_RO=postgres     # pragma: allowlist secret
       - DB_PORT_RO=5432
       - DB_HOST_RO=test_database
       - LOG_LEVEL=debug
-      - AWS_ACCESS_KEY_ID=testing  # pragma: allowlist secret
+      - AWS_ACCESS_KEY_ID=testing      # pragma: allowlist secret
       - AWS_SECRET_ACCESS_KEY=testing  # pragma: allowlist secret
-      - AWS_SECURITY_TOKEN=testing  # pragma: allowlist secret
-      - AWS_SESSION_TOKEN=testing  # pragma: allowlist secret
+      - AWS_SECURITY_TOKEN=testing     # pragma: allowlist secret
+      - AWS_SESSION_TOKEN=testing      # pragma: allowlist secret
       - AWS_ENDPOINT_URI=http://localstack:4566
       - LOCALSTACK_HOSTNAME=localstack
       - HTTPX_TIMEOUT=60
@@ -41,7 +41,7 @@ services:
     container_name: gfw-tile-cache-test-database
     image: postgis/postgis:12-2.5-alpine
     ports:
-      - 54322:5432
+      - "54322:5432"
     environment:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=_test
@@ -52,12 +52,14 @@ services:
     restart: on-failure
 
   localstack:
-    image: localstack/localstack:0.14.5
     container_name: localstack
+    image: localstack/localstack-pro:2.2.0  # required for Pro
     ports:
-      - '443:443'
-      - '4510-4559:4510-4559'
-      - '4566:4566'
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+      - "127.0.0.1:53:53"                # DNS config (required for Pro)
+      - "127.0.0.1:53:53/udp"            # DNS config (required for Pro)
+      - "127.0.0.1:443:443"              # LocalStack HTTPS Gateway (required for Pro)
       - '8055:8080'
       - '${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}'
     environment:
@@ -66,13 +68,14 @@ services:
       - DISABLE_EVENTS=1
       - LAMBDA_DOCKER_NETWORK=gfw-tile-cache_test_default
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
-      - LAMBDA_REMOTE_DOCKER=1
+      - LAMBDA_KEEPALIVE_MS=0
       - DOCKER_HOST=unix:///var/run/docker.sock
       - HOSTNAME_EXTERNAL=localstack
       - HOSTNAME=localstack
     volumes:
       - "${TMPDIR:-./localstack}:/tmp/localstack"
       - '/var/run/docker.sock:/var/run/docker.sock'
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
 volumes:
   test_database_data:
