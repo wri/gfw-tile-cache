@@ -2,6 +2,14 @@
 
 set -e
 
+PYTHON_RUNTIME="python3.10"
+MERCANTILE_VERSION="1.2.1"
+PILLOW_VERSION="9.5.0"
+RASTERIO_VERSION="1.3.8"
+
+MERCANTILE_FILENAME="${PYTHON_RUNTIME}-mercantile_${MERCANTILE_VERSION}.zip"
+PILLOW_FILENAME="${PYTHON_RUNTIME}-pillow_${PILLOW_VERSION}.zip"
+RASTERIO_FILENAME="${PYTHON_RUNTIME}-rasterio_${RASTERIO_VERSION}.zip"
 
 # Default values
 POSITIONAL=()
@@ -24,18 +32,11 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if ! [ -f "tests/fixtures/python3.10-rasterio_1.3.8.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-rasterio_1.3.8.zip tests/fixtures/python3.10-rasterio_1.3.8.zip
-fi
-
-if ! [ -f "tests/fixtures/python3.10-pillow_9.5.0.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-pillow_9.5.0.zip tests/fixtures/python3.10-pillow_9.5.0.zip
-fi
-
-if ! [ -f "tests/fixtures/python3.10-mercantile_1.2.1.zip" ]; then
-    aws s3 cp s3://gfw-pipelines-dev/lambda_layers/python3.10-mercantile_1.2.1.zip tests/fixtures/python3.10-mercantile_1.2.1.zip
-fi
-
+for filename in $MERCANTILE_FILENAME $PILLOW_FILENAME $RASTERIO_FILENAME; do
+  if ! [ -f "tests/fixtures/${FILENAME}" ]; then
+      aws s3 cp s3://gfw-pipelines-dev/lambda_layers/${filename} tests/fixtures/${filename}
+  fi
+done
 
 if [ "${BUILD}" = true ]; then
   docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
