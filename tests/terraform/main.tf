@@ -70,7 +70,6 @@ resource "aws_lambda_layer_version" "py310_pillow_950" {
   source_code_hash    = filebase64sha256("../fixtures/python3.10-pillow_9.5.0.zip")
 }
 
-
 resource "aws_s3_bucket_object" "py310_mercantile_121" {
   bucket = aws_s3_bucket.pipelines_test.id
   key    = "lambda_layers/python3.10-mercantile_1.2.1.zip"
@@ -92,7 +91,9 @@ module "lambda_raster_tiler" {
   lambda_layers = [
     aws_lambda_layer_version.py310_pillow_950.arn,
     aws_lambda_layer_version.py310_rasterio_138.arn,
-    aws_lambda_layer_version.py310_mercantile_121.arn]
+    aws_lambda_layer_version.py310_mercantile_121.arn
+  ]
+  lambda_runtime = "python3.10"
   log_level  = "debug"
   project    = "test_project"
   source_dir = "../../lambdas/raster_tiler"

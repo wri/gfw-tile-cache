@@ -67,6 +67,7 @@ module "content_delivery_network" {
   project            = local.project
   tags               = local.tags
   website_endpoint   = module.storage.tiles_bucket_website_endpoint
+  lambda_edge_runtime = "python3.9"
   tile_cache_app_url = module.orchestration.lb_dns_name
   log_retention      = var.log_retention
   tile_cache_url     = var.tile_cache_url
@@ -91,6 +92,7 @@ module "lambda_raster_tiler" {
     data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_138_arn,
     data.terraform_remote_state.lambda_layers.outputs.py310_mercantile_121_arn
   ]
+  lambda_runtime = "python3.10"
   log_level  = var.log_level
   project    = local.project
   source_dir = "${path.root}/../lambdas/raster_tiler"

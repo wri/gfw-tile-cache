@@ -7,6 +7,10 @@ variable "log_retention" {
 }
 variable "source_dir" { type = string }
 variable "lambda_layers" { type = list(string) }
+variable "lambda_runtime" {
+  type = string
+  description = "Runtime name and version (example: python3.10)"
+}
 variable "project" { type = string }
 variable "tags" { type = map(string) }
 variable "data_lake_bucket_name" { type = string }
