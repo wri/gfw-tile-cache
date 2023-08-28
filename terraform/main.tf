@@ -17,7 +17,6 @@ locals {
   tile_cache_url  = "https://${var.tile_cache_url}"
 }
 
-
 # Docker file for FastAPI app
 module "container_registry" {
   source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.4"
@@ -25,7 +24,6 @@ module "container_registry" {
   root_dir   = "../${path.root}"
   tag        = local.container_tag
 }
-
 
 module "orchestration" {
   source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.2.4"
@@ -57,20 +55,19 @@ module "orchestration" {
   container_definition         = data.template_file.container_definition.rendered
 }
 
-
 module "content_delivery_network" {
-  source             = "./modules/content_delivery_network"
-  bucket_domain_name = module.storage.tiles_bucket_domain_name
-  certificate_arn    = data.terraform_remote_state.core.outputs.acm_certificate
-  environment        = var.environment
-  name_suffix        = local.name_suffix
-  project            = local.project
-  tags               = local.tags
-  website_endpoint   = module.storage.tiles_bucket_website_endpoint
-  lambda_edge_runtime = "python3.9"
-  tile_cache_app_url = module.orchestration.lb_dns_name
-  log_retention      = var.log_retention
-  tile_cache_url     = var.tile_cache_url
+  source              = "./modules/content_delivery_network"
+  bucket_domain_name  = module.storage.tiles_bucket_domain_name
+  certificate_arn     = data.terraform_remote_state.core.outputs.acm_certificate
+  environment         = var.environment
+  name_suffix         = local.name_suffix
+  project             = local.project
+  tags                = local.tags
+  website_endpoint    = module.storage.tiles_bucket_website_endpoint
+  lambda_edge_runtime = var.lambda_edge_runtime
+  tile_cache_app_url  = module.orchestration.lb_dns_name
+  log_retention       = var.log_retention
+  tile_cache_url      = var.tile_cache_url
 }
 
 module "storage" {
@@ -92,7 +89,7 @@ module "lambda_raster_tiler" {
     data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_138_arn,
     data.terraform_remote_state.lambda_layers.outputs.py310_mercantile_121_arn
   ]
-  lambda_runtime = "python3.10"
+  lambda_runtime = var.lambda_runtime
   log_level  = var.log_level
   project    = local.project
   source_dir = "${path.root}/../lambdas/raster_tiler"

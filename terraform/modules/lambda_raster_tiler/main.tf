@@ -19,7 +19,7 @@ resource "aws_lambda_function" "default" {
   source_code_hash = data.archive_file.default.output_base64sha256
   role             = aws_iam_role.default.arn
   layers           = var.lambda_layers
-  runtime          = "python3.10"
+  runtime          = var.lambda_runtime
   handler          = "lambda_function.handler"
   memory_size      = 256
   timeout          = 30
@@ -28,9 +28,9 @@ resource "aws_lambda_function" "default" {
   environment {
     variables = {
       DATA_LAKE_BUCKET = var.data_lake_bucket_name
-      LOG_LEVEL = var.log_level
-      ENV       = var.environment
-      TILE_CACHE_URL = var.tile_cache_url
+      LOG_LEVEL        = var.log_level
+      ENV              = var.environment
+      TILE_CACHE_URL   = var.tile_cache_url
     }
   }
 }

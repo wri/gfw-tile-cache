@@ -40,60 +40,60 @@ resource "aws_s3_bucket" "tiles_test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "py310_rasterio_138" {
+resource "aws_s3_bucket_object" "rasterio_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.10-rasterio_1.3.8.zip"
-  source = "../fixtures/python3.10-rasterio_1.3.8.zip"
-  etag   = filemd5("../fixtures/python3.10-rasterio_1.3.8.zip")
+  key    = "lambda_layers/${var.lambda_runtime}-rasterio_1.3.8.zip"
+  source = "../fixtures/${var.lambda_runtime}-rasterio_1.3.8.zip"
+  etag   = filemd5("../fixtures/${var.lambda_runtime}-rasterio_1.3.8.zip")
 }
 
-resource "aws_lambda_layer_version" "py310_rasterio_138" {
-  layer_name          = substr("py310_rasterio_138", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py310_rasterio_138.bucket
-  s3_key              = aws_s3_bucket_object.py310_rasterio_138.key
-  compatible_runtimes = ["python3.10"]
+resource "aws_lambda_layer_version" "rasterio_layer" {
+  layer_name          = substr("${var.lambda_runtime_sn}_rasterio_138", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.rasterio_layer.bucket
+  s3_key              = aws_s3_bucket_object.rasterio_layer.key
+  compatible_runtimes = [var.lambda_runtime]
   source_code_hash    = filebase64sha256("../fixtures/python3.10-rasterio_1.3.8.zip")
 }
 
-resource "aws_s3_bucket_object" "py310_pillow_950" {
+resource "aws_s3_bucket_object" "pillow_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.10-pillow_9.5.0.zip"
-  source = "../fixtures/python3.10-pillow_9.5.0.zip"
-  etag   = filemd5("../fixtures/python3.10-pillow_9.5.0.zip")
+  key    = "lambda_layers/${var.lambda_runtime}-pillow_9.5.0.zip"
+  source = "../fixtures/${var.lambda_runtime}-pillow_9.5.0.zip"
+  etag   = filemd5("../fixtures/${var.lambda_runtime}-pillow_9.5.0.zip")
 }
 
-resource "aws_lambda_layer_version" "py310_pillow_950" {
-  layer_name          = substr("py310_pillow_950", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py310_pillow_950.bucket
-  s3_key              = aws_s3_bucket_object.py310_pillow_950.key
-  compatible_runtimes = ["python3.10"]
-  source_code_hash    = filebase64sha256("../fixtures/python3.10-pillow_9.5.0.zip")
+resource "aws_lambda_layer_version" "pillow_layer" {
+  layer_name          = substr("${var.lambda_runtime_sn}_pillow_950", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.pillow_layer.bucket
+  s3_key              = aws_s3_bucket_object.pillow_layer.key
+  compatible_runtimes = [var.lambda_runtime]
+  source_code_hash    = filebase64sha256("../fixtures/${var.lambda_runtime}-pillow_9.5.0.zip")
 }
 
-resource "aws_s3_bucket_object" "py310_mercantile_121" {
+resource "aws_s3_bucket_object" "mercantile_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.10-mercantile_1.2.1.zip"
-  source = "../fixtures/python3.10-mercantile_1.2.1.zip"
-  etag   = filemd5("../fixtures/python3.10-mercantile_1.2.1.zip")
+  key    = "lambda_layers/${var.lambda_runtime}-mercantile_1.2.1.zip"
+  source = "../fixtures/${var.lambda_runtime}-mercantile_1.2.1.zip"
+  etag   = filemd5("../fixtures/${var.lambda_runtime}-mercantile_1.2.1.zip")
 }
 
-resource "aws_lambda_layer_version" "py310_mercantile_121" {
-  layer_name          = substr("py310_mercantile_121", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py310_mercantile_121.bucket
-  s3_key              = aws_s3_bucket_object.py310_mercantile_121.key
-  compatible_runtimes = ["python3.10"]
-  source_code_hash    = filebase64sha256("../fixtures/python3.10-mercantile_1.2.1.zip")
+resource "aws_lambda_layer_version" "mercantile_layer" {
+  layer_name          = substr("${var.lambda_runtime_sn}_mercantile_121", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.mercantile_layer.bucket
+  s3_key              = aws_s3_bucket_object.mercantile_layer.key
+  compatible_runtimes = [var.lambda_runtime]
+  source_code_hash    = filebase64sha256("../fixtures/${var.lambda_runtime}-mercantile_1.2.1.zip")
 }
 
 module "lambda_raster_tiler" {
   source      = "../../terraform/modules/lambda_raster_tiler"
   environment = "test"
   lambda_layers = [
-    aws_lambda_layer_version.py310_pillow_950.arn,
-    aws_lambda_layer_version.py310_rasterio_138.arn,
-    aws_lambda_layer_version.py310_mercantile_121.arn
+    aws_lambda_layer_version.pillow_layer.arn,
+    aws_lambda_layer_version.rasterio_layer.arn,
+    aws_lambda_layer_version.mercantile_layer.arn
   ]
-  lambda_runtime = "python3.10"
+  lambda_runtime = var.lambda_runtime
   log_level  = "debug"
   project    = "test_project"
   source_dir = "../../lambdas/raster_tiler"
