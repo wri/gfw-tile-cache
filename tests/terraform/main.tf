@@ -21,6 +21,12 @@ provider "aws" {
   }
 }
 
+locals {
+  lambda_runtime_sn = replace(replace(var.lambda_runtime, ".", ""), "thon", "")
+  mercantile_layer_filename = "${var.lambda_runtime}-${var.mercantile_name_version}.zip"
+  pillow_layer_filename = "${var.lambda_runtime}-${var.pillow_name_version}.zip"
+  rasterio_layer_filename = "${var.lambda_runtime}-${var.rasterio_name_version}.zip"
+}
 
 resource "aws_s3_bucket" "data_lake_test" {
   bucket = "gfw-data-lake-test"
@@ -42,52 +48,52 @@ resource "aws_s3_bucket" "tiles_test" {
 
 resource "aws_s3_bucket_object" "rasterio_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/${var.lambda_runtime}-${rasterio_name_version}.zip"
-  source = "../fixtures/${var.lambda_runtime}-${rasterio_name_version}.zip"
-  etag   = filemd5("../fixtures/${var.lambda_runtime}-${rasterio_name_version}.zip")
+  key    = "lambda_layers/${local.rasterio_layer_filename}"
+  source = "../fixtures/${local.rasterio_layer_filename}"
+  etag   = filemd5("../fixtures/${local.rasterio_layer_filename}")
 }
 
 resource "aws_lambda_layer_version" "rasterio_layer" {
-  layer_name          = substr("${var.lambda_runtime_sn}_${replace(var.rasterio_name_version, ".", "")}", 0, 64)
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.rasterio_name_version, ".", "")}", 0, 64)
   s3_bucket           = aws_s3_bucket_object.rasterio_layer.bucket
   s3_key              = aws_s3_bucket_object.rasterio_layer.key
   compatible_runtimes = [var.lambda_runtime]
   source_code_hash    = filebase64sha256(
-    "../fixtures/${var.lambda_runtime}-${rasterio_name_version}.zip"
+    "../fixtures/${local.rasterio_layer_filename}"
   )
 }
 
 resource "aws_s3_bucket_object" "pillow_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/${var.lambda_runtime}-${pillow_name_version}.zip"
-  source = "../fixtures/${var.lambda_runtime}-${pillow_name_version}.zip"
-  etag   = filemd5("../fixtures/${var.lambda_runtime}-${pillow_name_version}.zip")
+  key    = "lambda_layers/${local.pillow_layer_filename}"
+  source = "../fixtures/${local.pillow_layer_filename}"
+  etag   = filemd5("../fixtures/${local.pillow_layer_filename}")
 }
 
 resource "aws_lambda_layer_version" "pillow_layer" {
-  layer_name          = substr("${var.lambda_runtime_sn}_${replace(var.pillow_name_version, ".", "")}", 0, 64)
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.pillow_name_version, ".", "")}", 0, 64)
   s3_bucket           = aws_s3_bucket_object.pillow_layer.bucket
   s3_key              = aws_s3_bucket_object.pillow_layer.key
   compatible_runtimes = [var.lambda_runtime]
   source_code_hash    = filebase64sha256(
-    "../fixtures/${var.lambda_runtime}-${pillow_name_version}.zip"
+    "../fixtures/${local.pillow_layer_filename}"
   )
 }
 
 resource "aws_s3_bucket_object" "mercantile_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/${var.lambda_runtime}-${mercantile_name_version}.zip"
-  source = "../fixtures/${var.lambda_runtime}-${mercantile_name_version}.zip"
-  etag   = filemd5("../fixtures/${var.lambda_runtime}-${mercantile_name_version}.zip")
+  key    = "lambda_layers/${local.mercantile_layer_filename}"
+  source = "../fixtures/${local.mercantile_layer_filename}"
+  etag   = filemd5("../fixtures/${local.mercantile_layer_filename}")
 }
 
 resource "aws_lambda_layer_version" "mercantile_layer" {
-  layer_name          = substr("${var.lambda_runtime_sn}_${replace(var.mercantile_name_version, ".", "")}", 0, 64)
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.mercantile_name_version, ".", "")}", 0, 64)
   s3_bucket           = aws_s3_bucket_object.mercantile_layer.bucket
   s3_key              = aws_s3_bucket_object.mercantile_layer.key
   compatible_runtimes = [var.lambda_runtime]
   source_code_hash    = filebase64sha256(
-    "../fixtures/${var.lambda_runtime}-${mercantile_name_version}.zip"
+    "../fixtures/${local.mercantile_layer_filename}"
   )
 }
 

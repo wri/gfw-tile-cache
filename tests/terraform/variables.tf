@@ -10,12 +10,6 @@ variable "lambda_runtime" {
   default     = "python3.10"
 }
 
-variable "lambda_runtime_sn" {
-  description = "Runtime name and version, short name (example: py310)"
-  type        = string
-  default     = replace(replace(var.lambda_runtime, ".", ""), "thon")
-}
-
 variable "mercantile_name_version" {
   description = "Name and version, separated by underscore (example: mercantile_1.2.1)"
   type        = string
