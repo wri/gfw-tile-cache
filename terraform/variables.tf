@@ -78,3 +78,15 @@ variable "auto_scaling_max_cpu_util" {
   type        = number
   description = "CPU usage percentage which will trigger autoscaling event."
 }
+
+variable "lambda_edge_runtime" {
+  description = "Runtime name and version (example: python3.10) for Lambda Edge"
+  type        = string
+  default     = "python3.9"
+}
+
+variable "lambda_runtime" {
+  description = "Runtime name and version (example: python3.10)"
+  type        = string
+  default     = "python3.10"
+}

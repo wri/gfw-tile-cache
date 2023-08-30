@@ -17,18 +17,16 @@ locals {
   tile_cache_url  = "https://${var.tile_cache_url}"
 }
 
-
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.3.0"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.4"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
   tag        = local.container_tag
 }
 
-
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.3.0"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.2.4"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
@@ -45,7 +43,10 @@ module "orchestration" {
   auto_scaling_max_cpu_util    = var.auto_scaling_max_cpu_util
   auto_scaling_min_capacity    = var.auto_scaling_min_capacity
   security_group_ids           = [data.terraform_remote_state.core.outputs.postgresql_security_group_id]
-  task_role_policies           = [module.lambda_raster_tiler.lambda_invoke_policy_arn, module.storage.s3_write_tiles_arn]
+  task_role_policies           = [
+    module.lambda_raster_tiler.lambda_invoke_policy_arn,
+    module.storage.s3_write_tiles_arn
+  ]
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn,
     data.terraform_remote_state.core.outputs.secrets_planet_api_key_policy_arn,
@@ -54,19 +55,19 @@ module "orchestration" {
   container_definition         = data.template_file.container_definition.rendered
 }
 
-
 module "content_delivery_network" {
-  source             = "./modules/content_delivery_network"
-  bucket_domain_name = module.storage.tiles_bucket_domain_name
-  certificate_arn    = data.terraform_remote_state.core.outputs.acm_certificate
-  environment        = var.environment
-  name_suffix        = local.name_suffix
-  project            = local.project
-  tags               = local.tags
-  website_endpoint   = module.storage.tiles_bucket_website_endpoint
-  tile_cache_app_url = module.orchestration.lb_dns_name
-  log_retention      = var.log_retention
-  tile_cache_url     = var.tile_cache_url
+  source              = "./modules/content_delivery_network"
+  bucket_domain_name  = module.storage.tiles_bucket_domain_name
+  certificate_arn     = data.terraform_remote_state.core.outputs.acm_certificate
+  environment         = var.environment
+  name_suffix         = local.name_suffix
+  project             = local.project
+  tags                = local.tags
+  website_endpoint    = module.storage.tiles_bucket_website_endpoint
+  lambda_edge_runtime = var.lambda_edge_runtime
+  tile_cache_app_url  = module.orchestration.lb_dns_name
+  log_retention       = var.log_retention
+  tile_cache_url      = var.tile_cache_url
 }
 
 module "storage" {
@@ -84,10 +85,11 @@ module "lambda_raster_tiler" {
   source      = "./modules/lambda_raster_tiler"
   environment = var.environment
   lambda_layers = [
-    data.terraform_remote_state.lambda_layers.outputs.py38_pillow_831_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py38_rasterio_1210_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py38_mercantile_121_arn
+    data.terraform_remote_state.lambda_layers.outputs.py310_pillow_950_arn,
+    data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_138_arn,
+    data.terraform_remote_state.lambda_layers.outputs.py310_mercantile_121_arn
   ]
+  lambda_runtime = var.lambda_runtime
   log_level  = var.log_level
   project    = local.project
   source_dir = "${path.root}/../lambdas/raster_tiler"
