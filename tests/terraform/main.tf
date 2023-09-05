@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">=0.13"
+  required_version = ">= 0.13, < 0.14"
 }
 
 provider "aws" {
@@ -17,12 +17,16 @@ provider "aws" {
     cloudwatchlogs = "http://localstack:4566"
     sts = "http://localstack:4566"
     cloudwatchevents = "http://localstack:4566"
-    secretsmanager = "http://localstack:4566"
+    secretsmanager = "http://localstack:4566"  # pragma: allowlist secret
   }
 }
 
-
-
+locals {
+  lambda_runtime_sn = replace(replace(var.lambda_runtime, ".", ""), "thon", "")
+  mercantile_layer_filename = "${var.lambda_runtime}-${var.mercantile_name_version}.zip"
+  pillow_layer_filename = "${var.lambda_runtime}-${var.pillow_name_version}.zip"
+  rasterio_layer_filename = "${var.lambda_runtime}-${var.rasterio_name_version}.zip"
+}
 
 resource "aws_s3_bucket" "data_lake_test" {
   bucket = "gfw-data-lake-test"
@@ -42,56 +46,66 @@ resource "aws_s3_bucket" "tiles_test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "py38_rasterio_118" {
+resource "aws_s3_bucket_object" "rasterio_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.8-rasterio_1.1.8.zip"
-  source = "../fixtures/python3.8-rasterio_1.1.8.zip"
-  etag   = filemd5("../fixtures/python3.8-rasterio_1.1.8.zip")
+  key    = "lambda_layers/${local.rasterio_layer_filename}"
+  source = "../fixtures/${local.rasterio_layer_filename}"
+  etag   = filemd5("../fixtures/${local.rasterio_layer_filename}")
 }
 
-resource "aws_lambda_layer_version" "py38_rasterio_118" {
-  layer_name          = substr("py38_rasterio_118", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py38_rasterio_118.bucket
-  s3_key              = aws_s3_bucket_object.py38_rasterio_118.key
-  compatible_runtimes = ["python3.8"]
-  source_code_hash    = filebase64sha256("../fixtures/python3.8-rasterio_1.1.8.zip")
+resource "aws_lambda_layer_version" "rasterio_layer" {
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.rasterio_name_version, ".", "")}", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.rasterio_layer.bucket
+  s3_key              = aws_s3_bucket_object.rasterio_layer.key
+  compatible_runtimes = [var.lambda_runtime]
+  source_code_hash    = filebase64sha256(
+    "../fixtures/${local.rasterio_layer_filename}"
+  )
 }
 
-resource "aws_s3_bucket_object" "py38_pillow_811" {
+resource "aws_s3_bucket_object" "pillow_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.8-pillow_8.1.1.zip"
-  source = "../fixtures/python3.8-pillow_8.1.1.zip"
-  etag   = filemd5("../fixtures/python3.8-pillow_8.1.1.zip")
+  key    = "lambda_layers/${local.pillow_layer_filename}"
+  source = "../fixtures/${local.pillow_layer_filename}"
+  etag   = filemd5("../fixtures/${local.pillow_layer_filename}")
 }
 
-resource "aws_lambda_layer_version" "py38_pillow_811" {
-  layer_name          = substr("py38_pillow_811", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py38_pillow_811.bucket
-  s3_key              = aws_s3_bucket_object.py38_pillow_811.key
-  compatible_runtimes = ["python3.8"]
-  source_code_hash    = filebase64sha256("../fixtures/python3.8-pillow_8.1.1.zip")
+resource "aws_lambda_layer_version" "pillow_layer" {
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.pillow_name_version, ".", "")}", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.pillow_layer.bucket
+  s3_key              = aws_s3_bucket_object.pillow_layer.key
+  compatible_runtimes = [var.lambda_runtime]
+  source_code_hash    = filebase64sha256(
+    "../fixtures/${local.pillow_layer_filename}"
+  )
 }
 
-
-resource "aws_s3_bucket_object" "py38_mercantile_121" {
+resource "aws_s3_bucket_object" "mercantile_layer" {
   bucket = aws_s3_bucket.pipelines_test.id
-  key    = "lambda_layers/python3.8-mercantile_1.2.1.zip"
-  source = "../fixtures/python3.8-mercantile_1.2.1.zip"
-  etag   = filemd5("../fixtures/python3.8-mercantile_1.2.1.zip")
+  key    = "lambda_layers/${local.mercantile_layer_filename}"
+  source = "../fixtures/${local.mercantile_layer_filename}"
+  etag   = filemd5("../fixtures/${local.mercantile_layer_filename}")
 }
 
-resource "aws_lambda_layer_version" "py38_mercantile_121" {
-  layer_name          = substr("py38_mercantile_121", 0, 64)
-  s3_bucket           = aws_s3_bucket_object.py38_mercantile_121.bucket
-  s3_key              = aws_s3_bucket_object.py38_mercantile_121.key
-  compatible_runtimes = ["python3.8"]
-  source_code_hash    = filebase64sha256("../fixtures/python3.8-mercantile_1.2.1.zip")
+resource "aws_lambda_layer_version" "mercantile_layer" {
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.mercantile_name_version, ".", "")}", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.mercantile_layer.bucket
+  s3_key              = aws_s3_bucket_object.mercantile_layer.key
+  compatible_runtimes = [var.lambda_runtime]
+  source_code_hash    = filebase64sha256(
+    "../fixtures/${local.mercantile_layer_filename}"
+  )
 }
 
 module "lambda_raster_tiler" {
   source      = "../../terraform/modules/lambda_raster_tiler"
   environment = "test"
-  lambda_layers = [aws_lambda_layer_version.py38_pillow_811.arn, aws_lambda_layer_version.py38_rasterio_118.arn, aws_lambda_layer_version.py38_mercantile_121.arn]
+  lambda_layers = [
+    aws_lambda_layer_version.pillow_layer.arn,
+    aws_lambda_layer_version.rasterio_layer.arn,
+    aws_lambda_layer_version.mercantile_layer.arn
+  ]
+  lambda_runtime = var.lambda_runtime
   log_level  = "debug"
   project    = "test_project"
   source_dir = "../../lambdas/raster_tiler"
