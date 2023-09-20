@@ -134,7 +134,7 @@ def get_attributes(dataset: str, version: str, asset_type: str) -> List[Dict[str
         #  needs changes to data-api to assure dynamic vector tile caches
         #  also have the implementation parameter in the creation options
         if tile_cache["dataset"] == dataset and tile_cache["version"] == version:
-            return tile_cache["fields"]
+            return tile_cache["metadata"]["fields"]
 
     logger.warning(
         f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."

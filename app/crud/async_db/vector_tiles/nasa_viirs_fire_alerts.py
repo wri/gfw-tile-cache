@@ -22,7 +22,7 @@ if latest_version:
     )
     for field in fields:
         if field["is_feature_info"]:
-            COLUMNS.append(db.column(field["field_name"]))
+            COLUMNS.append(db.column(field["name"]))
 
 
 async def get_tile(

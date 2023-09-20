@@ -69,7 +69,7 @@ async def dynamic_vector_tile(
     # if no attributes specified get all feature info fields
     if not include_attribute:
         columns: List[ColumnClause] = [
-            db.column(field["field_name"])
+            db.column(field["name"])
             for field in fields
             if field["is_feature_info"]
         ]
@@ -77,9 +77,9 @@ async def dynamic_vector_tile(
     # otherwise run provided list against feature info list and keep common elements
     else:
         columns = [
-            db.column(field["field_name"])
+            db.column(field["name"])
             for field in fields
-            if field["is_feature_info"] and field["field_name"] in include_attribute
+            if field["is_feature_info"] and field["name"] in include_attribute
         ]
 
     query: Select = get_mvt_table(dataset, version, bbox, extent, columns, filters)
