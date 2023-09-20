@@ -23,7 +23,7 @@ def get_all_tile_caches():
                     versions.version as version,
                     assets.creation_options->'implementation' as implementation,
                     versions.is_latest as is_latest,
-                    assets.fields as fields,
+                    assets.metadata->'fields' as fields,
                     assets.creation_options->'min_zoom' as min_zoom,
                     assets.creation_options->'max_zoom' as max_zoom,
                     version_metadata.content_start_date as min_date,
@@ -134,7 +134,7 @@ def get_attributes(dataset: str, version: str, asset_type: str) -> List[Dict[str
         #  needs changes to data-api to assure dynamic vector tile caches
         #  also have the implementation parameter in the creation options
         if tile_cache["dataset"] == dataset and tile_cache["version"] == version:
-            return tile_cache["metadata"]["fields"]
+            return tile_cache["fields"]
 
     logger.warning(
         f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
