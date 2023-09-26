@@ -22,9 +22,9 @@ XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:
-    logger.debug(f"{x},{y},{z}")
+    logger.debug(f"Coordinates (X, Y, Z): {x},{y},{z}")
     left, bottom, right, top = mercantile.xy_bounds(x, y, z)
-    logger.debug(f"{left},{bottom},{right},{top}")
+    logger.debug(f"Bounds (Left, Bottom, Right, Top): {left},{bottom},{right},{top}")
     return box(left, bottom, right, top).bounds
 
 
@@ -180,9 +180,7 @@ def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
 
 
 def validate_bbox(left: float, bottom: float, right: float, top: float) -> None:
-    """
-    Tile should be within WebMercator extent
-    """
+    """Tile should be within WebMercator extent."""
     min_left, min_bottom, max_right, max_top = mercantile.xy_bounds(0, 0, 0)
 
     if left < min_left or bottom < min_bottom or right > max_right or top > max_top:

@@ -77,7 +77,7 @@ async def get_tile_cache_preview(
 
 
 async def get_static_vector_tile_cache_style_spec(tile):
-    "Fetch static vector tile cache style specification from s3"
+    """Fetch static vector tile cache style specification from s3"""
     root_json_key = (
         f"{tile['dataset']}/{tile['version']}/{tile['implementation']}/root.json"
     )
@@ -92,7 +92,7 @@ async def get_static_vector_tile_cache_style_spec(tile):
 
 
 def get_default_style_spec(tile):
-    "Construct default tile source and layer style for Mapbox rendering"
+    """Construct default tile source and layer style for Mapbox rendering"""
     sources = dict()
     sources[tile["dataset"]] = {
         "type": "vector" if "vector" in tile["asset_type"].lower() else "raster",

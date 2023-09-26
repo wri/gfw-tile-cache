@@ -1,9 +1,10 @@
-"""
-Static raster tiles are pre-rendered for faster access. While performance for this tiles will be better,
-you will not be able to filter data or change tile resolution.
-Any of this operations will have to happen on the frontend.
-If tiles for a given zoom level are not present for a selected dataset,
-the server will redirect the request to the dynamic service and will attempt to generate it here
+"""Static raster tiles are pre-rendered for faster access.
+
+While performance for this tiles will be better, you will not be able to
+filter data or change tile resolution. Any of this operations will have
+to happen on the frontend. If tiles for a given zoom level are not
+present for a selected dataset, the server will redirect the request to
+the dynamic service and will attempt to generate it here
 """
 import base64
 import io
@@ -51,9 +52,7 @@ async def dynamic_raster_tile(
     ),
     background_tasks: BackgroundTasks,
 ) -> Response:
-    """
-    Generic raster tile.
-    """
+    """Generic raster tile."""
 
     dataset, version = dv
     x, y, z = xyz
@@ -88,9 +87,7 @@ async def static_raster_tile(
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
 ) -> Response:
-    """
-    Generic raster tile.
-    """
+    """Generic raster tile."""
     # This route is only here for documentation purposes. Static raster tiles are served directly via cloud front.
     pass
 
@@ -118,16 +115,12 @@ async def get_dynamic_raster_tile(
 
 
 async def get_lambda_tile(payload: Dict[str, Any]):
-    """
-    Invoke Lambda function to generate raster tile dynamically.
-    """
+    """Invoke Lambda function to generate raster tile dynamically."""
     try:
         response = await invoke_lambda(GLOBALS.raster_tiler_lambda_name, payload)
     except httpx.ReadTimeout as e:
         logger.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
-
-    logger.debug(response.text)
 
     data = json.loads(response.text)
     if data.get("status") == "success":
@@ -147,8 +140,9 @@ async def get_lambda_tile(payload: Dict[str, Any]):
 def hash_query_params(params: Dict[str, Any]) -> str:
     """Hash query parameters in alphabetic order.
 
-    This way we can store tile as its own implementation and
-    later read it them from file instead of dynamically create them over and over again.
+    This way we can store tile as its own implementation and later read
+    it them from file instead of dynamically create them over and over
+    again.
     """
 
     sorted_params = {
@@ -158,7 +152,7 @@ def hash_query_params(params: Dict[str, Any]) -> str:
 
 
 async def copy_tile(data, key):
-    """Copy tile to S3"""
+    """Copy tile to S3."""
 
     session = aioboto3.Session()
     async with session.client(

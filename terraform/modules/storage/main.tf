@@ -99,4 +99,3 @@ resource "aws_iam_policy" "s3_update_bucket_policy" {
   policy = data.template_file.s3_update_bucket_policy.rendered
 
 }
-
