@@ -20,7 +20,7 @@ async def get_aggregated_tile(
     version: str,
     bbox: Bounds,
     extent: int,
-    attributes: List[SupportedAttribute],
+    supported_attributes: List[SupportedAttribute],
     filters: List[TextClause],
 ) -> VectorTileResponse:
     """Make SQL query to PostgreSQL and return vector tile in PBF format.
@@ -28,37 +28,6 @@ async def get_aggregated_tile(
     This function makes a SQL query that aggregates point features based
     on proximity.
     """
-
-    col_dict = {
-        SupportedAttribute.LATITUDE: db.literal_column("round(avg(latitude),4)").label(
-            "latitude"
-        ),
-        SupportedAttribute.LONGITUDE: db.literal_column(
-            "round(avg(longitude),4)"
-        ).label("longitude"),
-        SupportedAttribute.ALERT_DATE: db.literal_column(
-            "mode() WITHIN GROUP (ORDER BY alert__date)"
-        ).label("alert__date"),
-        SupportedAttribute.ALERT_TIME_UTC: db.literal_column(
-            "mode() WITHIN GROUP (ORDER BY alert__time_utc)"
-        ).label("alert__time_utc"),
-        SupportedAttribute.CONFIDENCE_CAT: db.literal_column(
-            "mode() WITHIN GROUP (ORDER BY confidence__cat)"
-        ).label("confidence__cat"),
-        SupportedAttribute.BRIGHT_TI4_K: db.literal_column(
-            'round(avg("bright_ti4__K"),3)'
-        ).label("bright_ti4__K"),
-        SupportedAttribute.BRIGHT_TI5_K: db.literal_column(
-            'round(avg("bright_ti5__k"),3)'
-        ).label("bright_ti5__K"),
-        SupportedAttribute.FRP_MW: db.literal_column('sum("frp__MW")').label("frp__MW"),
-        SupportedAttribute.UMD_TREE_COVER_DENSITY__THRESHOLD: db.literal_column(
-            'max("umd_tree_cover_density__threshold")'
-        ).label("umd_tree_cover_density__threshold"),
-        SupportedAttribute.UMD_TREE_COVER_DENSITY_2000__THRESHOLD: db.literal_column(
-            'max("umd_tree_cover_density_2000__threshold")'
-        ).label("umd_tree_cover_density_2000__threshold"),
-    }
 
     columns: List[ColumnClause] = list()
     for attribute in get_attributes(SCHEMA, version, None):
@@ -72,10 +41,10 @@ async def get_aggregated_tile(
         db.literal_column("count(*)").label("count"),
     ]
 
-    for attribute in attributes:
+    for attribute in supported_attributes:
         logger.warning(attribute)
-        logger.warning(col_dict[attribute])
-        columns.append(col_dict[attribute])
+        logger.warning(attribute.aggregation_rule)
+        columns.append(attribute.aggregation_rule)
 
     group_by_columns = [db.column("geom")]
 
