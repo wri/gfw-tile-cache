@@ -12,6 +12,8 @@ from ...async_db import vector_tiles
 from ...sync_db.tile_cache_assets import get_attributes
 from . import get_mvt_table
 
+SCHEMA = "nasa_viirs_fire_alerts"
+
 
 async def get_aggregated_tile(
     version: str,
@@ -53,13 +55,12 @@ async def get_aggregated_tile(
         ),
     }
 
-    schema = "nasa_viirs_fire_alerts"
     columns: List[ColumnClause] = list()
-    for field in get_attributes(schema, version, None):
+    for field in get_attributes(SCHEMA, version, None):
         if field["is_feature_info"]:
             columns.append(db.column(field["field_name"]))
 
-    query = get_mvt_table(schema, version, bbox, extent, columns, filters)
+    query = get_mvt_table(SCHEMA, version, bbox, extent, columns, filters)
     columns = [
         db.column("geom"),
         db.literal_column("count(*)").label("count"),
@@ -71,7 +72,7 @@ async def get_aggregated_tile(
     group_by_columns = [db.column("geom")]
 
     return await vector_tiles.get_aggregated_tile(
-        query, columns, group_by_columns, schema, extent
+        query, columns, group_by_columns, SCHEMA, extent
     )
 
 
