@@ -55,10 +55,9 @@ async def get_aggregated_tile(
 
 
 async def _get_tile(query: Select) -> VectorTileResponse:
-
     logger.warning(query)
     tile = await db.scalar(query)
-
+    logger.warning(tile)
     return VectorTileResponse(content=tile, status_code=200)
 
 
