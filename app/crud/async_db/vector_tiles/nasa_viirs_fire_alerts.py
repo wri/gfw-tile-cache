@@ -54,6 +54,12 @@ async def get_aggregated_tile(
         SupportedAttributes.FRP_MW: db.literal_column('sum("frp__MW")').label(
             "frp__MW"
         ),
+        SupportedAttributes.UMD_TREE_COVER_DENSITY__THRESHOLD: db.literal_column(
+            'max("umd_tree_cover_density__threshold")'
+        ).label("umd_tree_cover_density__threshold"),
+        SupportedAttributes.UMD_TREE_COVER_DENSITY_2000__THRESHOLD: db.literal_column(
+            'max("umd_tree_cover_density_2000__threshold")'
+        ).label("umd_tree_cover_density_2000__threshold"),
     }
 
     columns: List[ColumnClause] = list()
