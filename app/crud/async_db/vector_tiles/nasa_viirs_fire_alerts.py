@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from fastapi.logger import logger
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
@@ -60,6 +61,8 @@ async def get_aggregated_tile(
         if field["is_feature_info"]:
             columns.append(db.column(field["field_name"]))
 
+    logger.warning(columns)
+
     query = get_mvt_table(SCHEMA, version, bbox, extent, columns, filters)
     columns = [
         db.column("geom"),
@@ -67,6 +70,8 @@ async def get_aggregated_tile(
     ]
 
     for attribute in attributes:
+        logger.warning(attribute)
+        logger.warning(col_dict[attribute])
         columns.append(col_dict[attribute])
 
     group_by_columns = [db.column("geom")]
