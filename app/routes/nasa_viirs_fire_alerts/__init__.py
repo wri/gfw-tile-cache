@@ -4,20 +4,20 @@ from fastapi import Query
 
 from ...models.enumerators.nasa_viirs_fire_alerts.attributes import default_attributes
 from ...models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
-    SupportedAttributes,
+    SupportedAttribute,
 )
 
 
 async def include_attributes(
-    include_attribute: Optional[List[SupportedAttributes]] = Query(  # type: ignore
+    include_attribute: Optional[List[SupportedAttribute]] = Query(  # type: ignore
         default_attributes,
         title="Supported Attributes",
         description="Select which attributes to include in vector tile. Will always show attribute count. "
         "Documentation list available attributes of latest version. For legacy version "
         "please check data-api for available attribute values.",
     ),
-) -> List[SupportedAttributes]:
-    attributes: List[SupportedAttributes] = list()
+) -> List[SupportedAttribute]:
+    attributes: List[SupportedAttribute] = list()
     if include_attribute:
         for attribute in include_attribute:
             attributes.append(attribute)  # type: ignore

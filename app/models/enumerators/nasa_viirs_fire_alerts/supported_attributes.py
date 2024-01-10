@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class SupportedAttributes(Enum):
+class SupportedAttribute(Enum):
     LATITUDE = "latitude"
     LONGITUDE = "longitude"
     ALERT_DATE = "alert__date"

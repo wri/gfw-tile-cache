@@ -5,7 +5,7 @@ from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
 from ....models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
-    SupportedAttributes,
+    SupportedAttribute,
 )
 from ....models.types import Bounds
 from ....responses import VectorTileResponse
@@ -20,7 +20,7 @@ async def get_aggregated_tile(
     version: str,
     bbox: Bounds,
     extent: int,
-    attributes: List[SupportedAttributes],
+    attributes: List[SupportedAttribute],
     filters: List[TextClause],
 ) -> VectorTileResponse:
     """Make SQL query to PostgreSQL and return vector tile in PBF format.
@@ -30,34 +30,32 @@ async def get_aggregated_tile(
     """
 
     col_dict = {
-        SupportedAttributes.LATITUDE: db.literal_column("round(avg(latitude),4)").label(
+        SupportedAttribute.LATITUDE: db.literal_column("round(avg(latitude),4)").label(
             "latitude"
         ),
-        SupportedAttributes.LONGITUDE: db.literal_column(
+        SupportedAttribute.LONGITUDE: db.literal_column(
             "round(avg(longitude),4)"
         ).label("longitude"),
-        SupportedAttributes.ALERT_DATE: db.literal_column(
+        SupportedAttribute.ALERT_DATE: db.literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__date)"
         ).label("alert__date"),
-        SupportedAttributes.ALERT_TIME_UTC: db.literal_column(
+        SupportedAttribute.ALERT_TIME_UTC: db.literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__time_utc)"
         ).label("alert__time_utc"),
-        SupportedAttributes.CONFIDENCE_CAT: db.literal_column(
+        SupportedAttribute.CONFIDENCE_CAT: db.literal_column(
             "mode() WITHIN GROUP (ORDER BY confidence__cat)"
         ).label("confidence__cat"),
-        SupportedAttributes.BRIGHT_TI4_K: db.literal_column(
+        SupportedAttribute.BRIGHT_TI4_K: db.literal_column(
             'round(avg("bright_ti4__K"),3)'
         ).label("bright_ti4__K"),
-        SupportedAttributes.BRIGHT_TI5_K: db.literal_column(
+        SupportedAttribute.BRIGHT_TI5_K: db.literal_column(
             'round(avg("bright_ti5__k"),3)'
         ).label("bright_ti5__K"),
-        SupportedAttributes.FRP_MW: db.literal_column('sum("frp__MW")').label(
-            "frp__MW"
-        ),
-        SupportedAttributes.UMD_TREE_COVER_DENSITY__THRESHOLD: db.literal_column(
+        SupportedAttribute.FRP_MW: db.literal_column('sum("frp__MW")').label("frp__MW"),
+        SupportedAttribute.UMD_TREE_COVER_DENSITY__THRESHOLD: db.literal_column(
             'max("umd_tree_cover_density__threshold")'
         ).label("umd_tree_cover_density__threshold"),
-        SupportedAttributes.UMD_TREE_COVER_DENSITY_2000__THRESHOLD: db.literal_column(
+        SupportedAttribute.UMD_TREE_COVER_DENSITY_2000__THRESHOLD: db.literal_column(
             'max("umd_tree_cover_density_2000__threshold")'
         ).label("umd_tree_cover_density_2000__threshold"),
     }

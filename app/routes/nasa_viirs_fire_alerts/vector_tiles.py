@@ -18,7 +18,7 @@ from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_ve
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
-    SupportedAttributes,
+    SupportedAttribute,
 )
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
@@ -92,7 +92,7 @@ async def nasa_viirs_fire_alerts_tile(
     high_confidence_only: Optional[bool] = Query(
         False, title="Only show high confidence alerts"
     ),
-    include_attribute: List[SupportedAttributes] = Depends(include_attributes),
+    include_attribute: List[SupportedAttribute] = Depends(include_attributes),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
 ) -> VectorTileResponse:
     """NASA VIIRS fire alerts vector tiles.
