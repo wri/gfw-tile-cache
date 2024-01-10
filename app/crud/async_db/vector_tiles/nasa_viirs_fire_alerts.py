@@ -6,34 +6,11 @@ from ....application import db
 from ....models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
     SupportedAttributes,
 )
-from ....models.enumerators.tile_caches import TileCacheType
 from ....models.types import Bounds
 from ....responses import VectorTileResponse
 from ...async_db import vector_tiles
-from ...sync_db.tile_cache_assets import get_attributes, get_latest_version
+from ...sync_db.tile_cache_assets import get_attributes
 from . import get_mvt_table
-
-SCHEMA = "nasa_viirs_fire_alerts"
-
-COLUMNS: List[ColumnClause] = list()
-latest_version: Optional[str] = get_latest_version(
-    SCHEMA, TileCacheType.dynamic_vector_tile_cache
-)
-if latest_version:
-    fields = get_attributes(
-        SCHEMA, latest_version, TileCacheType.dynamic_vector_tile_cache
-    )
-    for field in fields:
-        if field["is_feature_info"]:
-            COLUMNS.append(db.column(field["field_name"]))
-
-
-async def get_tile(
-    version: str, bbox: Bounds, extent: int, filters: List[TextClause]
-) -> VectorTileResponse:
-    """Make SQL query to PostgreSQL and return vector tile in PBF format."""
-    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters)
-    return await vector_tiles.get_tile(query, SCHEMA, extent)
 
 
 async def get_aggregated_tile(
@@ -76,7 +53,13 @@ async def get_aggregated_tile(
         ),
     }
 
-    query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters)
+    schema = "nasa_viirs_fire_alerts"
+    columns: List[ColumnClause] = list()
+    for field in get_attributes(schema, version, None):
+        if field["is_feature_info"]:
+            columns.append(db.column(field["field_name"]))
+
+    query = get_mvt_table(schema, version, bbox, extent, columns, filters)
     columns = [
         db.column("geom"),
         db.literal_column("count(*)").label("count"),
@@ -88,7 +71,7 @@ async def get_aggregated_tile(
     group_by_columns = [db.column("geom")]
 
     return await vector_tiles.get_aggregated_tile(
-        query, columns, group_by_columns, SCHEMA, extent
+        query, columns, group_by_columns, schema, extent
     )
 
 

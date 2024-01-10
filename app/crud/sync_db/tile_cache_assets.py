@@ -7,6 +7,7 @@ from pendulum import Duration
 
 from ...application import get_synchronous_db
 from ...models.enumerators.tile_caches import TileCacheType
+from ...utils.data_api import get_version_fields
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=900))
@@ -38,10 +39,13 @@ def get_all_tile_caches():
                    WHERE assets.asset_type IN {str(tuple([e.value for e in list(TileCacheType)])).replace('"', "'")}
                     AND assets.status = 'saved'"""
         ).fetchall()
-    if not rows:
+    if rows is None:
         # tile_caches = []
-        logger.warning("There are no tile caches registered with the API.")
-    # else:
+        logger.warning("Rows is None. There are no tile caches registered with the API")
+    elif len(rows) == 0:
+        logger.warning("Zero rows. There are no tile caches registered with the API")
+    else:
+        logger.warning(f"Found {len(rows)} rows")
     # tile_caches = rows
 
     for row in rows:
@@ -125,7 +129,9 @@ def get_latest_versions() -> List[Dict[str, str]]:
 
 
 @cached(cache=TTLCache(maxsize=15, ttl=900))
-def get_attributes(dataset: str, version: str, asset_type: str) -> List[Dict[str, Any]]:
+def get_attributes_legacy(
+    dataset: str, version: str, asset_type: str
+) -> List[Dict[str, Any]]:
     tile_caches = get_all_tile_caches()
 
     for tile_cache in tile_caches[asset_type]:
@@ -140,6 +146,11 @@ def get_attributes(dataset: str, version: str, asset_type: str) -> List[Dict[str
         f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
     )
     return list()
+
+
+@cached(cache=TTLCache(maxsize=15, ttl=900))
+def get_attributes(dataset, version, asset_type):
+    return get_version_fields(dataset, version)
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=900))
