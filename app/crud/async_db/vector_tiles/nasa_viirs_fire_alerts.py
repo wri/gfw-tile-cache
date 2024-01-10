@@ -3,6 +3,9 @@ from typing import List, Optional
 from sqlalchemy.sql.elements import ColumnClause, TextClause
 
 from ....application import db
+from ....models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
+    SupportedAttributes,
+)
 from ....models.enumerators.tile_caches import TileCacheType
 from ....models.types import Bounds
 from ....responses import VectorTileResponse
@@ -28,9 +31,7 @@ if latest_version:
 async def get_tile(
     version: str, bbox: Bounds, extent: int, filters: List[TextClause]
 ) -> VectorTileResponse:
-    """
-    Make SQL query to PostgreSQL and return vector tile in PBF format.
-    """
+    """Make SQL query to PostgreSQL and return vector tile in PBF format."""
     query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters)
     return await vector_tiles.get_tile(query, SCHEMA, extent)
 
@@ -39,33 +40,40 @@ async def get_aggregated_tile(
     version: str,
     bbox: Bounds,
     extent: int,
-    attributes: List[str],
+    attributes: List[SupportedAttributes],
     filters: List[TextClause],
 ) -> VectorTileResponse:
-    """
-    Make SQL query to PostgreSQL and return vector tile in PBF format.
-    This function makes a SQL query that aggregates point features based on proximity.
+    """Make SQL query to PostgreSQL and return vector tile in PBF format.
+
+    This function makes a SQL query that aggregates point features based
+    on proximity.
     """
 
     col_dict = {
-        "latitude": db.literal_column("round(avg(latitude),4)").label("latitude"),
-        "longitude": db.literal_column("round(avg(longitude),4)").label("longitude"),
-        "alert__date": db.literal_column(
+        SupportedAttributes.LATITUDE: db.literal_column("round(avg(latitude),4)").label(
+            "latitude"
+        ),
+        SupportedAttributes.LONGITUDE: db.literal_column(
+            "round(avg(longitude),4)"
+        ).label("longitude"),
+        SupportedAttributes.ALERT_DATE: db.literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__date)"
         ).label("alert__date"),
-        "alert__time_utc": db.literal_column(
+        SupportedAttributes.ALERT_TIME_UTC: db.literal_column(
             "mode() WITHIN GROUP (ORDER BY alert__time_utc)"
         ).label("alert__time_utc"),
-        "confidence__cat": db.literal_column(
+        SupportedAttributes.CONFIDENCE_CAT: db.literal_column(
             "mode() WITHIN GROUP (ORDER BY confidence__cat)"
         ).label("confidence__cat"),
-        "bright_ti4__K": db.literal_column('round(avg("bright_ti4__K"),3)').label(
-            "bright_ti4__K"
+        SupportedAttributes.BRIGHT_TI4_K: db.literal_column(
+            'round(avg("bright_ti4__K"),3)'
+        ).label("bright_ti4__K"),
+        SupportedAttributes.BRIGHT_TI5_K: db.literal_column(
+            'round(avg("bright_ti5__k"),3)'
+        ).label("bright_ti5__K"),
+        SupportedAttributes.FRP_MW: db.literal_column('sum("frp__MW")').label(
+            "frp__MW"
         ),
-        "bright_ti5__K": db.literal_column('round(avg("bright_ti5__k"),3)').label(
-            "bright_ti5__K"
-        ),
-        "frp__MW": db.literal_column('sum("frp__MW")').label("frp__MW"),
     }
 
     query = get_mvt_table(SCHEMA, version, bbox, extent, COLUMNS, filters)

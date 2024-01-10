@@ -4,9 +4,12 @@ from aenum import Enum, extend_enum
 
 from app.crud.sync_db.tile_cache_assets import get_attributes
 from app.models.enumerators.nasa_viirs_fire_alerts.datasets import dataset_name
+from app.models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
+    SupportedAttributes,
+)
 from app.models.enumerators.tile_caches import TileCacheType
 
-default_attributes = ["frp__MW"]
+default_attributes = [SupportedAttributes.FRP_MW]
 
 
 class Attributes(str, Enum):
