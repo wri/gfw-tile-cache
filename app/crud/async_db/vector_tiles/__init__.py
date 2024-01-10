@@ -30,9 +30,7 @@ def get_mvt_table(
 
 
 async def get_tile(query: Select, name: str, extent: int) -> VectorTileResponse:
-    """
-    Make SQL query to PostgreSQL and return vector tile in PBF format.
-    """
+    """Make SQL query to PostgreSQL and return vector tile in PBF format."""
     query = _as_vector_tile(query, name, extent)
     return await _get_tile(query)
 
@@ -44,9 +42,10 @@ async def get_aggregated_tile(
     name: str,
     extent: int,
 ) -> VectorTileResponse:
-    """
-    Make SQL query to PostgreSQL and return vector tile in PBF format.
-    This function makes a SQL query that aggregates point features based on proximity.
+    """Make SQL query to PostgreSQL and return vector tile in PBF format.
+
+    This function makes a SQL query that aggregates point features based
+    on proximity.
     """
     query = _group_mvt_table(query, columns, group_by_columns).alias(
         "grouped_mvt_table"
@@ -57,16 +56,14 @@ async def get_aggregated_tile(
 
 async def _get_tile(query: Select) -> VectorTileResponse:
 
-    logger.debug(query)
+    logger.warning(query)
     tile = await db.scalar(query)
 
     return VectorTileResponse(content=tile, status_code=200)
 
 
 def _get_bounds(left: float, bottom: float, right: float, top: float) -> Select:
-    """
-    Create bounds query
-    """
+    """Create bounds query."""
     geom = db.text(
         "ST_MakeEnvelope(:left, :bottom, :right, :top, 3857) AS geom"
         # "ST_SetSRID(ST_MakeBox2D(ST_Point(:left, :bottom), ST_Point(:right, :top)),3857) AS geom"
@@ -87,9 +84,7 @@ def _get_mvt_table(
     columns: List[ColumnClause],
     order_by: List[ColumnClause] = [],
 ) -> Select:
-    """
-    Create MVT Geom query
-    """
+    """Create MVT Geom query."""
 
     mvt_geom = db.literal_column(
         f"ST_AsMVTGeom(t.geom_wm, bounds.geom::box2d, {extent}, 0,false)"
