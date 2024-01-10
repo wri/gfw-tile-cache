@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import requests
 from async_lru import alru_cache
@@ -7,6 +7,10 @@ from fastapi.logger import logger
 from httpx import AsyncClient, ReadTimeout
 from httpx import Response as HTTPXResponse
 
+from ..models.enumerators.nasa_viirs_fire_alerts.attributes import (
+    Attributes,
+    get_attributes_enum,
+)
 from ..settings.globals import GLOBALS
 
 
@@ -47,7 +51,7 @@ async def validate_apikey(
     return response.status_code == 200 and response.json()["data"]["is_valid"]
 
 
-def get_version_fields(dataset: str, version: str) -> List[Dict]:
+def get_version_fields(dataset: str, version: str) -> List[Attributes]:
     prefix = _env_prefix()
     url = f"https://{prefix}data-api.globalforestwatch.org/dataset/{dataset}/{version}/fields"
     logger.warning(f"Calling DATA API to Get Fields: {url}")
@@ -69,20 +73,13 @@ def get_version_fields(dataset: str, version: str) -> List[Dict]:
         )
         raise HTTPException(status_code=500, detail="Call to DATA API failed.")
 
-    # Transform the data to match the expected format
-    attributes = []
+    # Convert the attributes into an enum
+    attributes: List[str] = []
     for item in response.json()["data"]:
-        attr = {
-            "is_filter": item["is_filter"],
-            "field_name": item["name"],
-            "field_type": item["data_type"],
-            "field_alias": item["alias"],
-            "is_feature_info": item["is_feature_info"],
-            "field_description": item["description"],
-        }
-        attributes.append(attr)
+        if item["is_feature_info"]:
+            attributes.append(item["name"])
 
-    return attributes
+    return get_attributes_enum(attributes)
 
 
 def _env_prefix() -> str:

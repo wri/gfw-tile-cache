@@ -61,9 +61,8 @@ async def get_aggregated_tile(
     }
 
     columns: List[ColumnClause] = list()
-    for field in get_attributes(SCHEMA, version, None):
-        if field["is_feature_info"]:
-            columns.append(db.column(field["field_name"]))
+    for attribute in get_attributes(SCHEMA, version, None):
+        columns.append(db.column(attribute))
 
     logger.warning(columns)
 
