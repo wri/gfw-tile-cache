@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import Query
 
-from ...models.enumerators.nasa_viirs_fire_alerts.attributes import default_attributes
 from ...models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
     SupportedAttribute,
+    default_attributes,
 )
 
 

@@ -1,9 +1,10 @@
+"""Dynamic vector tiles are generated on the fly.
+
+The dynamic nature of the service allows users to apply filters using
+query parameters or to change tile resolution using the `@` operator
+after the `y` index
 """
-Dynamic vector tiles are generated on the fly.
-The dynamic nature of the service allows users to apply filters using query parameters
-or to change tile resolution using the `@` operator after the `y` index
-"""
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 from uuid import UUID
 
 from asyncpg.exceptions import QueryCanceledError
@@ -49,9 +50,7 @@ async def dynamic_vector_tile(
         "If not specified, all attributes will be shown.",
     ),
 ) -> VectorTileResponse:
-    """
-    Generic dynamic vector tile
-    """
+    """Generic dynamic vector tile."""
     dataset, version = dv
     bbox, _, extent = bbox_z
 
@@ -62,24 +61,19 @@ async def dynamic_vector_tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    fields: List[Dict] = get_attributes(
+    attributes: List[str] = get_attributes(
         dataset, version, TileCacheType.dynamic_vector_tile_cache
     )
 
     # if no attributes specified get all feature info fields
     if not include_attribute:
-        columns: List[ColumnClause] = [
-            db.column(field["field_name"])
-            for field in fields
-            if field["is_feature_info"]
-        ]
-
+        columns: List[ColumnClause] = [db.column(attribute) for attribute in attributes]
     # otherwise run provided list against feature info list and keep common elements
     else:
         columns = [
-            db.column(field["field_name"])
-            for field in fields
-            if field["is_feature_info"] and field["field_name"] in include_attribute
+            db.column(attribute)
+            for attribute in attributes
+            if attribute in include_attribute
         ]
 
     query: Select = get_mvt_table(dataset, version, bbox, extent, columns, filters)

@@ -2,12 +2,6 @@ from typing import List
 
 from aenum import Enum, extend_enum
 
-from app.models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
-    SupportedAttribute,
-)
-
-default_attributes = [SupportedAttribute.FRP_MW]
-
 
 class Attributes(str, Enum):
     __doc__ = "NASA VIIRS fire alerts attributes"

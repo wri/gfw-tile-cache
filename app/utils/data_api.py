@@ -7,10 +7,6 @@ from fastapi.logger import logger
 from httpx import AsyncClient, ReadTimeout
 from httpx import Response as HTTPXResponse
 
-from ..models.enumerators.nasa_viirs_fire_alerts.attributes import (
-    Attributes,
-    get_attributes_enum,
-)
 from ..settings.globals import GLOBALS
 
 
@@ -51,7 +47,7 @@ async def validate_apikey(
     return response.status_code == 200 and response.json()["data"]["is_valid"]
 
 
-def get_version_fields(dataset: str, version: str) -> List[Attributes]:
+def get_version_fields(dataset: str, version: str) -> List[str]:
     prefix = _env_prefix()
     url = f"https://{prefix}data-api.globalforestwatch.org/dataset/{dataset}/{version}/fields"
     logger.warning(f"Calling DATA API to Get Fields: {url}")
@@ -79,7 +75,7 @@ def get_version_fields(dataset: str, version: str) -> List[Attributes]:
         if item["is_feature_info"]:
             attributes.append(item["name"])
 
-    return get_attributes_enum(attributes)
+    return attributes
 
 
 def _env_prefix() -> str:

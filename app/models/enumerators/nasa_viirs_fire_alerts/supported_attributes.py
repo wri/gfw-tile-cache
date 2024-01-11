@@ -49,3 +49,6 @@ class SupportedAttribute(Enum, init="value aggregation_rule"):
 
     def __str__(self):
         return self.value
+
+
+default_attributes = [SupportedAttribute.FRP_MW]
