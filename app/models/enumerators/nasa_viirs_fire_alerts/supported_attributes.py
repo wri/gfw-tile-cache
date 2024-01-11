@@ -3,8 +3,8 @@ from aenum import Enum
 from ....application import db
 
 
-def rule(sql_expression, label):
-    return db.literal_column(sql_expression).label(label)
+def rule(aggregation_expression, label):
+    return db.literal_column(aggregation_expression).label(label)
 
 
 class SupportedAttribute(Enum, init="value aggregation_rule"):
