@@ -61,7 +61,7 @@ async def dynamic_vector_tile(
     if geom_filter is not None:
         filters.append(geom_filter)
 
-    attributes: List[str] = get_attributes(
+    attributes: List[str] = await get_attributes(
         dataset, version, TileCacheType.dynamic_vector_tile_cache
     )
 

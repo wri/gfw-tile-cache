@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-import requests
 from async_lru import alru_cache
 from fastapi import HTTPException
 from fastapi.logger import logger
@@ -47,13 +46,14 @@ async def validate_apikey(
     return response.status_code == 200 and response.json()["data"]["is_valid"]
 
 
-def get_version_fields(dataset: str, version: str) -> List[str]:
+async def get_version_fields(dataset: str, version: str) -> List[str]:
     prefix = _env_prefix()
     url = f"https://{prefix}data-api.globalforestwatch.org/dataset/{dataset}/{version}/fields"
     logger.warning(f"Calling DATA API to Get Fields: {url}")
 
     try:
-        response = requests.get(url, timeout=10.0)
+        async with AsyncClient() as client:
+            response: HTTPXResponse = await client.get(url, timeout=10.0)
 
     except ReadTimeout:
         logger.error("Call to DATA API timed out")
@@ -69,7 +69,7 @@ def get_version_fields(dataset: str, version: str) -> List[str]:
         )
         raise HTTPException(status_code=500, detail="Call to DATA API failed.")
 
-    # Convert the attributes into an enum
+    # Build list of attributes from Data API response
     attributes: List[str] = []
     for item in response.json()["data"]:
         if item["is_feature_info"]:

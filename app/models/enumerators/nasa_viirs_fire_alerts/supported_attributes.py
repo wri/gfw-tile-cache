@@ -7,7 +7,7 @@ def rule(aggregation_expression, label):
     return db.literal_column(aggregation_expression).label(label)
 
 
-class SupportedAttribute(Enum, init="value aggregation_rule"):
+class SupportedAttribute(Enum, init="value aggregation_rule"):  # type: ignore
 
     LATITUDE = ("latitude", rule("round(avg(latitude),4)", "latitude"))
     LONGITUDE = ("longitude", rule("round(avg(longitude),4)", "longitude"))
