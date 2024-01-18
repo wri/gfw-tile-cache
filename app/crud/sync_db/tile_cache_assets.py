@@ -24,7 +24,6 @@ def get_all_tile_caches():
                     versions.version as version,
                     assets.creation_options->'implementation' as implementation,
                     versions.is_latest as is_latest,
-                    assets.fields as fields,
                     assets.creation_options->'min_zoom' as min_zoom,
                     assets.creation_options->'max_zoom' as max_zoom,
                     version_metadata.content_start_date as min_date,
@@ -55,7 +54,6 @@ def get_all_tile_caches():
                 "version": row.version,
                 "implementation": row.implementation,
                 "is_latest": row.is_latest,
-                "fields": row.fields,
                 "min_zoom": row.min_zoom,
                 "max_zoom": row.max_zoom,
                 "min_date": row.min_date.strftime("%Y-%m-%d")
