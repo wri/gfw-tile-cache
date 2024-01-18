@@ -126,7 +126,7 @@ def get_latest_versions() -> List[Dict[str, str]]:
     return latest_versions
 
 
-async def get_attributes(dataset, version, asset_type):
+async def get_attributes(dataset, version):
     # TODO: fetch the correct one for the current implementation
     #  needs changes to data-api to assure dynamic vector tile caches
     #  also have the implementation parameter in the creation options

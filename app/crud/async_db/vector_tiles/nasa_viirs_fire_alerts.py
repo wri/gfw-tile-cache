@@ -29,7 +29,7 @@ async def get_aggregated_tile(
     """
 
     columns: List[ColumnClause] = list()
-    attributes: List[str] = await get_attributes(SCHEMA, version, None)
+    attributes: List[str] = await get_attributes(SCHEMA, version)
     for attribute in attributes:
         columns.append(db.column(attribute))
 

@@ -73,9 +73,7 @@ def test_get_static_fields():
             "is_filter": False,
         }
     ]
-    assert result == get_attributes(
-        "wdpa_protected_areas", "v201912", TileCacheType.static_vector_tile_cache
-    )
+    assert result == get_attributes("wdpa_protected_areas", "v201912")
 
 
 @pytest.mark.xfail(
@@ -92,9 +90,7 @@ def test_get_dynamic_fields():
             "is_filter": False,
         }
     ]
-    assert result == get_attributes(
-        "nasa_viirs_fire_alerts", "v202003", TileCacheType.dynamic_vector_tile_cache
-    )
+    assert result == get_attributes("nasa_viirs_fire_alerts", "v202003")
 
 
 @pytest.mark.xfail(
@@ -102,9 +98,7 @@ def test_get_dynamic_fields():
 )
 def test_get_non_existing_fields():
     result = []
-    assert result == get_attributes(
-        "fails", "v2", TileCacheType.static_vector_tile_cache
-    )
+    assert result == get_attributes("fails", "v2")
 
 
 def test_latest_date():
