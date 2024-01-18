@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import pendulum
 from cachetools import TTLCache, cached
@@ -126,27 +126,10 @@ def get_latest_versions() -> List[Dict[str, str]]:
     return latest_versions
 
 
-@cached(cache=TTLCache(maxsize=15, ttl=900))
-def get_attributes_legacy(
-    dataset: str, version: str, asset_type: str
-) -> List[Dict[str, Any]]:
-    tile_caches = get_all_tile_caches()
-
-    for tile_cache in tile_caches[asset_type]:
-        # pick the first one that matchs
-        # TODO: fetch the correct one for the current implementation
-        #  needs changes to data-api to assure dynamic vector tile caches
-        #  also have the implementation parameter in the creation options
-        if tile_cache["dataset"] == dataset and tile_cache["version"] == version:
-            return tile_cache["fields"]
-
-    logger.warning(
-        f"Did not find any fields in metadata for {asset_type} of {dataset}.{version}."
-    )
-    return list()
-
-
 async def get_attributes(dataset, version, asset_type):
+    # TODO: fetch the correct one for the current implementation
+    #  needs changes to data-api to assure dynamic vector tile caches
+    #  also have the implementation parameter in the creation options
     return await get_version_fields(dataset, version)
 
 
