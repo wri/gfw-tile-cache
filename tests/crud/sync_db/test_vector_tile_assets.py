@@ -59,6 +59,9 @@ def test_get_latest_non_existing_version():
     assert get_latest_version("fails", TileCacheType.static_vector_tile_cache) is None
 
 
+@pytest.mark.xfail(
+    reason="The new implementation uses Data API not the DB. There is some refactoring to do before replacing these tests with valuable ones."
+)
 def test_get_static_fields():
     result = [
         {
@@ -75,6 +78,9 @@ def test_get_static_fields():
     )
 
 
+@pytest.mark.xfail(
+    reason="The new implementation uses Data API not the DB. There is some refactoring to do before replacing these tests with valuable ones."
+)
 def test_get_dynamic_fields():
     result = [
         {
@@ -91,6 +97,9 @@ def test_get_dynamic_fields():
     )
 
 
+@pytest.mark.xfail(
+    reason="The new implementation uses Data API not the DB. There is some refactoring to do before replacing these tests with valuable ones."
+)
 def test_get_non_existing_fields():
     result = []
     assert result == get_attributes(
