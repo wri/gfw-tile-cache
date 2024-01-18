@@ -29,7 +29,8 @@ async def get_aggregated_tile(
     """
 
     columns: List[ColumnClause] = list()
-    for attribute in await get_attributes(SCHEMA, version, None):
+    attributes: List[str] = await get_attributes(SCHEMA, version, None)
+    for attribute in attributes:
         columns.append(db.column(attribute))
 
     query = get_mvt_table(SCHEMA, version, bbox, extent, columns, filters)

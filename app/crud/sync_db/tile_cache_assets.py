@@ -148,9 +148,8 @@ def get_attributes_legacy(
     return list()
 
 
-@cached(cache=TTLCache(maxsize=15, ttl=900))
 async def get_attributes(dataset, version, asset_type):
-    return get_version_fields(dataset, version)
+    return await get_version_fields(dataset, version)
 
 
 @cached(cache=TTLCache(maxsize=100, ttl=900))

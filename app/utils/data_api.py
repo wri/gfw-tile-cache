@@ -46,6 +46,7 @@ async def validate_apikey(
     return response.status_code == 200 and response.json()["data"]["is_valid"]
 
 
+@alru_cache(maxsize=128)
 async def get_version_fields(dataset: str, version: str) -> List[str]:
     prefix = _env_prefix()
     url = f"https://{prefix}data-api.globalforestwatch.org/dataset/{dataset}/{version}/fields"
