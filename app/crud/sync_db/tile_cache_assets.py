@@ -38,14 +38,12 @@ def get_all_tile_caches():
                    WHERE assets.asset_type IN {str(tuple([e.value for e in list(TileCacheType)])).replace('"', "'")}
                     AND assets.status = 'saved'"""
         ).fetchall()
-    if rows is None:
-        # tile_caches = []
-        logger.warning("Rows is None. There are no tile caches registered with the API")
-    elif len(rows) == 0:
-        logger.warning("Zero rows. There are no tile caches registered with the API")
-    else:
-        logger.warning(f"Found {len(rows)} rows")
-    # tile_caches = rows
+
+    if rows is None or len(rows) == 0:
+        logger.warning(
+            "No rows returned. There are no tile caches registered with the API"
+        )
+        rows = []
 
     for row in rows:
         tile_caches[row.asset_type].append(
