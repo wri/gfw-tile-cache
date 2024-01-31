@@ -12,10 +12,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.sql import Select, TableClause
 from sqlalchemy.sql.elements import ColumnClause
 
+from ..adapters.data_api_geostore_geometry_adapter import DataApiGeostoreGeometryAdapter
 from ..application import db
 from ..crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ..crud.async_db.vector_tiles.filters import geometry_filter
 from ..crud.sync_db.tile_cache_assets import get_attributes
+from ..domain.services.geostore_geometry_service import GeostoreGeometryService
 from ..models.enumerators.geostore import GeostoreOrigin
 from ..models.types import Bounds
 from ..responses import VectorTileResponse
@@ -55,7 +57,14 @@ async def dynamic_vector_tile(
 
     filters: List[TableClause] = list()
 
-    geom_filter: TableClause = await geometry_filter(geostore_id, bbox, geostore_origin)
+    geometry = None
+    if geostore_id:
+        geostore_geometry_service = GeostoreGeometryService(
+            DataApiGeostoreGeometryAdapter
+        )
+        geometry = geostore_geometry_service.get_geometry(geostore_id, geostore_origin)
+
+    geom_filter: TableClause = await geometry_filter(bbox, geometry)
 
     if geom_filter is not None:
         filters.append(geom_filter)

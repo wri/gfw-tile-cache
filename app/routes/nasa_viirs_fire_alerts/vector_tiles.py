@@ -3,18 +3,16 @@ from uuid import UUID
 
 import pendulum
 from aenum import Enum, extend_enum
-from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from fastapi.responses import ORJSONResponse
 
-from ...crud.async_db.vector_tiles import nasa_viirs_fire_alerts
-from ...crud.async_db.vector_tiles.filters import (
-    contextual_filter,
-    date_filter,
-    geometry_filter,
+from ...adapters.data_api_geostore_geometry_adapter import (
+    DataApiGeostoreGeometryAdapter,
 )
 from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_versions
+from ...domain.services.geostore_geometry_service import GeostoreGeometryService
+from ...domain.services.nasa_viirs_fire_alerts_service import NasaViirsFireAlertsService
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
@@ -108,15 +106,6 @@ async def nasa_viirs_fire_alerts_tile(
     bbox, _, extent = bbox_z
     validate_dates(start_date, end_date, force_date_range)
 
-    filters = [
-        await geometry_filter(geostore_id, bbox, geostore_origin),
-        nasa_viirs_fire_alerts.confidence_filter(high_confidence_only),
-        date_filter("alert__date", start_date, end_date),
-    ] + contextual_filter(**contextual_filters)
-
-    # Remove empty filters
-    filters = [f for f in filters if f is not None]
-
     # If one of the default dates is used, we cannot cache the response for long,
     # as content might change after next update. For non-default values we can be certain,
     # that response will always be the same b/c we only add newer dates
@@ -128,17 +117,20 @@ async def nasa_viirs_fire_alerts_tile(
     else:
         response.headers["Cache-Control"] = "max-age=31536000"  # 1 year
 
-    try:
-        tile = await nasa_viirs_fire_alerts.get_aggregated_tile(
-            version, bbox, extent, include_attribute, filters
-        )
-    except QueryCanceledError:
-        raise HTTPException(
-            status_code=524,
-            detail="A timeout occurred while processing the request. Request canceled.",
-        )
-    else:
-        return tile
+    return await NasaViirsFireAlertsService(
+        GeostoreGeometryService(DataApiGeostoreGeometryAdapter)
+    ).get_aggregated_tile(
+        version,
+        geostore_id,
+        geostore_origin,
+        bbox,
+        extent,
+        high_confidence_only,
+        start_date,
+        end_date,
+        contextual_filters,
+        include_attribute,
+    )
 
 
 @router.get(
