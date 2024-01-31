@@ -17,6 +17,9 @@ from ...crud.async_db.vector_tiles.max_date import get_max_date
 from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_versions
 from ...errors import RecordNotFoundError
 from ...models.enumerators.geostore import GeostoreOrigin
+from ...models.enumerators.nasa_viirs_fire_alerts.supported_attributes import (
+    SupportedAttribute,
+)
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
 from ...models.pydantic.nasa_viirs_fire_alerts import MaxDateResponse
@@ -31,7 +34,11 @@ default_duration = pendulum.duration(weeks=1)
 
 
 class NasaViirsVersions(str, Enum):
-    """NASA Viirs Fire Alerts versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """NASA Viirs Fire Alerts versions.
+
+    When using `latest` call will be redirected (307) to version tagged
+    as latest.
+    """
 
     latest = "latest"
 
@@ -85,16 +92,18 @@ async def nasa_viirs_fire_alerts_tile(
     high_confidence_only: Optional[bool] = Query(
         False, title="Only show high confidence alerts"
     ),
-    include_attribute: List[str] = Depends(include_attributes),
+    include_attribute: List[SupportedAttribute] = Depends(include_attributes),
     contextual_filters: dict = Depends(nasa_viirs_fire_alerts_filters),
 ) -> VectorTileResponse:
-    """
-    NASA VIIRS fire alerts vector tiles.
-    This dataset holds the full archive of NASA VIIRS fire alerts, starting in 2012. Latest version is updated daily.
-    Check `Max Date` endpoint to retrieve latest date in dataset.
-    You can query fire alerts for any time period of up to 90 days. By default, the last 7 days are displayed.
-    Use additional query parameters to further filter alerts.
-    Vector tiles for zoom level 6 and lower will aggregate adjacent alerts into a single point.
+    """NASA VIIRS fire alerts vector tiles.
+
+    This dataset holds the full archive of NASA VIIRS fire alerts,
+    starting in 2012. Latest version is updated daily. Check `Max Date`
+    endpoint to retrieve latest date in dataset. You can query fire
+    alerts for any time period of up to 90 days. By default, the last 7
+    days are displayed. Use additional query parameters to further
+    filter alerts. Vector tiles for zoom level 6 and lower will
+    aggregate adjacent alerts into a single point.
     """
     bbox, _, extent = bbox_z
     validate_dates(start_date, end_date, force_date_range)
@@ -144,9 +153,8 @@ async def max_date(
     response: Response,
     version: NasaViirsVersions = Path(..., description=NasaViirsVersions.__doc__),
 ) -> MaxDateResponse:
-    """
-    Retrieve max alert date for NASA VIIRS fire alerts for a given version
-    """
+    """Retrieve max alert date for NASA VIIRS fire alerts for a given
+    version."""
     try:
         data = await get_max_date(version)
     except RecordNotFoundError as e:
