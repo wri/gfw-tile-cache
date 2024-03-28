@@ -46,6 +46,20 @@ class SupportedAttribute(Enum, init="value aggregation_rule"):  # type: ignore
             "umd_tree_cover_density__threshold",
         ),
     )
+    UMD_TREE_COVER_DENSITY__THRESHOLD_MAX = (
+        "umd_tree_cover_density__threshold_max",
+        rule(
+            'max("umd_tree_cover_density__threshold")',
+            "umd_tree_cover_density__threshold",
+        ),
+    )
+    UMD_TREE_COVER_DENSITY__THRESHOLD_MODE = (
+        "umd_tree_cover_density__threshold_mode",
+        rule(
+            "mode() WITHIN GROUP (ORDER BY umd_tree_cover_density__threshold)",
+            "umd_tree_cover_density__threshold",
+        ),
+    )
 
     def __str__(self):
         return self.value
