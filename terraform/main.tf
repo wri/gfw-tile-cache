@@ -98,3 +98,8 @@ module "lambda_raster_tiler" {
   data_lake_bucket_name = data.terraform_remote_state.core.outputs.data-lake_bucket
   tile_cache_url = local.tile_cache_url
 }
+
+resource "aws_iam_policy" "read_new_relic_secret" {
+  name = substr("${local.project}-read_new-relic_secret${local.name_suffix}", 0, 64)
+  policy = data.aws_iam_policy_document.read_new_relic_lic.json
+}
