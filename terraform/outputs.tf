@@ -10,6 +10,10 @@ output "tile_cache_bucket_name" {
   value = module.storage.tiles_bucket_name
 }
 
+output "tile_cache_bucket_arn" {
+  value = module.storage.tiles_bucket_arn
+}
+
 output "tile_cache_url" {
   value = local.tile_cache_url
 }
