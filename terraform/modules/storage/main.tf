@@ -99,3 +99,8 @@ resource "aws_iam_policy" "s3_update_bucket_policy" {
   policy = data.template_file.s3_update_bucket_policy.rendered
 
 }
+
+resource "aws_iam_policy" "read_new_relic_secret" {
+  name = substr("${var.project}-read_new-relic_secret${var.name_suffix}", 0, 64)
+  policy = data.aws_iam_policy_document.read_new_relic_lic.json
+}

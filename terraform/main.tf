@@ -50,7 +50,8 @@ module "orchestration" {
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn,
     data.terraform_remote_state.core.outputs.secrets_planet_api_key_policy_arn,
-    data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_policy_arn
+    data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_policy_arn,
+    aws_iam_policy.read_new_relic_secret.arn
   ]
   container_definition         = data.template_file.container_definition.rendered
 }
