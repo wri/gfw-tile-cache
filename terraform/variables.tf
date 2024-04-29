@@ -91,7 +91,9 @@ variable "lambda_runtime" {
   default     = "python3.10"
 }
 
-variable "new_relic_license_key_arn" {
+variable "newrelic_license_key_secret" {
   type        = string
-  description = "New Relic license key ARN"
+  description = "New Relic license key secret name"
+  default = "newrelic/license_key"
+
 }
