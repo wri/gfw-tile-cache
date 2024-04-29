@@ -10,6 +10,10 @@ output "tiles_bucket_name" {
   value = aws_s3_bucket.tiles.id
 }
 
+output "tiles_bucket_arn" {
+  value = aws_s3_bucket.tiles.arn
+}
+
 output "s3_write_tiles_arn" {
   value = aws_iam_policy.s3_write_tiles.arn
 }

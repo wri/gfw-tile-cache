@@ -56,7 +56,41 @@ async def umd_tree_cover_loss_raster_tile(
     background_tasks: BackgroundTasks,
 ) -> Response:
     """
-    UMD tree cover loss raster tile.
+    UMD Tree Cover Loss raster tile.
+
+    There are two types of TCL tiles available here: True color tiles and encoded tiles.
+    The true color tiles have been pre-rendered to appear the same way TCL appears on
+    globalforestwatch.org (i.e. the tiles show pink pixels to indicate tree cover loss).
+    The caveat with the true color tiles is that they do not contain information about
+    the year of loss. This means that they cannot be filtered after the fact (for example
+    to support a dynamic time slider). Whatever time period the true color tiles span is
+    baked-in (either the entire time period the alerts cover, or optionally bound by the
+    start_year and/or the end_year query parameters).
+
+    The encoded tiles, on the other hand, contain the year information but are not ready
+    to be displayed as-is. They can/need to be interpreted and rendered according to
+    the needs of the consumer of the data.
+
+    Note that both types of tiles are thresholded by Tree Cover Density, which means
+    that one needs to know the TCD percentage which one wants to consider necessary to
+    indicate tree cover loss of interest. A small example: If one wants data which
+    indicates loss in areas that have a tree cover density of 75% or more, one would
+    specify a TCD of 75. The allowable thresholds can be seen below in the query
+    parameters.
+    So if you want
+
+    True color tiles (i.e. pink pixels as they appear on the map at globalforestwatch.org), thresholded by tree cover density
+        Specify the style query parameter
+        For example: https://tiles.globalforestwatch.org/umd_tree_cover_loss/v1.10/dynamic/1/1/0.png?style=tcd_10
+
+    True color tiles filtered by start and/or end year, thresholded by tree cover density
+        Specify the tcd query parameter and optionally the start_year and/or end_year
+        For example: https://tiles.globalforestwatch.org/umd_tree_cover_loss/v1.10/dynamic/1/1/0.png?tcd=10&start_year=2016
+
+    Encoded tiles, so you can filter and style on your own, thresholded by tree cover density
+        Specify the implementation query parameter
+        For example: https://tiles.globalforestwatch.org/umd_tree_cover_loss/v1.10/dynamic/1/1/0.png?implementation=tcd_10
+
     """
 
     x, y, z = xyz
