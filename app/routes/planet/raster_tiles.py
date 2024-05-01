@@ -17,11 +17,11 @@ class PlanetImageMode(str, Enum):
 
 
 class PlanetDateRange(str, Enum):
-    """Available date ranges of Planet Mosaics"""
+    """Available date ranges of Planet Mosaics."""
 
 
 def get_planet_date_ranges() -> List[str]:
-    url = f"https://api.planet.com/basemaps/v1/mosaics?api_key={GLOBALS.planet_api_key}"
+    url = f"https://api.planet.com/basemaps/v1/mosaics?api_key={GLOBALS.planet_api_key}&_page_size=1000"
     resp = httpx.get(url)
     return [mosaic["name"][34:-7] for mosaic in resp.json()["mosaics"]]
 
@@ -50,9 +50,7 @@ async def planet_raster_tile(
     ),
     is_valid_apikey: bool = Depends(is_valid_apikey),
 ) -> Response:
-    """
-    A proxy for Planet Mosaic Tiles
-    """
+    """A proxy for Planet Mosaic Tiles."""
     x, y, z = xyz
 
     async with httpx.AsyncClient() as client:
