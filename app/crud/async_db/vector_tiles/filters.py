@@ -1,22 +1,17 @@
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
-from uuid import UUID
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import HTTPException
 from shapely.geometry import box, shape
 from sqlalchemy.sql.elements import TextClause
 
 from ....application import db
-from ....errors import BadResponseError, InvalidResponseError
-from ....models.enumerators.geostore import GeostoreOrigin
-from ....models.types import Bounds, Geometry
-from ....utils import rw_api
+from ....models.types import Bounds
 
 
 async def geometry_filter(
-    geostore_id: Optional[UUID], bounds: Bounds, geostore_origin: str
+    bounds: Bounds, geometry: Dict[str, Any] | None
 ) -> Optional[TextClause]:
-    if geostore_id:
-        geometry: Geometry = await _get_geostore_geometry(geostore_id, geostore_origin)
+    if geometry:
         envelope = shape(geometry).envelope
         if not envelope.intersects(box(*bounds)):
             raise HTTPException(
@@ -78,22 +73,3 @@ def filter_intersects(field, geometry) -> TextClause:
     f = f.bindparams(**values)
 
     return f
-
-
-async def _get_geostore_geometry(geostore_id: UUID, geostore_origin: str) -> Geometry:
-    geostore_constructor: Dict[str, Callable[[UUID], Coroutine[Any, Any, Geometry]]] = {
-        # GeostoreOrigin.gfw: geostore.get_geostore_geometry,
-        GeostoreOrigin.rw: rw_api.get_geostore_geometry
-    }
-
-    try:
-        return await geostore_constructor[geostore_origin](geostore_id)
-    except KeyError:
-        raise HTTPException(
-            status_code=501,
-            detail=f"Geostore origin {geostore_origin} not fully implemented.",
-        )
-    except InvalidResponseError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    except BadResponseError as e:
-        raise HTTPException(status_code=400, detail=str(e))

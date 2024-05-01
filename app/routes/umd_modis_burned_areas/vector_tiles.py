@@ -6,6 +6,9 @@ from aenum import Enum, extend_enum
 from asyncpg import QueryCanceledError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 
+from ...adapters.data_api_geostore_geometry_adapter import (
+    DataApiGeostoreGeometryAdapter,
+)
 from ...application import db
 from ...crud.async_db.vector_tiles import get_mvt_table, get_tile
 from ...crud.async_db.vector_tiles.filters import (
@@ -14,6 +17,7 @@ from ...crud.async_db.vector_tiles.filters import (
     geometry_filter,
 )
 from ...crud.sync_db.tile_cache_assets import default_end, default_start, get_versions
+from ...domain.services.geostore_geometry_service import GeostoreGeometryService
 from ...models.enumerators.geostore import GeostoreOrigin
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.versions import Versions
@@ -27,7 +31,11 @@ default_duration = pendulum.duration(months=3)
 
 
 class UmdModisBurnedAreas(str, Enum):
-    """MODIS burned areas versions. When using `latest` call will be redirected (307) to version tagged as latest."""
+    """MODIS burned areas versions.
+
+    When using `latest` call will be redirected (307) to version tagged
+    as latest.
+    """
 
     latest = "latest"
 
@@ -83,8 +91,17 @@ async def umd_modis_burned_areas_tile(
     bbox, z, extent = bbox_z
     validate_dates(start_date, end_date, force_date_range)
 
+    geometry = None
+    if geostore_id:
+        geostore_geometry_service = GeostoreGeometryService(
+            DataApiGeostoreGeometryAdapter
+        )
+        geometry = await geostore_geometry_service.get_geometry(
+            geostore_id, geostore_origin
+        )
+
     filters = [
-        await geometry_filter(geostore_id, bbox, geostore_origin),
+        await geometry_filter(bbox, geometry),
         date_filter("alert__date", start_date, end_date),
     ]
 
