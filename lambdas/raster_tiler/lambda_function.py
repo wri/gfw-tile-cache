@@ -172,6 +172,58 @@ def get_alpha_band(
     return alpha
 
 
+def get_integrated_alerts_alpha_band(
+    rgba: ndarray,
+    start_date: Optional[int],
+    end_date: Optional[int],
+    confirmed_only: Optional[bool],
+) -> ndarray:
+    """Compute alpha value based on RGBA encoding and applied filters.
+
+    Expecting 3D array.
+    """
+
+    logger.debug("Get Deforestation Alert Alpha Band")
+
+    # encode false color tiles
+    red, green, blue, alpha = rgba
+
+    # date and intensity must be Unit16 to stay in value range
+    days = (red.astype("uint16") * 255 + green).astype("uint16")
+    intensity = (blue % 100).astype("uint16")
+
+    # build masks
+    date_mask: Union[bool, ndarray] = (start_date is None or start_date <= days) * (
+        end_date is None or days <= end_date
+    )
+
+    # From the GFW repo:
+    #  First 6 bits Alpha channel used to individual alert confidence
+    #  First two bits (leftmost) are GLAD-L
+    #  Next, 3rd and 4th bits are GLAD-S2
+    #  Finally, 5th and 6th bits are RADD
+    #  Bits are either: 00 (0, no alerts), 01 (1, low conf), or 10 (2, high conf)
+    #  e.g. 00 10 01 00 --> no GLAD-L, high conf GLAD-S2, low conf RADD
+    conf_1 = ((alpha >> 6) & 3)
+    conf_2 = ((alpha >> 4) & 3)
+    conf_3 = ((alpha >> 2) & 3)
+    combined_conf = conf_1 + conf_2 + conf_3
+
+    if confirmed_only:
+        confidence_mask: Union[bool, ndarray] = combined_conf >= 4
+    else:
+        confidence_mask = True
+
+    no_data_mask: ndarray = red + green + blue > 0
+
+    # compute new alpha value
+    new_alpha: ndarray = (
+        np.minimum(255, intensity * 50) * date_mask * confidence_mask * no_data_mask
+    ).astype("uint8")
+
+    return new_alpha
+
+
 def apply_deforestation_filter(
     data: ndarray,
     start_date: Optional[str],
@@ -201,6 +253,40 @@ def apply_deforestation_filter(
 
     # Compute alpha value
     alpha = get_alpha_band(data, start_day, end_day, confirmed_only)
+
+    # stack bands and return
+    return np.array([red, green, blue, alpha])
+
+
+def apply_integrated_alerts_filter(
+    data: ndarray,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    confirmed_only: Optional[bool],
+    **kwargs,
+) -> ndarray:
+    """Decode using Pink alert color and filtering out unwanted alerts."""
+
+    logger.debug("Apply Deforestation Filter")
+
+    start_day = (
+        days_since_bog(datetime.strptime(start_date, "%Y-%m-%d").date())
+        if start_date
+        else None
+    )
+    end_day = (
+        days_since_bog(datetime.strptime(end_date, "%Y-%m-%d").date())
+        if end_date
+        else None
+    )
+
+    # Create an all pink image with varying opacity
+    red = np.ones(data[0].shape).astype("uint8") * 228
+    green = np.ones(data[1].shape).astype("uint8") * 102
+    blue = np.ones(data[2].shape).astype("uint8") * 153
+
+    # Compute alpha value
+    alpha = get_integrated_alerts_alpha_band(data, start_day, end_day, confirmed_only)
 
     # stack bands and return
     return np.array([red, green, blue, alpha])
@@ -427,6 +513,7 @@ def handler(event: Dict[str, Any], _: Dict[str, Any]) -> Dict[str, str]:
     filter_constructor = {
         "annual_loss": apply_annual_loss_filter,
         "deforestation_alerts": apply_deforestation_filter,
+        "integrated_alerts": apply_integrated_alerts_filter
     }
 
     source: str = event.get("source", "datalake")
