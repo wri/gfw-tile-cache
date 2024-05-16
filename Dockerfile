@@ -7,6 +7,8 @@ RUN apt-get -y update && apt-get -y --no-install-recommends install \
         make gcc libc-dev libgeos-dev musl-dev libpq-dev libffi-dev
 
 RUN pip install --upgrade pip && pip install pipenv==v2022.11.30
+RUN pip install titiler.application
+
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 

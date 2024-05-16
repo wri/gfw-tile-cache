@@ -2,8 +2,10 @@
 
     isort:skip_file
 """
+
 import json
 import logging
+import os
 
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.logger import logger
@@ -16,6 +18,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from asyncio.exceptions import TimeoutError as AsyncTimeoutError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from titiler.core.factory import TilerFactory
 
 from app.errors import http_error_handler
 from .middleware import no_cache_response_header
@@ -71,6 +74,11 @@ ROUTERS = (
 
 for r in ROUTERS:
     app.include_router(r)
+
+
+os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
+cog = TilerFactory()
+app.include_router(cog.router, prefix="/titiler")
 
 #####################
 ## Middleware
