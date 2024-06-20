@@ -4,5 +4,5 @@ from pydantic.main import BaseModel
 
 
 class Response(BaseModel):
-    data: Any
+    data: Any = None
     status: str = "success"
