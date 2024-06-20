@@ -5,7 +5,6 @@
 
 import json
 import logging
-import os
 
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.logger import logger
@@ -18,7 +17,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from asyncio.exceptions import TimeoutError as AsyncTimeoutError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from titiler.core.factory import TilerFactory
 
 from app.errors import http_error_handler
 from .middleware import no_cache_response_header
@@ -46,6 +44,8 @@ from .routes.wur_radd_alerts import raster_tiles as wur_radd_alerts_raster_tiles
 from .routes.planet import raster_tiles as planet_raster_tiles
 from .routes import wmts
 from .routes import preview
+
+from .routes.titiler import cog, custom, mosaic, routes as titiler_routes
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
@@ -76,9 +76,11 @@ for r in ROUTERS:
     app.include_router(r)
 
 
-os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
-cog = TilerFactory()
-app.include_router(cog.router, prefix="/titiler")
+# titiler routes
+app.include_router(cog.router, prefix="/titiler/cog", tags=["Single COG Tiles"])
+app.include_router(mosaic.router, prefix="/titiler/mosaic", tags=["Mosaic Tiles"])
+app.include_router(custom.router, prefix="/titiler/custom", tags=["Custom Tiles"])
+
 
 #####################
 ## Middleware
@@ -171,6 +173,7 @@ tags_metadata = [
     {"name": "Dynamic Vector Tiles", "description": dynamic_vector_tiles.__doc__},
     {"name": "Vector Tiles", "description": vector_tiles.__doc__},
     {"name": "Raster Tiles", "description": raster_tiles.__doc__},
+    {"name": "Dynamic COG Tiles", "description": titiler_routes.__doc__},
     {
         "name": "ESRI Vector Tile Service",
         "description": esri_vector_tile_server.__doc__,
@@ -195,6 +198,10 @@ def custom_openapi(openapi_prefix: str = ""):
     openapi_schema["x-tagGroups"] = [
         {"name": "Vector Tiles API", "tags": ["Dynamic Vector Tiles", "Vector Tiles"]},
         {"name": "Raster Tiles API", "tags": ["Raster Tiles"]},
+        {
+            "name": "Titiler COG Tiles",
+            "tags": ["Single COG Tiles", "Mosaic Tiles", "Custom Tiles"],
+        },
         {"name": "ESRI Vector Tile Server API", "tags": ["ESRI Vector Tile Service"]},
         {"name": "Map Preview", "tags": ["Tile Cache Preview"]},
     ]
