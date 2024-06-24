@@ -14,8 +14,8 @@ from ..fixtures.payloads import umd_glad_alerts_payload, umd_tree_cover_loss_pay
 @pytest.mark.e2e
 @pytest.mark.parametrize("x, y, multiplier", [(0, 0, 1), (1, 1, 4)])
 def test_dynamic_tiles_no_params(x, y, multiplier, client):
-    """
-    Test dynamic tile cache
+    """Test dynamic tile cache.
+
     :param x: x block coordinate for tile
     :param y: y block coordinate for tile
     :param multiplier: the test tile has multiplier for each x, y block. This is used to check the expected result values.
@@ -24,7 +24,6 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
         response = client.get(
             f"/wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
             params={"implementation": "default"},
-            stream=True,
         )
 
         assert (
@@ -51,14 +50,11 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
 @pytest.mark.e2e
 @pytest.mark.parametrize("x, y, confirmed_only", [(0, 0, False), (0, 0, True)])
 def test_dynamic_tiles_params(x, y, confirmed_only, client):
-    """
-    Test dynamic tile cache end to end
-    """
+    """Test dynamic tile cache end to end."""
     try:
         response = client.get(
             f"/wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
             params={"confirmed_only": confirmed_only},
-            stream=True,
         )
 
         assert (
@@ -93,6 +89,7 @@ def test_dynamic_tiles_params(x, y, confirmed_only, client):
 )
 def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     """Only testing if payload is correctly forwarded to lambda.
+
     Lambda execution should be handled by a separate test.
     """
     dataset = payload["dataset"]

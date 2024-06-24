@@ -3,8 +3,8 @@ import pytest
 
 @pytest.mark.parametrize("z, x, y", [(2, 3, 3), (8, 10, 10)])
 def test_umd_modis_burned_areas(z, x, y, client):
-    """
-    Test dynamic tile cache
+    """Test dynamic tile cache.
+
     :param x: x block coordinate for tile
     :param y: y block coordinate for tile
     :param multiplier: the test tile has multiplier for each x, y block. This is used to check the expected result values.
@@ -16,7 +16,6 @@ def test_umd_modis_burned_areas(z, x, y, client):
             "end_date": "2019-06-01",
             "force_date_range": True,
         },
-        stream=True,
     )
 
     assert (
