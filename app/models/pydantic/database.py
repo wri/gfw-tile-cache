@@ -1,14 +1,9 @@
 from typing import Any, Optional, Union
 
-from pydantic import (
-    ConfigDict,
-    Field,
-    field_validator,
-)
+from pydantic import ConfigDict, Field, field_validator
+from pydantic_settings import BaseSettings
 from sqlalchemy.engine.url import URL
 from starlette.datastructures import Secret
-
-from pydantic_settings import BaseSettings
 
 
 class DatabaseURL(BaseSettings):
