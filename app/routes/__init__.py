@@ -1,13 +1,15 @@
+import os
 from typing import Optional, Tuple, Union
 
 import mercantile
 import pendulum
-from fastapi import Depends, HTTPException, Path, Query
+from fastapi import Depends, HTTPException, Path, Query, Request, status
 from fastapi.logger import logger
 from shapely.geometry import box
 
 from ..crud.sync_db.tile_cache_assets import get_versions
 from ..models.enumerators.datasets import (
+    COGDatasets,
     DynamicVectorTileCacheDatasets,
     RasterTileCacheDatasets,
     StaticVectorTileCacheDatasets,
@@ -19,6 +21,9 @@ from ..models.types import Bounds
 DATE_REGEX = r"^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
 VERSION_REGEX = r"^v\d{1,8}(\.\d{1,3}){0,2}?$|^latest$"
 XYZ_REGEX = r"^\d+(@(2|0.5|0.25)x)?$"
+VERSION_REGEX_NO_LATEST = r"^v\d{1,8}(\.\d{1,3}){0,2}?$"
+
+DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:
@@ -135,6 +140,42 @@ async def raster_tile_cache_version_dependency(
         )
     validate_tile_cache_version(dataset, version, TileCacheType.raster_tile_cache)
     return dataset, version
+
+
+async def cog_asset_dependency(
+    request: Request,
+    dataset: Optional[COGDatasets] = Query(None, description=COGDatasets.__doc__),  # type: ignore
+    version: Optional[str] = Query(
+        None, description="Data API dataset version.", regex=VERSION_REGEX_NO_LATEST
+    ),
+    url: Optional[str] = Query(
+        None,
+        description="Dataset path. This needs to be set if `dataset` and `version` query parameters for a Data API dataset are not set.",
+    ),
+) -> Optional[str]:
+
+    if dataset is None and version is None and url is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Need to pass either `url` or `dataset` and `version` pair for Data API dataset.",
+        )
+
+    if dataset and version and url:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Need to pass either `url` or `dataset` and `version` pair, not both.",
+        )
+
+    if dataset and version:
+        folder: str = (
+            f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
+        )
+        if "bands" in request.query_params:
+            return folder
+
+        return f"{folder}/default.tif"
+
+    return url
 
 
 async def optional_implementation_dependency(

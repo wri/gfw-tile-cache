@@ -16,7 +16,7 @@ class DatabaseURL(BaseSettings):
     host: str = Field("localhost", description="Server host.")
     port: Optional[Union[str, int]] = Field(None, description="Server access port.")
     username: Optional[str] = Field(None, alias="user", description="Username")
-    password: Optional[Secret] = Field(None, description="Password")
+    password: Optional[Union[Secret, str]] = Field(None, description="Password")
     database: str = Field(..., description="Database name.")
     url: Optional[URL] = None
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)

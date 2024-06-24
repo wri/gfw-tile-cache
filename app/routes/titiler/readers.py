@@ -30,9 +30,7 @@ class IntegratedAlertsReader(MultiBandReader):
 
     def __attrs_post_init__(self):
         """Get grid bounds."""
-        band_url: str = self._get_band_url(
-            "gfw_integrated_alerts/v20230922/raster/epsg-4326/cog/default"
-        )
+        band_url: str = self._get_band_url("default")
         with self.reader(band_url) as cog:
             self.bounds = cog.bounds
             self.crs = cog.crs

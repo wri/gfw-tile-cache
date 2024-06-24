@@ -1,7 +1,4 @@
-"""
-
-    isort:skip_file
-"""
+"""isort:skip_file."""
 
 import json
 import logging
@@ -45,7 +42,7 @@ from .routes.planet import raster_tiles as planet_raster_tiles
 from .routes import wmts
 from .routes import preview
 
-from .routes.titiler import cog, custom, mosaic, routes as titiler_routes
+from .routes.titiler import routes as titiler_routes
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
@@ -77,9 +74,15 @@ for r in ROUTERS:
 
 
 # titiler routes
-app.include_router(cog.router, prefix="/titiler/cog", tags=["Single COG Tiles"])
-app.include_router(mosaic.router, prefix="/titiler/mosaic", tags=["Mosaic Tiles"])
-app.include_router(custom.router, prefix="/titiler/custom", tags=["Custom Tiles"])
+app.include_router(
+    titiler_routes.cog.router, prefix="/cog/basic", tags=["Single COG Tiles"]
+)
+app.include_router(
+    titiler_routes.mosaic.router, prefix="/cog/mosaic", tags=["Mosaic Tiles"]
+)
+app.include_router(
+    titiler_routes.custom.router, prefix="/cog/custom", tags=["Custom Tiles"]
+)
 
 
 #####################

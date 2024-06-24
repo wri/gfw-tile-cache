@@ -423,6 +423,32 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+  # send all Titiler requests to tile cache app
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    target_origin_id       = "dynamic"
+    compress               = true
+    path_pattern           = "cog/*"
+    default_ttl            = 86400
+    max_ttl                = 86400
+    min_ttl                = 0
+    smooth_streaming       = false
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = true
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
   # Default static vector tiles are stored on S3
   # They won't change and can stay in cache for a year
   # We will set response headers for selected tile caches in S3 if required

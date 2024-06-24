@@ -8,6 +8,7 @@ from titiler.core.factory import AlgorithmFactory, MultiBandTilerFactory, TilerF
 from titiler.extensions import cogValidateExtension, cogViewerExtension
 from titiler.mosaic.factory import MosaicTilerFactory
 
+from ...routes import cog_asset_dependency
 from .algorithms import IntegratedAlerts
 from .readers import IntegratedAlertsReader
 
@@ -18,7 +19,6 @@ from .readers import IntegratedAlertsReader
 # print("Debugger attached.")
 
 
-# Add the `Multiply` algorithm to the default ones
 algorithms: Algorithms = default_algorithms.register(
     {"integrated_alerts": IntegratedAlerts}
 )
@@ -27,21 +27,23 @@ algorithms: Algorithms = default_algorithms.register(
 PostProcessParams: Callable = algorithms.dependency
 
 custom = MultiBandTilerFactory(
-    router_prefix="/titiler/custom",
+    router_prefix="/cog/custom",
     process_dependency=PostProcessParams,
     reader=IntegratedAlertsReader,
+    path_dependency=cog_asset_dependency,
 )
 
 cog = TilerFactory(
-    router_prefix="/titiler/cog",
+    router_prefix="/cog/basic",
     extensions=[
         cogValidateExtension(),
         cogViewerExtension(),
     ],
+    path_dependency=cog_asset_dependency,
 )
 
 algorithms = AlgorithmFactory()
 
-mosaic = MosaicTilerFactory(router_prefix="/titiler/mosaic")
+mosaic = MosaicTilerFactory(router_prefix="/cog/mosaic")
 
 # add_exception_handlers(app, DEFAULT_STATUS_CODES)
