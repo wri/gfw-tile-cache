@@ -109,7 +109,7 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
         mck.side_effect = mock_get_dynamic_tile
 
         response = client.get(
-            f"/{dataset}/{version}/dynamic/{z}/{x}/{y}.png", params=params, stream=True
+            f"/{dataset}/{version}/dynamic/{z}/{x}/{y}.png", params=params
         )
 
         assert (
