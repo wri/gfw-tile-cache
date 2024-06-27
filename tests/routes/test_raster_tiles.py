@@ -21,17 +21,18 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
     :param multiplier: the test tile has multiplier for each x, y block. This is used to check the expected result values.
     """
     try:
-        response = client.get(
+        with client.stream(
+            "GET",
             f"/wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
             params={"implementation": "default"},
-        )
+        ) as response:
+            response.read()
+            assert (
+                response.status_code == 200
+            ), f"Bad response for request {response.request.url}: {response.json()}"
 
-        assert (
-            response.status_code == 200
-        ), f"Bad response for request {response.request.url}: {response.json()}"
-
-        img = _response_to_img(response)
-        _check_png(img, multiplier)
+            img = _response_to_img(response)
+            _check_png(img, multiplier)
 
         # check if s3 file copied. It should now be accessible using the default endpoint.
         saved_bytes = BytesIO()
@@ -52,17 +53,18 @@ def test_dynamic_tiles_no_params(x, y, multiplier, client):
 def test_dynamic_tiles_params(x, y, confirmed_only, client):
     """Test dynamic tile cache end to end."""
     try:
-        response = client.get(
+        with client.stream(
+            "GET",
             f"/wur_radd_alerts/v20201214/dynamic/14/{x}/{y}.png",
             params={"confirmed_only": confirmed_only},
-        )
+        ) as response:
+            response.read()
+            assert (
+                response.status_code == 200
+            ), f"Bad response for request {response.request.url}: {response.json()}"
 
-        assert (
-            response.status_code == 200
-        ), f"Bad response for request {response.request.url}: {response.json()}"
-
-        img = _response_to_img(response)
-        _check_filtered_png(img, confirmed_only)
+            img = _response_to_img(response)
+            _check_filtered_png(img, confirmed_only)
 
         # check if s3 file copied. It should now be accessible using the default endpoint.
         # saved_bytes = BytesIO()
@@ -108,24 +110,23 @@ def test_dynamic_tiles_named(params, payload, client, mock_get_dynamic_tile):
     with mock.patch(mock_patch) as mck:
         mck.side_effect = mock_get_dynamic_tile
 
-        response = client.get(
-            f"/{dataset}/{version}/dynamic/{z}/{x}/{y}.png", params=params
-        )
+        with client.stream(
+            "GET", f"/{dataset}/{version}/dynamic/{z}/{x}/{y}.png", params=params
+        ) as response:
+            response.read()
+            assert (
+                response.status_code == 200
+            ), f"Bad response for request {response.request.url}: {response.json()}"
 
-        assert (
-            response.status_code == 200
-        ), f"Bad response for request {response.request.url}: {response.json()}"
+            expected_response = {"data": payload, "status": "success"}
 
-        expected_response = {"data": payload, "status": "success"}
-
-        rsp = _response_to_img(response)
-        assert json.loads(rsp.read()) == expected_response
+            rsp = _response_to_img(response)
+            assert json.loads(rsp.read()) == expected_response
 
 
 def _response_to_img(response):
-    response.raw.decode_content = True
     image_bytes = BytesIO()
-    for chunk in response:
+    for chunk in response.iter_bytes():
         image_bytes.write(chunk)
 
     image_bytes.seek(0)
