@@ -39,5 +39,6 @@ data "template_file" "container_definition" {
     tile_cache_url           = local.tile_cache_url
     raster_tiler_lambda_name = module.lambda_raster_tiler.lambda_name
     tiles_bucket_name        = module.storage.tiles_bucket_name
+    data_lake_bucket_name = local.data_lake_bucket_name
   }
 }
