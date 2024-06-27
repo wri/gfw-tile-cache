@@ -12,12 +12,6 @@ from ...routes import cog_asset_dependency
 from .algorithms import IntegratedAlerts
 from .readers import IntegratedAlertsReader
 
-# Allow other computers to attach to debugpy at this IP address and port.
-# debugpy.listen(("0.0.0.0", 5678))
-# print("Waiting for debugger attach...")
-# debugpy.wait_for_client()
-# print("Debugger attached.")
-
 
 algorithms: Algorithms = default_algorithms.register(
     {"integrated_alerts": IntegratedAlerts}
@@ -45,5 +39,3 @@ cog = TilerFactory(
 algorithms = AlgorithmFactory()
 
 mosaic = MosaicTilerFactory(router_prefix="/cog/mosaic")
-
-# add_exception_handlers(app, DEFAULT_STATUS_CODES)
