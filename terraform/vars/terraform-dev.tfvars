@@ -4,4 +4,6 @@ tile_cache_url            = "dev-tiles.globalforestwatch.org"
 desired_count             = 1
 auto_scaling_min_capacity = 1
 auto_scaling_max_capacity = 5
+fargate_cpu               = 4096
+fargate_memory            = 8192
 data_lake_bucket_name     = "gfw-data-lake-staging"
