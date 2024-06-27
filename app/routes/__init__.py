@@ -42,10 +42,15 @@ async def vector_xyz(
         regex=XYZ_REGEX,
     ),
 ) -> Tuple[Bounds, int, int]:
-    if isinstance(y, str) and "@" in y:
-        __y, _scale = y.split("@")
-        _y: int = int(__y)
-        scale: float = float(_scale[:-1])
+    print("typeof y", y, isinstance(y, str))
+    if isinstance(y, str):
+        if "@" in y:
+            __y, _scale = y.split("@")
+            _y: int = int(__y)
+            scale: float = float(_scale[:-1])
+        else:
+            _y = int(y)
+            scale = 1.0
     elif isinstance(y, int):
         _y = y
         scale = 1.0
