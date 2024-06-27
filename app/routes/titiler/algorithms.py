@@ -1,4 +1,4 @@
-
+# from datetime import date
 import numpy as np
 from pydantic import Field
 from rio_tiler.models import ImageData
@@ -11,7 +11,7 @@ class IntegratedAlerts(BaseAlgorithm):
     title: str = "Integrated Deforestation Alerts"
     description: str = "Decode and vizualize alerts"
 
-    # START_DATE: np.datetime64 = np.datetime64(16435, "D")
+    # START_DATE: np.datetime64 = np.datetime64("2014-12-31").astype(int)
 
     # Parameters
     start_date: int = Field(None, description="start date of alert")
@@ -26,24 +26,26 @@ class IntegratedAlerts(BaseAlgorithm):
         """Encode Integrated alerts to RGBA."""
         mask = img.array.mask[0].astype(int)
         data = img.data[0]
+
+        # Will add this in next iteration
+        # if self.start_date:
+        #     start_mask = data % 10000 >= (
+        #         np.datetime64(self.start_date).astype(int) - self.START_DATE
+        #     )
+        #     mask = mask * start_mask
+        # if self.end_date:
+        #     end_mask = data % 10000 <= (
+        #         np.datetime64(self.end_date).astype(int) - self.START_DATE
+        #     )
+        #     mask = mask * end_mask
+
         r = np.where(data > 0, 228, 0)
         g = np.where(data > 0, 102, 0)
         b = np.where(data > 0, 153, 0)
 
         intensity = np.where(mask == 0, img.data[1], 0)
         intensity = np.minimum(255, intensity * 50)
-        # data = np.ma.MaskedArray(np.ma.stack([r, g, b, intensity]), mask=False).astype(
-        #     self.output_dtype
-        # )
         data = np.stack([r, g, b, intensity]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
 
-        # plt.imsave(
-        #     "rgba_image.png",
-        #     np.transpose(np.stack([r, g, b, intensity]).astype(np.uint8), (1, 2, 0)),
-        # )
-        # plt.imsave(
-        #     "intensity_image.png",
-        #     img.array[1],
-        # )
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
