@@ -16,7 +16,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_dev }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_dev }}
         AWS_REGION: ${{ secrets.aws_region_dev }}
-        LOCALSTACK_API_KEY: ${{ secrets.localstack_api_key }}
+        LOCALSTACK_AUTH_TOKEN: ${{ secrets.localstack_auth_token }}
         PLANET_API_KEY: ${{secrets.planet_api_key }}
       run: |
         ./scripts/test
