@@ -1,6 +1,5 @@
 """isort:skip_file."""
 
-import json
 import logging
 
 from fastapi.exceptions import HTTPException, RequestValidationError
@@ -141,7 +140,8 @@ async def rve_error_handler(
 ) -> ORJSONResponse:
     """Use JSEND protocol for validation errors."""
     return ORJSONResponse(
-        status_code=422, content={"status": "failed", "message": json.loads(exc.json())}
+        status_code=422,
+        content={"status": "failed", "message": exc.errors()},
     )
 
 
