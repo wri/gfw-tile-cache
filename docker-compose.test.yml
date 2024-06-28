@@ -67,7 +67,7 @@ services:
       - DEBUG=1
       - DISABLE_EVENTS=1
       - LAMBDA_DOCKER_NETWORK=gfw-tile-cache_test_default
-      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
       - LAMBDA_KEEPALIVE_MS=0
       - DOCKER_HOST=unix:///var/run/docker.sock
       - HOSTNAME_EXTERNAL=localstack
