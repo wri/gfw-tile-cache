@@ -10,8 +10,11 @@ from fastapi.testclient import TestClient
 from PIL import Image
 from rasterio.enums import ColorInterp
 from rasterio.windows import Window
+import pytest_asyncio
 
-from app.application import get_synchronous_db
+
+from app.application import db, get_synchronous_db
+from app.settings.globals import GLOBALS
 
 AWS_ENDPOINT_URI = os.environ.get("AWS_ENDPOINT_URI", None)
 
@@ -126,7 +129,7 @@ def pytest_sessionfinish(session, exitstatus):
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 def client():
     """
     Test client for tile cache app
@@ -150,3 +153,14 @@ def fixture_mock_get_dynamic_tile():
         return json.dumps(response).encode()
 
     return _mock_get_dynamic_tile
+
+
+@pytest_asyncio.fixture(scope="function")
+async def connect_db():
+    await db.set_bind(GLOBALS.database_config.url)
+    yield db
+
+    # Teardown: close the database connection
+    bind = db.pop_bind()
+    if bind:
+        await bind.close()
