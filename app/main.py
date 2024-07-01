@@ -74,7 +74,7 @@ for r in ROUTERS:
 
 # titiler routes
 app.include_router(
-    titiler_routes.cog.router, prefix="/cog/basic", tags=["Single COG Tiles"]
+    titiler_routes.cog.router, prefix="/cog/basic", tags=["Single Source Tiles"]
 )
 app.include_router(
     titiler_routes.mosaic.router, prefix="/cog/mosaic", tags=["Mosaic Tiles"]
@@ -203,7 +203,7 @@ def custom_openapi(openapi_prefix: str = ""):
         {"name": "Raster Tiles API", "tags": ["Raster Tiles"]},
         {
             "name": "Titiler COG Tiles",
-            "tags": ["Single COG Tiles", "Mosaic Tiles", "Custom Tiles"],
+            "tags": ["Single Source Tiles", "Mosaic Tiles", "Custom Tiles"],
         },
         {"name": "ESRI Vector Tile Server API", "tags": ["ESRI Vector Tile Service"]},
         {"name": "Map Preview", "tags": ["Tile Cache Preview"]},
