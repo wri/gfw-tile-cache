@@ -5,13 +5,12 @@ from typing import Any, Dict
 import boto3
 import numpy as np
 import pytest
+import pytest_asyncio
 import rasterio
 from fastapi.testclient import TestClient
 from PIL import Image
 from rasterio.enums import ColorInterp
 from rasterio.windows import Window
-import pytest_asyncio
-
 
 from app.application import db, get_synchronous_db
 from app.settings.globals import GLOBALS
@@ -83,10 +82,8 @@ def create_test_png():
 
 
 def pytest_sessionstart(session):
-    """
-    Called after the Session object has been created and
-    before performing collection and entering the run test loop.
-    """
+    """Called after the Session object has been created and before performing
+    collection and entering the run test loop."""
 
     with get_synchronous_db() as db:
         sql_file = f"{os.path.dirname(__file__)}/fixtures/session_start.sql"
@@ -101,10 +98,8 @@ def pytest_sessionstart(session):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """
-    Called after whole test run finished, right before
-    returning the exit status to the system.
-    """
+    """Called after whole test run finished, right before returning the exit
+    status to the system."""
     with get_synchronous_db() as db:
         sql_file = f"{os.path.dirname(__file__)}/fixtures/session_end.sql"
         with open(sql_file) as f:
@@ -131,10 +126,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 @pytest.fixture(autouse=False)
 def client():
-    """
-    Test client for tile cache app
-
-    """
+    """Test client for tile cache app."""
     from app.main import app
 
     with TestClient(app) as client:
@@ -143,8 +135,12 @@ def client():
 
 @pytest.fixture(name="mock_get_dynamic_tile", scope="session")
 def fixture_mock_get_dynamic_tile():
-    """Mock lambda raster tile and return payload as byte obj instead of raster image.
-    This will allow to verify if route service correctly process the payload."""
+    """Mock lambda raster tile and return payload as byte obj instead of raster
+    image.
+
+    This will allow to verify if route service correctly process the
+    payload.
+    """
 
     def _mock_get_dynamic_tile(
         payload: Dict[str, Any], implementation, background_tasks
