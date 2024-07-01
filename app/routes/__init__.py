@@ -148,7 +148,7 @@ async def raster_tile_cache_version_dependency(
 
 async def cog_asset_dependency(
     request: Request,
-    dataset: Optional[COGDatasets] = Query(None, description=COGDatasets.__doc__),  # type: ignore
+    dataset: Optional[COGDatasets] = Query(None, description=COGDatasets.__doc__),
     version: Optional[str] = Query(
         None, description="Data API dataset version.", regex=VERSION_REGEX_NO_LATEST
     ),
