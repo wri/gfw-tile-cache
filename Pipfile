@@ -26,7 +26,6 @@ cachetools = "*"
 fastapi = "*"
 geojson = "*"
 gino = "*"
-gino_starlette = "*"
 httpx = "*"
 httpx-auth = "*"
 jinja2 = "*"
@@ -43,6 +42,10 @@ starlette = "*"
 titiler.application = "*"
 urllib3 = "*"
 uvicorn = {version = "*", extras = ["standard"]}
+urllib3 = "*"
+pydantic-settings = "*"
+pydantic = "2.7.4"
+numpy = "1.25.2"
 
 [requires]
 python_version = "3.10"
