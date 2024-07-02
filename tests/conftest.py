@@ -10,6 +10,7 @@ import rasterio
 from fastapi.testclient import TestClient
 from PIL import Image
 from rasterio.enums import ColorInterp
+from rasterio.io import MemoryFile
 from rasterio.windows import Window
 
 from app.application import db, get_synchronous_db
@@ -24,6 +25,9 @@ AWS_ENDPOINT_URI = os.environ.get("AWS_ENDPOINT_URI", None)
 fixtures = os.path.join(os.path.dirname(__file__), "fixtures")
 TEST_TIF = os.path.join(fixtures, "test.tif")
 TEST_PNG = os.path.join(fixtures, "test.png")
+DATE_CONF_TIF = os.path.join(fixtures, "date_conf.tif")
+INTENSITY_TIF = os.path.join(fixtures, "intensity.tif")
+COG_TIF = os.path.join(fixtures, "cog.tif")
 
 
 def create_test_tif():
@@ -71,6 +75,20 @@ def create_test_tif():
     )
 
 
+def prep_titiler_tifs():
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=AWS_ENDPOINT_URI,
+    )
+    s3_client.upload_file(DATE_CONF_TIF, "gfw-data-lake-test", "default.tif")
+    s3_client.upload_file(DATE_CONF_TIF, "gfw-data-lake-test", "intensity.tif")
+    s3_client.upload_file(
+        COG_TIF,
+        "gfw-data-lake-test",
+        "umd_glad_landsat_alerts/v20210101/raster/epsg-4326/cog/default.tif",
+    )
+
+
 ##################
 # Create Test data
 ##################
@@ -95,6 +113,7 @@ def pytest_sessionstart(session):
 
     create_test_tif()
     create_test_png()
+    prep_titiler_tifs()
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -121,6 +140,12 @@ def pytest_sessionfinish(session, exitstatus):
     s3_client.delete_object(
         Bucket="gfw-data-lake-test",
         Key="umd_glad_landsat_alerts/v20210101/raster/epsg-3857/zoom_12/default/geotiff/000R_000C.tif",
+    )
+    s3_client.delete_object(Bucket="gfw-data-lake-test", Key="default.tif")
+    s3_client.delete_object(Bucket="gfw-data-lake-test", Key="intensity.tif")
+    s3_client.delete_object(
+        Bucket="gfw-data-lake-test",
+        Key="umd_glad_landsat_alerts/v20210101/raster/epsg-4326/cog/default.tif",
     )
 
 
@@ -160,3 +185,10 @@ async def connect_db():
     bind = db.pop_bind()
     if bind:
         await bind.close()
+
+
+def parse_img(content: bytes) -> Dict[Any, Any]:
+    """Read tile image and return metadata."""
+    with MemoryFile(content) as mem:
+        with mem.open() as dst:
+            return dst.profile
