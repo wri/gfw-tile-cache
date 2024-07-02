@@ -177,7 +177,7 @@ async def cog_asset_dependency(
         if "bands" in request.query_params:
             return folder
 
-        if "mosaic" in request.url:
+        if "mosaic" in str(request.url):
             return f"{folder}/mosaic.json"
 
         return f"{folder}/default.tif"
