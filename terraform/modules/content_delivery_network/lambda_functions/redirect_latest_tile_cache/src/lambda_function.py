@@ -7,14 +7,13 @@ LATEST_VERSIONS = None
 
 
 def get_latest_versions(url):
-    """
-    Get latest version for all datasets in Data API
-    Use in memory object if exists, otherwise fetch from API
-    B/C this is a Lambd@Edge function I cannot connect to a database inside VPC
-    I also cannot read from S3, b/c I cannot set ENV variable to indicate the environment I am in
-    Nor can I add a custom header to pass in variables b/c this is a viewer-request event-type
-    The only option I have is to fetch the request URI and use it for my purposes
-    """
+    """Get latest version for all datasets in Data API Use in memory object if
+    exists, otherwise fetch from API B/C this is a Lambd@Edge function I cannot
+    connect to a database inside VPC I also cannot read from S3, b/c I cannot
+    set ENV variable to indicate the environment I am in Nor can I add a custom
+    header to pass in variables b/c this is a viewer-request event-type The
+    only option I have is to fetch the request URI and use it for my
+    purposes."""
     global LATEST_VERSIONS
 
     if not LATEST_VERSIONS:
@@ -57,7 +56,10 @@ def handler(event, context):
 
             redirect_path = request["uri"].replace("latest", latest_version["version"])
             if request["querystring"]:
-                redirect_path += f"?{request['querystring']}"
+                if "version=latest" in request["querystring"]:
+                    redirect_path += f"?{request['querystring'].replace('latest', latest_version['version'])}"
+                else:
+                    redirect_path += f"?{request['querystring']}"
 
             # set redirect path in location header
             headers["location"] = [{"key": "Location", "value": redirect_path}]
