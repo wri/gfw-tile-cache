@@ -152,6 +152,9 @@ async def cog_asset_dependency(
     version: Optional[str] = Query(
         None, description="Data API dataset version.", regex=VERSION_REGEX_NO_LATEST
     ),
+    name: Optional[str] = Query(
+        "default", description="Name of the COG asset to display"
+    ),
     url: Optional[str] = Query(
         None,
         description="Dataset path. This needs to be set if `dataset` and `version` query parameters for a Data API dataset are not set.",
@@ -180,7 +183,7 @@ async def cog_asset_dependency(
         if "mosaic" in str(request.url):
             return f"{folder}/mosaic.json"
 
-        return f"{folder}/default.tif"
+        return f"{folder}/{name}.tif"
 
     return url
 
