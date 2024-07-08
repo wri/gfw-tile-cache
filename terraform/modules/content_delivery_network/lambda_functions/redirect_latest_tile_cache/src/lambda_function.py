@@ -2,6 +2,7 @@
 
 import json
 import urllib.request
+from urllib.parse import parse_qs
 
 LATEST_VERSIONS = None
 
@@ -47,19 +48,30 @@ def handler(event, context):
         ]
 
     path_items = request["uri"].split("/")
+    query_string = request["querystring"]
+
     dataset = path_items[1]
+    if dataset == "cog":
+        query_params = parse_qs(query_string)
+        dataset = query_params.get("dataset", [None])[0]
+        version = query_params.get("version", [None])[0]
+    else:
+        version = path_items[2]
 
     latest_versions = get_latest_versions(f"https://{host}/_latest")
 
     for latest_version in latest_versions:
         if latest_version["dataset"] == dataset:
 
+            if "cog" in path_items:
+                if version != "latest":
+                    return request
+
+                query_string = query_string.replace("latest", latest_version["version"])
+
             redirect_path = request["uri"].replace("latest", latest_version["version"])
-            if request["querystring"]:
-                if "version=latest" in request["querystring"]:
-                    redirect_path += f"?{request['querystring'].replace('latest', latest_version['version'])}"
-                else:
-                    redirect_path += f"?{request['querystring']}"
+            if query_string:
+                redirect_path += f"?{query_string}"
 
             # set redirect path in location header
             headers["location"] = [{"key": "Location", "value": redirect_path}]
