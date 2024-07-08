@@ -447,6 +447,12 @@ resource "aws_cloudfront_distribution" "tiles" {
         whitelisted_names = []
       }
     }
+
+    lambda_function_association {
+      event_type   = "viewer-request"
+      include_body = false
+      lambda_arn   = aws_lambda_function.redirect_latest_tile_cache.qualified_arn
+    }
   }
 
   # Default static vector tiles are stored on S3
