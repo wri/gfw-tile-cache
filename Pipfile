@@ -13,32 +13,37 @@ pytest = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 python-dotenv = "*"
-rasterio = "==1.3.8" # same as lambda layer
 
 [packages]
 aioboto3 = "*"
-aiobotocore = {extras = ["boto3"], version="<2.0.0"}
+aiobotocore = "*"
 aiofiles = "*"
 aenum = "<3.0"
 async_lru = "*"
 asyncpg = "*"
 cachetools = "*"
-fastapi = "<0.68"
+fastapi = "*"
 geojson = "*"
 gino = "*"
 gino_starlette = "*"
 httpx = "*"
 httpx-auth = "*"
-jinja2 = "<3.1"
-mercantile = "==1.2.1" # same as lambda layer
+jinja2 = "*"
+mercantile = "*" # same as lambda layer
+numpy = "1.25.2"
 orjson = "*"
+pydantic = "2.7.4"
+pydantic-settings = "*"
 pendulum = "*"
 psycopg2 = "*"
 pyproj = "*"
+rasterio = "1.3.10"
 requests = "*"
 SQLAlchemy = "<1.4"
 shapely = "*"
-starlette = "<0.15"
+starlette = "*"
+titiler.application = "*"
+urllib3 = "*"
 uvicorn = {version = "*", extras = ["standard"]}
 
 [requires]

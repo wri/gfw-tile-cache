@@ -5,13 +5,16 @@ from typing import Any, Dict
 import boto3
 import numpy as np
 import pytest
+import pytest_asyncio
 import rasterio
 from fastapi.testclient import TestClient
 from PIL import Image
 from rasterio.enums import ColorInterp
+from rasterio.io import MemoryFile
 from rasterio.windows import Window
 
-from app.application import get_synchronous_db
+from app.application import db, get_synchronous_db
+from app.settings.globals import GLOBALS
 
 AWS_ENDPOINT_URI = os.environ.get("AWS_ENDPOINT_URI", None)
 
@@ -22,6 +25,9 @@ AWS_ENDPOINT_URI = os.environ.get("AWS_ENDPOINT_URI", None)
 fixtures = os.path.join(os.path.dirname(__file__), "fixtures")
 TEST_TIF = os.path.join(fixtures, "test.tif")
 TEST_PNG = os.path.join(fixtures, "test.png")
+DATE_CONF_TIF = os.path.join(fixtures, "date_conf.tif")
+INTENSITY_TIF = os.path.join(fixtures, "intensity.tif")
+COG_TIF = os.path.join(fixtures, "cog.tif")
 
 
 def create_test_tif():
@@ -69,6 +75,20 @@ def create_test_tif():
     )
 
 
+def prep_titiler_tifs():
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=AWS_ENDPOINT_URI,
+    )
+    s3_client.upload_file(DATE_CONF_TIF, "gfw-data-lake-test", "default.tif")
+    s3_client.upload_file(DATE_CONF_TIF, "gfw-data-lake-test", "intensity.tif")
+    s3_client.upload_file(
+        COG_TIF,
+        "gfw-data-lake-test",
+        "umd_glad_landsat_alerts/v20210101/raster/epsg-4326/cog/default.tif",
+    )
+
+
 ##################
 # Create Test data
 ##################
@@ -80,10 +100,8 @@ def create_test_png():
 
 
 def pytest_sessionstart(session):
-    """
-    Called after the Session object has been created and
-    before performing collection and entering the run test loop.
-    """
+    """Called after the Session object has been created and before performing
+    collection and entering the run test loop."""
 
     with get_synchronous_db() as db:
         sql_file = f"{os.path.dirname(__file__)}/fixtures/session_start.sql"
@@ -95,13 +113,12 @@ def pytest_sessionstart(session):
 
     create_test_tif()
     create_test_png()
+    prep_titiler_tifs()
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """
-    Called after whole test run finished, right before
-    returning the exit status to the system.
-    """
+    """Called after whole test run finished, right before returning the exit
+    status to the system."""
     with get_synchronous_db() as db:
         sql_file = f"{os.path.dirname(__file__)}/fixtures/session_end.sql"
         with open(sql_file) as f:
@@ -124,14 +141,17 @@ def pytest_sessionfinish(session, exitstatus):
         Bucket="gfw-data-lake-test",
         Key="umd_glad_landsat_alerts/v20210101/raster/epsg-3857/zoom_12/default/geotiff/000R_000C.tif",
     )
+    s3_client.delete_object(Bucket="gfw-data-lake-test", Key="default.tif")
+    s3_client.delete_object(Bucket="gfw-data-lake-test", Key="intensity.tif")
+    s3_client.delete_object(
+        Bucket="gfw-data-lake-test",
+        Key="umd_glad_landsat_alerts/v20210101/raster/epsg-4326/cog/default.tif",
+    )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 def client():
-    """
-    Test client for tile cache app
-
-    """
+    """Test client for tile cache app."""
     from app.main import app
 
     with TestClient(app) as client:
@@ -140,8 +160,12 @@ def client():
 
 @pytest.fixture(name="mock_get_dynamic_tile", scope="session")
 def fixture_mock_get_dynamic_tile():
-    """Mock lambda raster tile and return payload as byte obj instead of raster image.
-    This will allow to verify if route service correctly process the payload."""
+    """Mock lambda raster tile and return payload as byte obj instead of raster
+    image.
+
+    This will allow to verify if route service correctly process the
+    payload.
+    """
 
     def _mock_get_dynamic_tile(
         payload: Dict[str, Any], implementation, background_tasks
@@ -150,3 +174,21 @@ def fixture_mock_get_dynamic_tile():
         return json.dumps(response).encode()
 
     return _mock_get_dynamic_tile
+
+
+@pytest_asyncio.fixture(scope="function")
+async def connect_db():
+    await db.set_bind(GLOBALS.database_config.url)
+    yield db
+
+    # Teardown: close the database connection
+    bind = db.pop_bind()
+    if bind:
+        await bind.close()
+
+
+def parse_img(content: bytes) -> Dict[Any, Any]:
+    """Read tile image and return metadata."""
+    with MemoryFile(content) as mem:
+        with mem.open() as dst:
+            return dst.profile

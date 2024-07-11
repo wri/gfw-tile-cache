@@ -230,6 +230,9 @@ INSERT INTO public.versions (dataset, version, is_latest, status)
 INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
     VALUES ('umd_glad_landsat_alerts', 'v20210101', 'Raster tile cache', '{"min_zoom": 0, "max_zoom": 12, "max_static_zoom": 9, "implementation": "default", "symbology": null, "source_asset_id": null, "resampling":"average"}', '{}', '[]', '3ac4028e-798d-4854-9b5e-6a9771ed06ed', 'saved', 'my_uri7', true, false);
 
+INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('umd_glad_landsat_alerts', 'v20210101', 'COG', '{"implementation": "default", "source_asset_id": "3ac4028e-798d-4854-9b5e-6a9771ed06ed", "resampling":"mode", "blocksize": 256}', '{}', '[]', '821f0211-e439-4302-93bb-0925099df65d', 'saved', 'my_uri13', true, false);
+
 
 CREATE SCHEMA umd_modis_burned_areas;
 CREATE TABLE umd_modis_burned_areas.v202003 (alert__date date, gfw_area__ha numeric, geom_wm geometry);

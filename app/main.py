@@ -1,8 +1,5 @@
-"""
+"""isort:skip_file."""
 
-    isort:skip_file
-"""
-import json
 import logging
 
 from fastapi.exceptions import HTTPException, RequestValidationError
@@ -44,6 +41,8 @@ from .routes.planet import raster_tiles as planet_raster_tiles
 from .routes import wmts
 from .routes import preview
 
+from .routes.titiler import routes as titiler_routes
+
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
 
@@ -71,6 +70,19 @@ ROUTERS = (
 
 for r in ROUTERS:
     app.include_router(r)
+
+
+# titiler routes
+app.include_router(
+    titiler_routes.cog.router, prefix="/cog/basic", tags=["Single Source Tiles"]
+)
+app.include_router(
+    titiler_routes.mosaic.router, prefix="/cog/mosaic", tags=["Mosaic Tiles"]
+)
+app.include_router(
+    titiler_routes.custom.router, prefix="/cog/custom", tags=["Custom Tiles"]
+)
+
 
 #####################
 ## Middleware
@@ -128,7 +140,8 @@ async def rve_error_handler(
 ) -> ORJSONResponse:
     """Use JSEND protocol for validation errors."""
     return ORJSONResponse(
-        status_code=422, content={"status": "failed", "message": json.loads(exc.json())}
+        status_code=422,
+        content={"status": "failed", "message": exc.errors()},
     )
 
 
@@ -163,6 +176,7 @@ tags_metadata = [
     {"name": "Dynamic Vector Tiles", "description": dynamic_vector_tiles.__doc__},
     {"name": "Vector Tiles", "description": vector_tiles.__doc__},
     {"name": "Raster Tiles", "description": raster_tiles.__doc__},
+    {"name": "Dynamic COG Tiles", "description": titiler_routes.__doc__},
     {
         "name": "ESRI Vector Tile Service",
         "description": esri_vector_tile_server.__doc__,
@@ -187,6 +201,10 @@ def custom_openapi(openapi_prefix: str = ""):
     openapi_schema["x-tagGroups"] = [
         {"name": "Vector Tiles API", "tags": ["Dynamic Vector Tiles", "Vector Tiles"]},
         {"name": "Raster Tiles API", "tags": ["Raster Tiles"]},
+        {
+            "name": "Titiler COG Tiles",
+            "tags": ["Single Source Tiles", "Mosaic Tiles", "Custom Tiles"],
+        },
         {"name": "ESRI Vector Tile Server API", "tags": ["ESRI Vector Tile Service"]},
         {"name": "Map Preview", "tags": ["Tile Cache Preview"]},
     ]

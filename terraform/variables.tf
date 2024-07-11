@@ -90,3 +90,8 @@ variable "lambda_runtime" {
   type        = string
   default     = "python3.10"
 }
+
+variable "data_lake_bucket_name" {
+  description = "Data Lake S3 bucket name"
+  default = ""
+}
