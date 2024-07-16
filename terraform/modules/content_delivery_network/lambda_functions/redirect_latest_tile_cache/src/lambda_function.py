@@ -53,6 +53,9 @@ def handler(event, context):
     dataset = path_items[1]
     if dataset == "cog":
         query_params = parse_qs(query_string)
+        # in the case of cog assets, we look for optional
+        # `dataset` (if url to external cog isn't specified) in query
+        # parameter setting the default to "cog" instead of `None` for clarity in later steps
         dataset = query_params.get("dataset", ["cog"])[0]
         version = query_params.get("version", [None])[0]
     else:
@@ -64,6 +67,7 @@ def handler(event, context):
         if latest_version["dataset"] == dataset or dataset == "cog":
 
             if "cog" in path_items:
+
                 if version != "latest":
                     return request
 
