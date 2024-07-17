@@ -46,7 +46,8 @@ module "orchestration" {
   security_group_ids           = [data.terraform_remote_state.core.outputs.postgresql_security_group_id]
   task_role_policies           = [
     module.lambda_raster_tiler.lambda_invoke_policy_arn,
-    module.storage.s3_write_tiles_arn
+    module.storage.s3_write_tiles_arn,
+    "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
   ]
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn,
