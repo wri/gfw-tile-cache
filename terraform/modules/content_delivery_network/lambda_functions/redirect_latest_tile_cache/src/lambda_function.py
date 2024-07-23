@@ -2,19 +2,19 @@
 
 import json
 import urllib.request
+from urllib.parse import parse_qs
 
 LATEST_VERSIONS = None
 
 
 def get_latest_versions(url):
-    """
-    Get latest version for all datasets in Data API
-    Use in memory object if exists, otherwise fetch from API
-    B/C this is a Lambd@Edge function I cannot connect to a database inside VPC
-    I also cannot read from S3, b/c I cannot set ENV variable to indicate the environment I am in
-    Nor can I add a custom header to pass in variables b/c this is a viewer-request event-type
-    The only option I have is to fetch the request URI and use it for my purposes
-    """
+    """Get latest version for all datasets in Data API Use in memory object if
+    exists, otherwise fetch from API B/C this is a Lambd@Edge function I cannot
+    connect to a database inside VPC I also cannot read from S3, b/c I cannot
+    set ENV variable to indicate the environment I am in Nor can I add a custom
+    header to pass in variables b/c this is a viewer-request event-type The
+    only option I have is to fetch the request URI and use it for my
+    purposes."""
     global LATEST_VERSIONS
 
     if not LATEST_VERSIONS:
@@ -48,16 +48,34 @@ def handler(event, context):
         ]
 
     path_items = request["uri"].split("/")
+    query_string = request["querystring"]
+
     dataset = path_items[1]
+    if dataset == "cog":
+        query_params = parse_qs(query_string)
+        # in the case of cog assets, we look for optional
+        # `dataset` (if url to external cog isn't specified) in query
+        # parameter setting the default to "cog" instead of `None` for clarity in later steps
+        dataset = query_params.get("dataset", ["cog"])[0]
+        version = query_params.get("version", [None])[0]
+    else:
+        version = path_items[2]
 
     latest_versions = get_latest_versions(f"https://{host}/_latest")
 
     for latest_version in latest_versions:
-        if latest_version["dataset"] == dataset:
+        if latest_version["dataset"] == dataset or dataset == "cog":
+
+            if "cog" in path_items:
+
+                if version != "latest":
+                    return request
+
+                query_string = query_string.replace("latest", latest_version["version"])
 
             redirect_path = request["uri"].replace("latest", latest_version["version"])
-            if request["querystring"]:
-                redirect_path += f"?{request['querystring']}"
+            if query_string:
+                redirect_path += f"?{query_string}"
 
             # set redirect path in location header
             headers["location"] = [{"key": "Location", "value": redirect_path}]

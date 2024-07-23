@@ -111,5 +111,5 @@ def test_get_dataset_tile_caches():
         "umd_glad_landsat_alerts", "v20210101", "default"
     )
 
-    assert len(tile_caches) == 1
+    assert len(tile_caches) == 2
     assert tile_caches[0]["asset_uri"] == "my_uri7"
