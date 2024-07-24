@@ -90,3 +90,14 @@ variable "lambda_runtime" {
   type        = string
   default     = "python3.10"
 }
+
+variable "newrelic_license_key_secret" {
+  type        = string
+  description = "New Relic license key secret name"
+  default = "newrelic/license_key"
+}
+
+variable "data_lake_bucket_name" {
+  description = "Data Lake S3 bucket name"
+  default = ""
+}

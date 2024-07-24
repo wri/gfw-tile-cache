@@ -39,5 +39,19 @@ data "template_file" "container_definition" {
     tile_cache_url           = local.tile_cache_url
     raster_tiler_lambda_name = module.lambda_raster_tiler.lambda_name
     tiles_bucket_name        = module.storage.tiles_bucket_name
+    new_relic_license_key_arn = data.aws_secretsmanager_secret.newrelic_license.arn
+    data_lake_bucket_name = local.data_lake_bucket_name
+  }
+}
+
+data "aws_secretsmanager_secret" "newrelic_license" {
+  name = var.newrelic_license_key_secret
+}
+
+data "aws_iam_policy_document" "read_new_relic_lic" {
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [data.aws_secretsmanager_secret.newrelic_license.arn]
+    effect    = "Allow"
   }
 }

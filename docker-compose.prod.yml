@@ -22,7 +22,7 @@ services:
       - ENV=production
     ports:
       - 8088:80
-    entrypoint: wait_for_postgres.sh /start.sh
+    entrypoint: wait_for_postgres.sh /app/start.sh
     depends_on:
       - database
 

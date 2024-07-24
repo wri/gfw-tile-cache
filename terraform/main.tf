@@ -50,7 +50,8 @@ module "orchestration" {
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn,
     data.terraform_remote_state.core.outputs.secrets_planet_api_key_policy_arn,
-    data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_policy_arn
+    data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_policy_arn,
+    aws_iam_policy.read_new_relic_secret.arn
   ]
   container_definition         = data.template_file.container_definition.rendered
 }
@@ -96,4 +97,9 @@ module "lambda_raster_tiler" {
   tags       = local.tags
   data_lake_bucket_name = data.terraform_remote_state.core.outputs.data-lake_bucket
   tile_cache_url = local.tile_cache_url
+}
+
+resource "aws_iam_policy" "read_new_relic_secret" {
+  name = substr("${local.project}-read_new-relic_secret${local.name_suffix}", 0, 64)
+  policy = data.aws_iam_policy_document.read_new_relic_lic.json
 }
