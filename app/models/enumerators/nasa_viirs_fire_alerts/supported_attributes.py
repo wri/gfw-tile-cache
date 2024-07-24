@@ -32,17 +32,10 @@ class SupportedAttribute(Enum, init="value aggregation_rule"):  # type: ignore
         rule('round(avg("bright_ti5__k"),3)', "bright_ti5__K"),
     )
     FRP_MW = ("frp__MW", rule('sum("frp__MW")', "frp__MW"))
-    UMD_TREE_COVER_DENSITY_2000__THRESHOLD = (
-        "umd_tree_cover_density_2000__threshold",
-        rule(
-            'max("umd_tree_cover_density_2000__threshold")',
-            "umd_tree_cover_density_2000__threshold",
-        ),
-    )
     UMD_TREE_COVER_DENSITY__THRESHOLD = (
         "umd_tree_cover_density__threshold",
         rule(
-            'max("umd_tree_cover_density__threshold")',
+            "mode() WITHIN GROUP (ORDER BY umd_tree_cover_density__threshold)",
             "umd_tree_cover_density__threshold",
         ),
     )
