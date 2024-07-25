@@ -6,6 +6,7 @@ to happen on the frontend. If tiles for a given zoom level are not
 present for a selected dataset, the server will redirect the request to
 the dynamic service and will attempt to generate it here
 """
+
 import base64
 import io
 import json
@@ -81,9 +82,7 @@ async def dynamic_raster_tile(
 async def static_raster_tile(
     *,
     dv: Tuple[str, str] = Depends(raster_tile_cache_version_dependency),
-    implementation: str = Path(
-        "default", description="Tile cache implementation name."
-    ),
+    implementation: str = Path(..., description="Tile cache implementation name."),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     background_tasks: BackgroundTasks,
 ) -> Response:

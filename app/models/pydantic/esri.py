@@ -28,18 +28,18 @@ class LOD(BaseModel):
 
 
 class TileInfo(BaseModel):
-    rows: int = Field(None, example=512)
-    cols: int = Field(None, example=512)
-    dpi: int = Field(None, example=96)
-    format: str = Field(None, example="pbf")
+    rows: int = Field(None, examples=[512])
+    cols: int = Field(None, examples=[512])
+    dpi: int = Field(None, examples=[96])
+    format: str = Field(None, examples=["pbf"])
     origin: Origin
     spatialReference: SpatialReference
     lods: List[LOD]
 
 
 class StorageInfo(BaseModel):
-    packetSize: int = Field(None, example=128)
-    storageFormat: str = Field(None, example="compactV2")
+    packetSize: int = Field(None, examples=[128])
+    storageFormat: str = Field(None, examples=["compactV2"])
 
 
 class CacheInfo(BaseModel):
@@ -48,19 +48,19 @@ class CacheInfo(BaseModel):
 
 class ResourceInfo(BaseModel):
     styleVersion: int
-    tileCompression: str = Field(None, example="gzip")
+    tileCompression: str = Field(None, examples=["gzip"])
     cacheInfo: CacheInfo
 
 
 class VectorTileService(BaseModel):
-    currentVersion: float = Field(None, example=10.7)
+    currentVersion: float = Field(None, examples=[10.7])
     name: str
     copyrightText: str
-    capabilities: str = Field(None, example="TilesOnly")
-    type: str = Field(None, example="indexedVector")
+    capabilities: str = Field(None, examples=["TilesOnly"])
+    type: str = Field(None, examples=["indexedVector"])
     defaultStyles: str
-    tiles: List[str] = Field(None, example=["{z}/{x}/{y}.pbf?key=value"])
-    exportTilesAllowed: bool = Field(None, example=False)
+    tiles: List[str] = Field(None, examples=[["{z}/{x}/{y}.pbf?key=value"]])
+    exportTilesAllowed: bool = Field(None, examples=[False])
     initialExtent: Extent
     fullExtent: Extent
     minScale: int

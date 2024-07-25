@@ -34,3 +34,12 @@ class StaticVectorTileCacheDatasets(str, Enum):
 _datasets = get_datasets(TileCacheType.static_vector_tile_cache)
 for _dataset in _datasets:
     extend_enum(StaticVectorTileCacheDatasets, _dataset, _dataset)
+
+
+class COGDatasets(str, Enum):
+    __doc__ = "Data API datasets with COG assets"
+
+
+_datasets = get_datasets(TileCacheType.cog)
+for _dataset in _datasets:
+    extend_enum(COGDatasets, _dataset, _dataset)

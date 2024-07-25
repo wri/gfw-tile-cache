@@ -62,7 +62,7 @@ def test__filter_mvt_tabe():
 
 
 @pytest.mark.asyncio
-async def test__get_tile():
+async def test__get_tile(connect_db):
     query = (
         select([column("is_latest")])
         .select_from(table("versions"))
