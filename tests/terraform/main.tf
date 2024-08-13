@@ -24,6 +24,7 @@ provider "aws" {
 locals {
   lambda_runtime_sn = replace(replace(var.lambda_runtime, ".", ""), "thon", "")
   mercantile_layer_filename = "${var.lambda_runtime}-${var.mercantile_name_version}.zip"
+  numpy_layer_filename = "${var.lambda_runtime}-${var.numpy_name_version}.zip"
   pillow_layer_filename = "${var.lambda_runtime}-${var.pillow_name_version}.zip"
   rasterio_layer_filename = "${var.lambda_runtime}-${var.rasterio_name_version}.zip"
 }
