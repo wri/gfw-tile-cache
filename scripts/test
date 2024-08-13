@@ -41,13 +41,13 @@ for filename in $MERCANTILE_FILENAME $PILLOW_FILENAME $RASTERIO_FILENAME; do
 done
 
 if [ "${BUILD}" = true ]; then
-  docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
+  docker compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
 fi
 
 set +e
-docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test run --rm app tests/"$@" -vv
+docker compose -f docker-compose.test.yml --project-name gfw-tile-cache_test run --rm app tests/"$@" -vv
 exit_code=$?
-docker-compose -f docker-compose.test.yml --project-name gfw-tile-cache_test down --remove-orphans
+docker compose -f docker-compose.test.yml --project-name gfw-tile-cache_test down --remove-orphans
 rm -rf tests/terraform/terraform.tfstate* \
        tests/terraform/.terraform.lock.hcl \
        tests/terraform/.terraform/modules/modules.json

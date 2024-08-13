@@ -2,8 +2,6 @@
 
 set -e
 
-
-
 # Default values
 POSITIONAL=()
 BUILD=true
@@ -26,8 +24,8 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "${BUILD}" = true ]; then
-  docker-compose -f docker-compose.dev.yml up --abort-on-container-exit --remove-orphans --build
+  docker compose -f docker-compose.dev.yml up --abort-on-container-exit --remove-orphans --build
 else
-  docker-compose -f docker-compose.dev.yml up --abort-on-container-exit --remove-orphans
+  docker compose -f docker-compose.dev.yml up --abort-on-container-exit --remove-orphans
 fi
 
