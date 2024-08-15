@@ -14,18 +14,16 @@ services:
     networks:
       - gfw-data-api
     environment:
-      - DB_HOST_RO=host.docker.internal
-      - DATABASE_RO=${GFW_DB_NAME}
-      - DB_USER_RO=${GFW_DB_USER_RO}
-      - DB_PASSWORD_RO=${GFW_DB_PASSWORD_RO}
+      - DB_HOST_RO=database_12
+      - DATABASE_RO=geostore
+      - DB_USER_RO=gfw_readonly
+      - DB_PASSWORD_RO=readonly  # pragma: allowlist secret
       - DB_PORT_RO=5432
-      - AWS_DEFAULT_PROFILE=gfw-staging
-      - DATA_LAKE_BUCKET=gfw-data-lake-staging
+      - AWS_DEFAULT_PROFILE=gfw-dev
       - LOG_LEVEL=debug
       - RASTER_TILER_LAMBDA_NAME=test
       - ENV=dev
       - PLANET_API_KEY
-      - AWS_REQUEST_PAYER=requester
     ports:
       - 8088:80
     entrypoint: wait_for_postgres.sh /start-reload.sh
