@@ -24,6 +24,7 @@ provider "aws" {
 locals {
   lambda_runtime_sn = replace(replace(var.lambda_runtime, ".", ""), "thon", "")
   mercantile_layer_filename = "${var.lambda_runtime}-${var.mercantile_name_version}.zip"
+  numpy_layer_filename = "${var.lambda_runtime}-${var.numpy_name_version}.zip"
   pillow_layer_filename = "${var.lambda_runtime}-${var.pillow_name_version}.zip"
   rasterio_layer_filename = "${var.lambda_runtime}-${var.rasterio_name_version}.zip"
 }
@@ -44,6 +45,23 @@ resource "aws_s3_bucket" "tiles_test" {
   bucket = "gfw-tiles-test"
   acl    = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_object" "numpy_layer" {
+  bucket = aws_s3_bucket.pipelines_test.id
+  key    = "lambda_layers/${local.numpy_layer_filename}"
+  source = "../fixtures/${local.numpy_layer_filename}"
+  etag   = filemd5("../fixtures/${local.numpy_layer_filename}")
+}
+
+resource "aws_lambda_layer_version" "numpy_layer" {
+  layer_name          = substr("${local.lambda_runtime_sn}_${replace(var.numpy_name_version, ".", "")}", 0, 64)
+  s3_bucket           = aws_s3_bucket_object.numpy_layer.bucket
+  s3_key              = aws_s3_bucket_object.numpy_layer.key
+  compatible_runtimes = [var.lambda_runtime]
+  source_code_hash    = filebase64sha256(
+    "../fixtures/${local.numpy_layer_filename}"
+  )
 }
 
 resource "aws_s3_bucket_object" "rasterio_layer" {
@@ -101,6 +119,7 @@ module "lambda_raster_tiler" {
   source      = "../../terraform/modules/lambda_raster_tiler"
   environment = "test"
   lambda_layers = [
+    aws_lambda_layer_version.numpy_layer.arn,
     aws_lambda_layer_version.pillow_layer.arn,
     aws_lambda_layer_version.rasterio_layer.arn,
     aws_lambda_layer_version.mercantile_layer.arn
