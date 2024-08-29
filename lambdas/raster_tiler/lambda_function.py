@@ -252,7 +252,7 @@ def get_tile_array(src_tile: str, window: Window) -> np.ndarray:
             "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
         }
 
-    logger.debug(f"GDAL_ENV: f{gdal_env}")
+    logger.debug(f"GDAL_ENV: {gdal_env}")
     with rasterio.Env(**gdal_env), rasterio.open(src_tile) as src:
         profile = src.profile
         bands = profile["count"]
