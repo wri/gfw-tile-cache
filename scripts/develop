@@ -30,7 +30,7 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "${BUILD}" = true ]; then
-  docker-compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans --build
+  docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans --build
 else
-  docker-compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans
+  docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans
 fi
