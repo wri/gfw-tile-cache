@@ -31,5 +31,5 @@ variable "pillow_name_version" {
 variable "rasterio_name_version" {
   description = "Name and version, separated by underscore (example: rasterio_1.3.8)"
   type        = string
-  default     = "rasterio_1.3.8"
+  default     = "rasterio_no_numpy_1.3.8"
 }
