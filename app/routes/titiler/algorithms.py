@@ -1,11 +1,13 @@
 # from datetime import date
-from datetime import date
-
 import numpy as np
+
 from dateutil.relativedelta import relativedelta
+from datetime import date
 from pydantic import Field
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
+
+from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
 
 
 class IntegratedAlerts(BaseAlgorithm):
@@ -30,16 +32,27 @@ class IntegratedAlerts(BaseAlgorithm):
         default_end_date, description="end date of alert in YYYY-MM-DD format."
     )
 
+    alert_confidence: DeforestationAlertConfidence = Field(
+        DeforestationAlertConfidence.nominal, description="Alert confidence"
+    )
+
     # metadata
     input_nbands: int = 2
     output_nbands: int = 4
     output_dtype: str = "uint8"
+
+    alert_confidence_map: dict = {
+        DeforestationAlertConfidence.nominal: 2,
+        DeforestationAlertConfidence.high: 3,
+        DeforestationAlertConfidence.highest: 4,
+    }
 
     def __call__(self, img: ImageData) -> ImageData:
         """Encode Integrated alerts to RGBA."""
         mask = img.array.mask[0].astype(int)
         data = img.data[0]
         alert_date = data % 10000  # in days since 2014-12-31
+        data_alert_confidence = data // 10000
 
         intensity = np.where(mask == 0, img.data[1], 0)
         if self.start_date:
@@ -55,12 +68,23 @@ class IntegratedAlerts(BaseAlgorithm):
             )
             intensity = np.where(start_mask.astype(int) == 1, img.data[1], 0)
 
+        if self.alert_confidence:
+            confidence_mask = (
+                data_alert_confidence
+                >= self.alert_confidence_map[self.alert_confidence]
+            )
+
         r = np.where(data > 0, 228, 0)
         g = np.where(data > 0, 102, 0)
         b = np.where(data > 0, 153, 0)
 
         intensity = np.where(
-            ((mask == 0) & (start_mask.astype(int) == 1) & (end_mask.astype(int) == 1)),
+            (
+                (mask == 0)
+                & (start_mask.astype(int) == 1)
+                & (end_mask.astype(int) == 1)
+                & (confidence_mask.astype(int) == 1)
+            ),
             img.data[1],
             0,
         )
