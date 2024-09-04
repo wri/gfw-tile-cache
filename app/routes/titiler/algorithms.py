@@ -1,6 +1,7 @@
 # from datetime import date
 import numpy as np
 
+from collections import OrderedDict
 from dateutil.relativedelta import relativedelta
 from datetime import date
 from pydantic import Field
@@ -19,7 +20,7 @@ class IntegratedAlerts(BaseAlgorithm):
     START_DATE: str = "2014-12-31"  # start of record
 
     # Parameters
-    default_start_date: str = (date.today() - relativedelta(days=90)).strftime(
+    default_start_date: str = (date.today() - relativedelta(days=180)).strftime(
         "%Y-%m-%d"
     )
     start_date: str = Field(
@@ -33,19 +34,13 @@ class IntegratedAlerts(BaseAlgorithm):
     )
 
     alert_confidence: DeforestationAlertConfidence = Field(
-        DeforestationAlertConfidence.nominal, description="Alert confidence"
+        DeforestationAlertConfidence.low, description="Alert confidence"
     )
 
     # metadata
     input_nbands: int = 2
     output_nbands: int = 4
     output_dtype: str = "uint8"
-
-    alert_confidence_map: dict = {
-        DeforestationAlertConfidence.nominal: 2,
-        DeforestationAlertConfidence.high: 3,
-        DeforestationAlertConfidence.highest: 4,
-    }
 
     def __call__(self, img: ImageData) -> ImageData:
         """Encode Integrated alerts to RGBA."""
@@ -54,29 +49,64 @@ class IntegratedAlerts(BaseAlgorithm):
         alert_date = data % 10000  # in days since 2014-12-31
         data_alert_confidence = data // 10000
 
+        alert_confidence_map: OrderedDict = OrderedDict(
+            {
+                DeforestationAlertConfidence.low: {
+                    "confidence": 2,
+                    "colors": {"red": 237, "green": 164, "blue": 194},
+                },
+                DeforestationAlertConfidence.high: {
+                    "confidence": 3,
+                    "colors": {"red": 220, "green": 102, "blue": 153},
+                },
+                DeforestationAlertConfidence.highest: {
+                    "confidence": 4,
+                    "colors": {"red": 201, "green": 42, "blue": 109},
+                },
+            }
+        )
+
+        r = np.zeros_like(data_alert_confidence, dtype=int)
+        g = np.zeros_like(data_alert_confidence, dtype=int)
+        b = np.zeros_like(data_alert_confidence, dtype=int)
+
+        for confidence_level, properties in alert_confidence_map.items():
+            confidence = properties["confidence"]
+            colors = properties["colors"]
+
+            r = np.where(
+                data_alert_confidence >= confidence,
+                colors["red"],
+                r,
+            )
+            g = np.where(
+                data_alert_confidence >= confidence,
+                colors["green"],
+                g,
+            )
+            b = np.where(
+                data_alert_confidence >= confidence,
+                colors["blue"],
+                b,
+            )
+
         intensity = np.where(mask == 0, img.data[1], 0)
         if self.start_date:
             start_mask = alert_date >= (
                 np.datetime64(self.start_date).astype(int)
                 - np.datetime64(self.START_DATE).astype(int)
             )
-            intensity = np.where(start_mask.astype(int) == 1, img.data[1], 0)
         if self.end_date:
             end_mask = alert_date <= (
                 np.datetime64(self.end_date).astype(int)
                 - np.datetime64(self.START_DATE).astype(int)
             )
-            intensity = np.where(start_mask.astype(int) == 1, img.data[1], 0)
 
         if self.alert_confidence:
             confidence_mask = (
                 data_alert_confidence
-                >= self.alert_confidence_map[self.alert_confidence]
+                >= alert_confidence_map[self.alert_confidence]["confidence"]
             )
-
-        r = np.where(data > 0, 228, 0)
-        g = np.where(data > 0, 102, 0)
-        b = np.where(data > 0, 153, 0)
 
         intensity = np.where(
             (
