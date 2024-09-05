@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class DeforestationAlertConfidence(str, Enum):
-    nominal = "nominal"
+    low = "low"
     high = "high"
     highest = "highest"
