@@ -1,9 +1,8 @@
-# from datetime import date
-import numpy as np
-
 from collections import OrderedDict
-from dateutil.relativedelta import relativedelta
 from datetime import date
+
+import numpy as np
+from dateutil.relativedelta import relativedelta
 from pydantic import Field
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
@@ -15,7 +14,7 @@ class IntegratedAlerts(BaseAlgorithm):
     """Decode Integrated Alerts."""
 
     title: str = "Integrated Deforestation Alerts"
-    description: str = "Decode and vizualize alerts"
+    description: str = "Decode and visualize alerts"
 
     START_DATE: str = "2014-12-31"  # start of record
 
@@ -46,7 +45,7 @@ class IntegratedAlerts(BaseAlgorithm):
         """Encode Integrated alerts to RGBA."""
         mask = img.array.mask[0].astype(int)
         data = img.data[0]
-        alert_date = data % 10000  # in days since 2014-12-31
+        alert_date = data % 10000  # in days since 2014-12-311
         data_alert_confidence = data // 10000
 
         alert_confidence_map: OrderedDict = OrderedDict(
@@ -79,22 +78,19 @@ class IntegratedAlerts(BaseAlgorithm):
             b[data_alert_confidence >= confidence] = colors["blue"]
 
         intensity = np.where(mask == 0, img.data[1], 0)
-        if self.start_date:
-            start_mask = alert_date >= (
-                np.datetime64(self.start_date).astype(int)
-                - np.datetime64(self.START_DATE).astype(int)
-            )
-        if self.end_date:
-            end_mask = alert_date <= (
-                np.datetime64(self.end_date).astype(int)
-                - np.datetime64(self.START_DATE).astype(int)
-            )
+        start_mask = alert_date >= (
+            np.datetime64(self.start_date).astype(int)
+            - np.datetime64(self.START_DATE).astype(int)
+        )
+        end_mask = alert_date <= (
+            np.datetime64(self.end_date).astype(int)
+            - np.datetime64(self.START_DATE).astype(int)
+        )
 
-        if self.alert_confidence:
-            confidence_mask = (
-                data_alert_confidence
-                >= alert_confidence_map[self.alert_confidence]["confidence"]
-            )
+        confidence_mask = (
+            data_alert_confidence
+            >= alert_confidence_map[self.alert_confidence]["confidence"]
+        )
 
         intensity = np.where(
             (
