@@ -70,25 +70,13 @@ class IntegratedAlerts(BaseAlgorithm):
         g = np.zeros_like(data_alert_confidence, dtype=int)
         b = np.zeros_like(data_alert_confidence, dtype=int)
 
-        for confidence_level, properties in alert_confidence_map.items():
+        for _, properties in alert_confidence_map.items():
             confidence = properties["confidence"]
             colors = properties["colors"]
 
-            r = np.where(
-                data_alert_confidence >= confidence,
-                colors["red"],
-                r,
-            )
-            g = np.where(
-                data_alert_confidence >= confidence,
-                colors["green"],
-                g,
-            )
-            b = np.where(
-                data_alert_confidence >= confidence,
-                colors["blue"],
-                b,
-            )
+            r[data_alert_confidence >= confidence] = colors["red"]
+            g[data_alert_confidence >= confidence] = colors["green"]
+            b[data_alert_confidence >= confidence] = colors["blue"]
 
         intensity = np.where(mask == 0, img.data[1], 0)
         if self.start_date:
