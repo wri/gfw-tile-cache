@@ -9,14 +9,31 @@ from titiler.core.algorithm import BaseAlgorithm
 
 from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
 
+START_DATE: str = "2014-12-31"  # start of record
+
+ALERT_CONFIDENCE_MAP: OrderedDict = OrderedDict(
+    {
+        DeforestationAlertConfidence.low: {
+            "confidence": 2,
+            "colors": {"red": 237, "green": 164, "blue": 194},
+        },
+        DeforestationAlertConfidence.high: {
+            "confidence": 3,
+            "colors": {"red": 220, "green": 102, "blue": 153},
+        },
+        DeforestationAlertConfidence.highest: {
+            "confidence": 4,
+            "colors": {"red": 201, "green": 42, "blue": 109},
+        },
+    }
+)
+
 
 class IntegratedAlerts(BaseAlgorithm):
     """Decode Integrated Alerts."""
 
     title: str = "Integrated Deforestation Alerts"
     description: str = "Decode and visualize alerts"
-
-    START_DATE: str = "2014-12-31"  # start of record
 
     # Parameters
     default_start_date: str = (date.today() - relativedelta(days=180)).strftime(
@@ -45,31 +62,14 @@ class IntegratedAlerts(BaseAlgorithm):
         """Encode Integrated alerts to RGBA."""
         mask = img.array.mask[0].astype(int)
         data = img.data[0]
-        alert_date = data % 10000  # in days since 2014-12-311
+        alert_date = data % 10000  # in days since 2014-12-31
         data_alert_confidence = data // 10000
-
-        alert_confidence_map: OrderedDict = OrderedDict(
-            {
-                DeforestationAlertConfidence.low: {
-                    "confidence": 2,
-                    "colors": {"red": 237, "green": 164, "blue": 194},
-                },
-                DeforestationAlertConfidence.high: {
-                    "confidence": 3,
-                    "colors": {"red": 220, "green": 102, "blue": 153},
-                },
-                DeforestationAlertConfidence.highest: {
-                    "confidence": 4,
-                    "colors": {"red": 201, "green": 42, "blue": 109},
-                },
-            }
-        )
 
         r = np.zeros_like(data_alert_confidence, dtype=int)
         g = np.zeros_like(data_alert_confidence, dtype=int)
         b = np.zeros_like(data_alert_confidence, dtype=int)
 
-        for _, properties in alert_confidence_map.items():
+        for _, properties in ALERT_CONFIDENCE_MAP.items():
             confidence = properties["confidence"]
             colors = properties["colors"]
 
@@ -77,19 +77,18 @@ class IntegratedAlerts(BaseAlgorithm):
             g[data_alert_confidence >= confidence] = colors["green"]
             b[data_alert_confidence >= confidence] = colors["blue"]
 
-        intensity = np.where(mask == 0, img.data[1], 0)
         start_mask = alert_date >= (
             np.datetime64(self.start_date).astype(int)
-            - np.datetime64(self.START_DATE).astype(int)
+            - np.datetime64(START_DATE).astype(int)
         )
         end_mask = alert_date <= (
             np.datetime64(self.end_date).astype(int)
-            - np.datetime64(self.START_DATE).astype(int)
+            - np.datetime64(START_DATE).astype(int)
         )
 
         confidence_mask = (
             data_alert_confidence
-            >= alert_confidence_map[self.alert_confidence]["confidence"]
+            >= ALERT_CONFIDENCE_MAP[self.alert_confidence]["confidence"]
         )
 
         intensity = np.where(
@@ -99,10 +98,11 @@ class IntegratedAlerts(BaseAlgorithm):
                 & (end_mask.astype(int) == 1)
                 & (confidence_mask.astype(int) == 1)
             ),
-            img.data[1],
+            img.data[1] % 100,
             0,
         )
-        intensity = np.minimum(255, intensity * 50)
+        intensity = np.minimum(255, intensity)
+        print("min intensity", intensity.mean())
         data = np.stack([r, g, b, intensity]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
 
