@@ -61,6 +61,7 @@ class IntegratedAlerts(BaseAlgorithm):
     def __call__(self, img: ImageData) -> ImageData:
         """Encode Integrated alerts to RGBA."""
         data = img.data[0]
+        intensity = img.data[1]
         alert_date = data % 10000  # in days since 2014-12-31
         data_alert_confidence = data // 10000
 
@@ -88,13 +89,13 @@ class IntegratedAlerts(BaseAlgorithm):
             >= ALERT_CONFIDENCE_MAP[self.alert_confidence]["confidence"]
         )
         mask = ~img.array.mask[0] * start_mask * end_mask * confidence_mask
-        intensity = np.where(
+        alpha = np.where(
             mask,
-            img.data[1],
+            intensity,
             0,
         )
-        intensity = np.minimum(255, intensity)
-        data = np.stack([r, g, b, intensity]).astype(self.output_dtype)
+        alpha = np.minimum(255, alpha)
+        data = np.stack([r, g, b, alpha]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
 
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
