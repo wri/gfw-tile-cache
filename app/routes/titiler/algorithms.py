@@ -64,9 +64,9 @@ class IntegratedAlerts(BaseAlgorithm):
         alert_date = data % 10000  # in days since 2014-12-31
         data_alert_confidence = data // 10000
 
-        r = np.zeros_like(data_alert_confidence, dtype=int)
-        g = np.zeros_like(data_alert_confidence, dtype=int)
-        b = np.zeros_like(data_alert_confidence, dtype=int)
+        r = np.zeros_like(data_alert_confidence, dtype=np.uint8)
+        g = np.zeros_like(data_alert_confidence, dtype=np.uint8)
+        b = np.zeros_like(data_alert_confidence, dtype=np.uint8)
 
         for properties in ALERT_CONFIDENCE_MAP.values():
             confidence = properties["confidence"]
@@ -77,12 +77,10 @@ class IntegratedAlerts(BaseAlgorithm):
             b[data_alert_confidence >= confidence] = colors["blue"]
 
         start_mask = alert_date >= (
-            np.datetime64(self.start_date).astype(int)
-            - np.datetime64(START_DATE).astype(int)
+            np.datetime64(self.start_date) - np.datetime64(START_DATE)
         )
         end_mask = alert_date <= (
-            np.datetime64(self.end_date).astype(int)
-            - np.datetime64(START_DATE).astype(int)
+            np.datetime64(self.end_date) - np.datetime64(START_DATE)
         )
 
         confidence_mask = (
