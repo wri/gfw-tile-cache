@@ -5,6 +5,8 @@ set -e
 # Default values
 POSITIONAL=()
 BUILD=true
+COMPOSE_FILE="docker-compose.dev.yml"
+
 # extracting cmd line arguments
 while [[ $# -gt 0 ]]
 do
@@ -13,6 +15,10 @@ do
   case $key in
       --no_build)
       BUILD=false
+      shift # past argument
+      ;;
+      --local_data_api)
+      COMPOSE_FILE="docker-compose-local-data-api.dev.yml"
       shift # past argument
       ;;
       *)    # unknown option
@@ -24,8 +30,7 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "${BUILD}" = true ]; then
-  docker compose -f docker-compose.dev.yml up --abort-on-container-exit --remove-orphans --build
+  docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans --build
 else
-  docker compose -f docker-compose.dev.yml up --abort-on-container-exit --remove-orphans
+  docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans
 fi
-
