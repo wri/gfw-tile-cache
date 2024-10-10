@@ -3,14 +3,14 @@ import numpy as np
 from lambdas.raster_tiler.lambda_function import (
     array_to_img,
     combine_bands,
-    seperate_bands,
+    separate_bands,
 )
 
 
-def test_seperate_bands():
+def test_separate_bands():
     data = np.array([[[1, 2, 3]], [[1, 2, 3]], [[1, 2, 3]]])
 
-    flip = seperate_bands(data)
+    flip = separate_bands(data)
     assert flip.shape == (3, 1, 3)
     assert np.all(flip[0] == 1)
     assert np.all(flip[1] == 2)
@@ -18,7 +18,7 @@ def test_seperate_bands():
 
     data = np.array([[[1, 2, 3, 4]], [[1, 2, 3, 4]], [[1, 2, 3, 4]]])
 
-    flip = seperate_bands(data)
+    flip = separate_bands(data)
     assert flip.shape == (4, 1, 3)
     assert np.all(flip[0] == 1)
     assert np.all(flip[1] == 2)
