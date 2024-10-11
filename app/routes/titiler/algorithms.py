@@ -91,7 +91,7 @@ class IntegratedAlerts(BaseAlgorithm):
         mask = ~img.array.mask[0] * start_mask * end_mask * confidence_mask
         alpha = np.where(
             mask,
-            intensity,
+            intensity * 150,
             0,
         )
         alpha = np.minimum(255, alpha)
