@@ -9,31 +9,29 @@ from titiler.core.algorithm import BaseAlgorithm
 
 from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
 
-START_DATE: str = "2014-12-31"  # start of record
 
-ALERT_CONFIDENCE_MAP: OrderedDict = OrderedDict(
-    {
-        DeforestationAlertConfidence.low: {
-            "confidence": 2,
-            "colors": {"red": 237, "green": 164, "blue": 194},
-        },
-        DeforestationAlertConfidence.high: {
-            "confidence": 3,
-            "colors": {"red": 220, "green": 102, "blue": 153},
-        },
-        DeforestationAlertConfidence.highest: {
-            "confidence": 4,
-            "colors": {"red": 201, "green": 42, "blue": 109},
-        },
-    }
-)
+class Alerts(BaseAlgorithm):
+    """Decode Deforestation Alerts."""
 
-
-class IntegratedAlerts(BaseAlgorithm):
-    """Decode Integrated Alerts."""
-
-    title: str = "Integrated Deforestation Alerts"
+    title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
+    conf_colors: OrderedDict = OrderedDict(
+        {
+            DeforestationAlertConfidence.low: {
+                "confidence": 2,
+                "colors": (237, 164, 194),
+            },
+            DeforestationAlertConfidence.high: {
+                "confidence": 3,
+                "colors": (220, 102, 153),
+            },
+            DeforestationAlertConfidence.highest: {
+                "confidence": 4,
+                "colors": (201, 42, 109),
+            },
+        }
+    )
+    record_start_date: str = "2014-12-31"
 
     # Parameters
     default_start_date: str = (date.today() - relativedelta(days=180)).strftime(
@@ -69,29 +67,29 @@ class IntegratedAlerts(BaseAlgorithm):
         g = np.zeros_like(data_alert_confidence, dtype=np.uint8)
         b = np.zeros_like(data_alert_confidence, dtype=np.uint8)
 
-        for properties in ALERT_CONFIDENCE_MAP.values():
+        for properties in self.conf_colors.values():
             confidence = properties["confidence"]
             colors = properties["colors"]
 
-            r[data_alert_confidence >= confidence] = colors["red"]
-            g[data_alert_confidence >= confidence] = colors["green"]
-            b[data_alert_confidence >= confidence] = colors["blue"]
+            r[data_alert_confidence >= confidence] = colors[0]
+            g[data_alert_confidence >= confidence] = colors[1]
+            b[data_alert_confidence >= confidence] = colors[2]
 
         start_mask = alert_date >= (
-            np.datetime64(self.start_date) - np.datetime64(START_DATE)
+            np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
         )
         end_mask = alert_date <= (
-            np.datetime64(self.end_date) - np.datetime64(START_DATE)
+            np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
         )
 
         confidence_mask = (
             data_alert_confidence
-            >= ALERT_CONFIDENCE_MAP[self.alert_confidence]["confidence"]
+            >= self.conf_colors[self.alert_confidence]["confidence"]
         )
         mask = ~img.array.mask[0] * start_mask * end_mask * confidence_mask
         alpha = np.where(
             mask,
-            intensity,
+            intensity * 150,
             0,
         )
         alpha = np.minimum(255, alpha)
