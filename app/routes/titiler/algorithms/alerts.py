@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from datetime import date
 
 import numpy as np
@@ -15,34 +15,38 @@ class Alerts(BaseAlgorithm):
 
     title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
+
+    Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
+    DeforestationAlert: namedtuple = namedtuple(
+        "DeforestationAlert", ["confidence", "colors"]
+    )
+
     conf_colors: OrderedDict = OrderedDict(
         {
-            DeforestationAlertConfidence.low: {
-                "confidence": 2,
-                "colors": (237, 164, 194),
-            },
-            DeforestationAlertConfidence.high: {
-                "confidence": 3,
-                "colors": (220, 102, 153),
-            },
-            DeforestationAlertConfidence.highest: {
-                "confidence": 4,
-                "colors": (201, 42, 109),
-            },
+            DeforestationAlertConfidence.low: DeforestationAlert(
+                confidence=2, colors=Colors(237, 164, 194)
+            ),
+            DeforestationAlertConfidence.high: DeforestationAlert(
+                confidence=3, colors=Colors(220, 102, 153)
+            ),
+            DeforestationAlertConfidence.highest: DeforestationAlert(
+                confidence=4, colors=Colors(201, 42, 109)
+            ),
         }
     )
+
     record_start_date: str = "2014-12-31"
 
+    today: date = date.today()
+
     # Parameters
-    default_start_date: str = (date.today() - relativedelta(days=180)).strftime(
-        "%Y-%m-%d"
-    )
+    default_start_date: str = (today - relativedelta(days=180)).strftime("%Y-%m-%d")
     start_date: str = Field(
         default_start_date,
         description="start date of alert in YYYY-MM-DD format.",
     )
 
-    default_end_date: str = date.today().strftime("%Y-%m-%d")
+    default_end_date: str = today.strftime("%Y-%m-%d")
     end_date: str = Field(
         default_end_date, description="end date of alert in YYYY-MM-DD format."
     )
@@ -60,7 +64,7 @@ class Alerts(BaseAlgorithm):
         """Encode Integrated alerts to RGBA."""
         data = img.data[0]
         intensity = img.data[1]
-        alert_date = data % 10000  # in days since 2014-12-31
+        alert_date = data % 10000
         data_alert_confidence = data // 10000
 
         r = np.zeros_like(data_alert_confidence, dtype=np.uint8)
@@ -68,12 +72,12 @@ class Alerts(BaseAlgorithm):
         b = np.zeros_like(data_alert_confidence, dtype=np.uint8)
 
         for properties in self.conf_colors.values():
-            confidence = properties["confidence"]
-            colors = properties["colors"]
+            confidence = properties.confidence
+            colors = properties.colors
 
-            r[data_alert_confidence >= confidence] = colors[0]
-            g[data_alert_confidence >= confidence] = colors[1]
-            b[data_alert_confidence >= confidence] = colors[2]
+            r[data_alert_confidence >= confidence] = colors.red
+            g[data_alert_confidence >= confidence] = colors.green
+            b[data_alert_confidence >= confidence] = colors.blue
 
         start_mask = alert_date >= (
             np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
@@ -83,8 +87,7 @@ class Alerts(BaseAlgorithm):
         )
 
         confidence_mask = (
-            data_alert_confidence
-            >= self.conf_colors[self.alert_confidence]["confidence"]
+            data_alert_confidence >= self.conf_colors[self.alert_confidence].confidence
         )
         mask = ~img.array.mask[0] * start_mask * end_mask * confidence_mask
         alpha = np.where(
