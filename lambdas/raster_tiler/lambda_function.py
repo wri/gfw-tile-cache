@@ -99,20 +99,28 @@ def apply_annual_loss_filter(
         year <= _end_year - 2000
     )
 
-    red: ndarray = np.ones(intensity.shape).astype("uint8") * 228
+    # Construct RGBA bands with floating point values for precision
+    red: np.ndarray = np.ones(intensity.shape).astype("float32") * 228
     green: ndarray = (
-        np.ones(intensity.shape) * 102
+        np.ones(intensity.shape).astype("float32") * 102
         + (72 - zoom)
         - (scaled_intensity * (3 / max(zoom, 1)))
-    ).astype("uint8")
+    )
     blue: ndarray = (
-        np.ones(intensity.shape) * 153 + (33 - zoom) - (intensity / max(zoom, 1))
-    ).astype("uint8")
+        np.ones(intensity.shape).astype("float32") * 153 
+        + (33 - zoom) 
+        - (intensity / max(zoom, 1))
+    )
     alpha: ndarray = (
         (scaled_intensity if zoom < 13 else intensity) * start_year_mask * end_year_mask
-    ).astype("uint8")
+    ).astype("float32")
 
-    return np.array([red, green, blue, alpha])
+    # Ensure GBA values are in [0, 255] range
+    green = np.clip(green, 0, 255).astype("uint8")
+    blue = np.clip(blue, 0, 255).astype("uint8")
+    alpha = np.clip(alpha, 0, 255).astype("uint8")
+
+    return np.array([red.astype("uint8"), green, blue, alpha])
 
 
 ##############################
@@ -352,7 +360,7 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
 
     arr = np.array(png)
 
-    return seperate_bands(arr)
+    return separat_bands(arr)
 
 
 ##########################
@@ -360,7 +368,7 @@ def read_tile_cache(dataset, version, implementation, x, y, z, **kwargs) -> ndar
 ##########################
 
 
-def seperate_bands(arr: ndarray) -> ndarray:
+def separat_bands(arr: ndarray) -> ndarray:
 
     logger.debug("Store bands in separate arrays")
     # convert data from (height, width, bands) to (bands, height, width)
