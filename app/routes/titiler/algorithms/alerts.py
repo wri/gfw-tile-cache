@@ -61,42 +61,56 @@ class Alerts(BaseAlgorithm):
     output_dtype: str = "uint8"
 
     def __call__(self, img: ImageData) -> ImageData:
-        """Encode Integrated alerts to RGBA."""
-        data = img.data[0]
+        """Decode deforestation and last disturbance alert raster data to RGBA."""
+        date_conf_data = img.data[0]
         intensity = img.data[1]
-        alert_date = data % 10000
-        data_alert_confidence = data // 10000
 
-        r = np.zeros_like(data_alert_confidence, dtype=np.uint8)
-        g = np.zeros_like(data_alert_confidence, dtype=np.uint8)
-        b = np.zeros_like(data_alert_confidence, dtype=np.uint8)
+        self.no_data = img.array.mask[0]
+        self.data_alert_confidence = date_conf_data // 10000
+        self.alert_date = date_conf_data % 10000
 
-        for properties in self.conf_colors.values():
-            confidence = properties.confidence
-            colors = properties.colors
+        mask = self.create_mask()
+        rgb = self.create_rgb()
 
-            r[data_alert_confidence >= confidence] = colors.red
-            g[data_alert_confidence >= confidence] = colors.green
-            b[data_alert_confidence >= confidence] = colors.blue
-
-        start_mask = alert_date >= (
-            np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
-        )
-        end_mask = alert_date <= (
-            np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
-        )
-
-        confidence_mask = (
-            data_alert_confidence >= self.conf_colors[self.alert_confidence].confidence
-        )
-        mask = ~img.array.mask[0] * start_mask * end_mask * confidence_mask
         alpha = np.where(
             mask,
             intensity * 150,
             0,
         )
         alpha = np.minimum(255, alpha)
-        data = np.stack([r, g, b, alpha]).astype(self.output_dtype)
+
+        data = np.vstack([rgb, alpha[np.newaxis, ...]]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
 
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
+
+    def create_mask(self):
+        start_mask = self.alert_date >= (
+            np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
+        )
+        end_mask = self.alert_date <= (
+            np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
+        )
+
+        confidence_mask = (
+            self.data_alert_confidence
+            >= self.conf_colors[self.alert_confidence].confidence
+        )
+        mask = ~self.no_data * start_mask * end_mask * confidence_mask
+
+        return mask
+
+    def create_rgb(self):
+        r = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+        g = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+        b = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+
+        for properties in self.conf_colors.values():
+            confidence = properties.confidence
+            colors = properties.colors
+
+            r[self.data_alert_confidence >= confidence] = colors.red
+            g[self.data_alert_confidence >= confidence] = colors.green
+            b[self.data_alert_confidence >= confidence] = colors.blue
+
+        return np.stack([r, g, b], axis=0)
