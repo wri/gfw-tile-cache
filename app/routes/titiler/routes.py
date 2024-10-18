@@ -9,12 +9,13 @@ from titiler.extensions import cogValidateExtension, cogViewerExtension
 from titiler.mosaic.factory import MosaicTilerFactory
 
 from ...routes import cog_asset_dependency
-from .algorithms import IntegratedAlerts
+from .algorithms.integrated_alerts import IntegratedAlerts
+from .algorithms.dist_alerts import DISTAlerts
 from .readers import IntegratedAlertsReader
 
 
 algorithms: Algorithms = default_algorithms.register(
-    {"integrated_alerts": IntegratedAlerts}
+    {"integrated_alerts": IntegratedAlerts, "dist_alerts": DISTAlerts}
 )
 
 # Create a PostProcessParams dependency
