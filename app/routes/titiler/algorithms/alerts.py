@@ -63,21 +63,15 @@ class Alerts(BaseAlgorithm):
     def __call__(self, img: ImageData) -> ImageData:
         """Decode deforestation and last disturbance alert raster data to RGBA."""
         date_conf_data = img.data[0]
-        intensity = img.data[1]
 
+        self.intensity = img.data[1]
         self.no_data = img.array.mask[0]
         self.data_alert_confidence = date_conf_data // 10000
         self.alert_date = date_conf_data % 10000
 
         mask = self.create_mask()
         rgb = self.create_rgb()
-
-        alpha = np.where(
-            mask,
-            intensity * 150,
-            0,
-        )
-        alpha = np.minimum(255, alpha)
+        alpha = self.create_alpha(mask)
 
         data = np.vstack([rgb, alpha[np.newaxis, ...]]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
@@ -114,3 +108,6 @@ class Alerts(BaseAlgorithm):
             b[self.data_alert_confidence >= confidence] = colors.blue
 
         return np.stack([r, g, b], axis=0)
+    def create_alpha(self, mask):
+        alpha = np.where(mask, self.intensity * 150, 0)
+        return np.minimum(255, alpha)
