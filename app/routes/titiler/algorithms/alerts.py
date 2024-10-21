@@ -59,7 +59,7 @@ class Alerts(BaseAlgorithm):
     output_dtype: str = "uint8"
 
     def __call__(self, img: ImageData) -> ImageData:
-        """Decode deforestation and last disturbance alert raster data to
+        """Decode deforestation and land disturbance alert raster data to
         RGBA."""
         date_conf_data = img.data[0]
 
