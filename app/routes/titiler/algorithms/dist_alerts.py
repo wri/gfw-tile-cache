@@ -1,7 +1,8 @@
 from collections import OrderedDict, namedtuple
-from .alerts import Alerts
 
-from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
+from app.models.enumerators.titiler import DeforestationAlertConfidence
+
+from .alerts import Alerts
 
 
 class DISTAlerts(Alerts):

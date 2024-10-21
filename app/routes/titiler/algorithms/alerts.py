@@ -7,7 +7,7 @@ from pydantic import Field
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
 
-from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
+from app.models.enumerators.titiler import DeforestationAlertConfidence, RenderType
 
 
 class Alerts(BaseAlgorithm):
@@ -55,13 +55,19 @@ class Alerts(BaseAlgorithm):
         DeforestationAlertConfidence.low, description="Alert confidence"
     )
 
+    render_type: RenderType = Field(
+        RenderType.true_color,
+        description="Render true color or encoded pixels",
+    )
+
     # metadata
     input_nbands: int = 2
     output_nbands: int = 4
     output_dtype: str = "uint8"
 
     def __call__(self, img: ImageData) -> ImageData:
-        """Decode deforestation and last disturbance alert raster data to RGBA."""
+        """Decode deforestation and last disturbance alert raster data to
+        RGBA."""
         date_conf_data = img.data[0]
 
         self.intensity = img.data[1]
@@ -69,9 +75,14 @@ class Alerts(BaseAlgorithm):
         self.data_alert_confidence = date_conf_data // 10000
         self.alert_date = date_conf_data % 10000
 
-        mask = self.create_mask()
-        rgb = self.create_rgb()
-        alpha = self.create_alpha(mask)
+        self.mask = self.create_mask()
+
+        if self.render_type == RenderType.true_color:
+            rgb = self.create_true_color_rgb()
+            alpha = self.create_true_color_alpha()
+        else:  # encoded
+            rgb = self.create_encoded_rgb()
+            alpha = self.create_encoded_alpha()
 
         data = np.vstack([rgb, alpha[np.newaxis, ...]]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
@@ -94,10 +105,8 @@ class Alerts(BaseAlgorithm):
 
         return mask
 
-    def create_rgb(self):
-        r = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
-        g = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
-        b = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+    def create_true_color_rgb(self):
+        r, g, b = self._rgb_zeros_array()
 
         for properties in self.conf_colors.values():
             confidence = properties.confidence
@@ -108,6 +117,26 @@ class Alerts(BaseAlgorithm):
             b[self.data_alert_confidence >= confidence] = colors.blue
 
         return np.stack([r, g, b], axis=0)
-    def create_alpha(self, mask):
-        alpha = np.where(mask, self.intensity * 150, 0)
+
+    def create_encoded_rgb(self):
+        r, g, b = self._rgb_zeros_array()
+        r = self.alert_date // 255
+        g = self.alert_date % 255
+        b = (self.data_alert_confidence // 3 + 1) * 100 + self.intensity
+
+        return np.stack([r, g, b], axis=0)
+
+    def create_true_color_alpha(self):
+        alpha = np.where(self.mask, self.intensity * 150, 0)
         return np.minimum(255, alpha)
+
+    def create_encoded_alpha(self):
+        """To be overridden by alert types that implement it."""
+        return self.create_true_color_alpha()
+
+    def _rgb_zeros_array(self):
+        r = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+        g = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+        b = np.zeros_like(self.data_alert_confidence, dtype=np.uint8)
+
+        return r, g, b
