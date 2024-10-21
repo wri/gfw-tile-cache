@@ -7,7 +7,10 @@ from pydantic import Field
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
 
-from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
+from app.models.enumerators.alerts_confidence import AlertConfidence
+
+Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
+AlertConfig: namedtuple = namedtuple("AlertConfig", ["confidence", "colors"])
 
 
 class Alerts(BaseAlgorithm):
@@ -16,20 +19,15 @@ class Alerts(BaseAlgorithm):
     title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
 
-    Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
-    DeforestationAlert: namedtuple = namedtuple(
-        "DeforestationAlert", ["confidence", "colors"]
-    )
-
     conf_colors: OrderedDict = OrderedDict(
         {
-            DeforestationAlertConfidence.low: DeforestationAlert(
+            AlertConfidence.low: AlertConfig(
                 confidence=2, colors=Colors(237, 164, 194)
             ),
-            DeforestationAlertConfidence.high: DeforestationAlert(
+            AlertConfidence.high: AlertConfig(
                 confidence=3, colors=Colors(220, 102, 153)
             ),
-            DeforestationAlertConfidence.highest: DeforestationAlert(
+            AlertConfidence.highest: AlertConfig(
                 confidence=4, colors=Colors(201, 42, 109)
             ),
         }
@@ -51,8 +49,8 @@ class Alerts(BaseAlgorithm):
         default_end_date, description="end date of alert in YYYY-MM-DD format."
     )
 
-    alert_confidence: DeforestationAlertConfidence = Field(
-        DeforestationAlertConfidence.low, description="Alert confidence"
+    alert_confidence: AlertConfidence = Field(
+        AlertConfidence.low, description="Alert confidence"
     )
 
     # metadata
@@ -61,7 +59,8 @@ class Alerts(BaseAlgorithm):
     output_dtype: str = "uint8"
 
     def __call__(self, img: ImageData) -> ImageData:
-        """Decode deforestation and last disturbance alert raster data to RGBA."""
+        """Decode deforestation and last disturbance alert raster data to
+        RGBA."""
         date_conf_data = img.data[0]
 
         self.intensity = img.data[1]
@@ -108,6 +107,7 @@ class Alerts(BaseAlgorithm):
             b[self.data_alert_confidence >= confidence] = colors.blue
 
         return np.stack([r, g, b], axis=0)
+
     def create_alpha(self, mask):
         alpha = np.where(mask, self.intensity * 150, 0)
         return np.minimum(255, alpha)

@@ -5,7 +5,7 @@ import rasterio
 from dateutil.relativedelta import relativedelta
 from rio_tiler.models import ImageData
 
-from app.models.enumerators.alerts_confidence import DeforestationAlertConfidence
+from app.models.enumerators.alerts_confidence import AlertConfidence
 from app.routes.titiler.algorithms.integrated_alerts import IntegratedAlerts
 from tests.conftest import DATE_CONF_TIF, INTENSITY_TIF
 
@@ -33,7 +33,7 @@ def test_integrated_alerts_defaults():
         "%Y-%m-%d"
     )
     assert alerts.end_date == today.strftime("%Y-%m-%d")
-    assert alerts.alert_confidence == DeforestationAlertConfidence.low
+    assert alerts.alert_confidence == AlertConfidence.low
     assert alerts.record_start_date == "2014-12-31"
 
 
@@ -55,7 +55,7 @@ def test_create_date_range_mask():
 
 def test_create_confidence_mask():
     """Test confidence filters are applied correctly."""
-    alerts = IntegratedAlerts(alert_confidence=DeforestationAlertConfidence.highest)
+    alerts = IntegratedAlerts(alert_confidence=AlertConfidence.highest)
     alerts.start_date = alerts.record_start_date
 
     img = get_tile_data()
@@ -68,7 +68,7 @@ def test_create_confidence_mask():
 
 def test_mask_logic_with_nodata():
     """Test that the mask properly handles no-data values."""
-    alerts = IntegratedAlerts(alert_confidence=DeforestationAlertConfidence.low)
+    alerts = IntegratedAlerts(alert_confidence=AlertConfidence.low)
 
     img = get_tile_data()
 
