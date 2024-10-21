@@ -20,4 +20,4 @@ class DISTAlerts(Alerts):
         }
     )
 
-    record_start_date: str = "2020-12-13"
+    record_start_date: str = "2020-12-31"
