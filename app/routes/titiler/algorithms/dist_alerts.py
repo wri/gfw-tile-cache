@@ -6,7 +6,7 @@ from .alerts import AlertConfig, Alerts, Colors
 
 
 class DISTAlerts(Alerts):
-    title: str = "Land Disturbunce (DIST) Alerts"
+    title: str = "Land Disturbance (DIST) Alerts"
     description: str = "Decode and visualize DIST alerts"
 
     conf_colors: OrderedDict = OrderedDict(
