@@ -3,6 +3,7 @@ from datetime import date
 
 import numpy as np
 from dateutil.relativedelta import relativedelta
+from fastapi.logger import logger
 from pydantic import Field
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
@@ -64,8 +65,17 @@ class Alerts(BaseAlgorithm):
     output_dtype: str = "uint8"
 
     def __call__(self, img: ImageData) -> ImageData:
-        """Decode deforestation and land disturbance alert raster data to
-        RGBA."""
+        """Process the input image and decode deforestation or land disturbance
+        alert raster data into RGBA format.
+
+        Args:
+            img (ImageData): Input image data with alert date/confidence and intensity
+            (zoom-level visibility) layers.
+
+        Returns:
+            ImageData: Processed image with RGBA channels either with true colors ready for
+            visualization or encoding date and confidence for front-end processing.
+        """
         date_conf_data = img.data[0]
 
         self.intensity = img.data[1]
@@ -88,6 +98,13 @@ class Alerts(BaseAlgorithm):
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
 
     def create_mask(self):
+        """Generate a mask for pixel visibility based on date and confidence
+        filters, and no data values.
+
+        Returns:
+            np.ndarray: A mask array pixels with no alert or alerts not meeting filter
+            condition are masked.
+        """
         start_mask = self.alert_date >= (
             np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
         )
@@ -104,6 +121,11 @@ class Alerts(BaseAlgorithm):
         return mask
 
     def create_true_color_rgb(self):
+        """Map alert confidence levels to RGB values for visualization.
+
+        Returns:
+            np.ndarray: A 3D array with RGB channels.
+        """
         r, g, b = self._rgb_zeros_array()
 
         for properties in self.conf_colors.values():
@@ -117,6 +139,12 @@ class Alerts(BaseAlgorithm):
         return np.stack([r, g, b], axis=0)
 
     def create_encoded_rgb(self):
+        """Encode the alert date and confidence into the RGB channels, allowing
+        interactive date filtering and color control on Flagship.
+
+        Returns:
+            np.ndarray: A 3D array with encoded RGB values.
+        """
         r, g, b = self._rgb_zeros_array()
         r = self.alert_date // 255
         g = self.alert_date % 255
@@ -125,11 +153,30 @@ class Alerts(BaseAlgorithm):
         return np.stack([r, g, b], axis=0)
 
     def create_true_color_alpha(self):
+        """Set the transparency (alpha) channel for alert pixels based on date,
+        confidence filters, and intensity input. The intensity multiplier is
+        used to control how isolated alerts fade out at low zoom levels,
+        matching the rendering behavior in Flagship.
+
+        Returns:
+            np.ndarray: Array representing the alpha (transparency) channel, where pixel
+            visibility is adjusted by intensity.
+        """
         alpha = np.where(self.mask, self.intensity * 150, 0)
         return np.minimum(255, alpha)
 
     def create_encoded_alpha(self):
-        """To be overridden by alert types that implement it."""
+        """Generate the alpha channel for encoded alerts. The default
+        implementation sets pixel visibility based on date/confidence filters
+        and intensity input. Can be overridden for specific alert types.
+
+        Returns:
+            np.ndarray: An array representing the alpha channel.
+        """
+        logger.info(
+            """Encoded alpha not provided, returning alpha
+                    from input layer and date/confidence mask."""
+        )
         return self.create_true_color_alpha()
 
     def _rgb_zeros_array(self):
