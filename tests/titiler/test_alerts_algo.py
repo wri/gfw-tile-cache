@@ -96,7 +96,7 @@ def test_true_color_rgb():
 
 
 def test_encoded_rgba():
-    """Test encoding used for tiled served to Flagship."""
+    """Test encoding used for tiles served to Flagship."""
     alerts = IntegratedAlerts(start_date="2022-01-01", render_type=RenderType.encoded)
 
     img = get_tile_data()
