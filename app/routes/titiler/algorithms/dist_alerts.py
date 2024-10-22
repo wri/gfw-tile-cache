@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from app.models.enumerators.alerts_confidence import AlertConfidence
+from app.models.enumerators.titiler import AlertConfidence
 
 from .alerts import AlertConfig, Alerts, Colors
 

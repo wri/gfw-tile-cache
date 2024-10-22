@@ -5,7 +5,7 @@ import rasterio
 from dateutil.relativedelta import relativedelta
 from rio_tiler.models import ImageData
 
-from app.models.enumerators.alerts_confidence import AlertConfidence
+from app.models.enumerators.titiler import AlertConfidence, RenderType
 from app.routes.titiler.algorithms.integrated_alerts import IntegratedAlerts
 from tests.conftest import DATE_CONF_TIF, INTENSITY_TIF
 
@@ -77,7 +77,7 @@ def test_mask_logic_with_nodata():
     assert output.data[3, 0, 0] == 0  # Alpha should be 0 for no-data pixel
 
 
-def test_rgb():
+def test_true_color_rgb():
     """Test that the right pink pixels are used."""
     alerts = IntegratedAlerts(start_date="2022-01-01")
 
@@ -93,3 +93,20 @@ def test_rgb():
     np.testing.assert_array_equal(
         rgba.array[:, 154, 71], np.array([220, 102, 153, 255])
     )
+
+
+def test_encoded_rgba():
+    """Test encoding used for tiles served to Flagship."""
+    alerts = IntegratedAlerts(start_date="2022-01-01", render_type=RenderType.encoded)
+
+    img = get_tile_data()
+    rgba = alerts(img)
+
+    # test date encoding in red and green channels
+    np.testing.assert_array_equal(rgba.array[:2, 122, 109], np.array([12, 154]))
+
+    # test highest confidence in alpha channel
+    assert rgba.array[3, 122, 109] == 24
+
+    # test high confidence in alpha channel
+    assert rgba.array[3, 154, 71] == 8

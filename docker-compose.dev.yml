@@ -19,8 +19,8 @@ services:
       - DB_USER_RO=${GFW_DB_USER_RO}
       - DB_PASSWORD_RO=${GFW_DB_PASSWORD_RO}
       - DB_PORT_RO=5432
-      - AWS_DEFAULT_PROFILE=gfw-staging
-      - DATA_LAKE_BUCKET=gfw-data-lake-staging
+      - AWS_DEFAULT_PROFILE=${AWS_PROFILE}
+      - DATA_LAKE_BUCKET=${DATA_LAKE_BUCKET}
       - LOG_LEVEL=debug
       - RASTER_TILER_LAMBDA_NAME=test
       - ENV=dev
