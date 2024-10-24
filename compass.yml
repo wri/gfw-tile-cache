@@ -1,0 +1,19 @@
+name: gfw-tile-cache
+id: ari:cloud:compass:9e6ae18b-aaf1-4b81-b8dc-143cae66ae09:component/2466cdc0-d697-40cb-9612-93c0370df8ee/9734ac1a-7f6c-4e9e-8ee5-e2f37c6cf29c
+description: GFW Tile Cache Service
+configVersion: 1
+typeId: SERVICE
+ownerId: ari:cloud:identity::team/e1395033-4c36-4ef0-9865-d4a1a95986e4
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/wri/gfw-tile-cache
+relationships:
+  DEPENDS_ON: []
+labels:
+  - language:python
+  - source:github
+  - vector-tiles
+customFields: null
