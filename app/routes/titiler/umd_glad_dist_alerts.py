@@ -43,7 +43,7 @@ async def glad_dist_alerts_raster_tile(
         description="Only show alerts until given date.",
     ),
     render_type: RenderType = Query(
-        RenderType.true_color, description="Render true color or encoded tiles"
+        RenderType.encoded, description="Render true color or encoded tiles"
     ),
     alert_confidence: Optional[bool] = Query(
         AlertConfidence.low,
