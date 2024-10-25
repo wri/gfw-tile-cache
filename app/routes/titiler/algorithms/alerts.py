@@ -1,10 +1,8 @@
 from collections import OrderedDict, namedtuple
-from datetime import date
+from typing import Optional
 
 import numpy as np
-from dateutil.relativedelta import relativedelta
 from fastapi.logger import logger
-from pydantic import Field
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
 
@@ -36,28 +34,10 @@ class Alerts(BaseAlgorithm):
 
     record_start_date: str = "2014-12-31"
 
-    today: date = date.today()
-
-    # Parameters
-    default_start_date: str = (today - relativedelta(days=180)).strftime("%Y-%m-%d")
-    start_date: str = Field(
-        default_start_date,
-        description="start date of alert in YYYY-MM-DD format.",
-    )
-
-    default_end_date: str = today.strftime("%Y-%m-%d")
-    end_date: str = Field(
-        default_end_date, description="end date of alert in YYYY-MM-DD format."
-    )
-
-    alert_confidence: AlertConfidence = Field(
-        AlertConfidence.low, description="Alert confidence"
-    )
-
-    render_type: RenderType = Field(
-        RenderType.true_color,
-        description="Render true color or encoded pixels",
-    )
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    alert_confidence: Optional[AlertConfidence] = None
+    render_type: Optional[RenderType] = RenderType.true_color
 
     # metadata
     input_nbands: int = 2
@@ -105,18 +85,27 @@ class Alerts(BaseAlgorithm):
             np.ndarray: A mask array pixels with no alert or alerts not meeting filter
             condition are masked.
         """
-        start_mask = self.alert_date >= (
-            np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
-        )
-        end_mask = self.alert_date <= (
-            np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
-        )
 
-        confidence_mask = (
-            self.data_alert_confidence
-            >= self.conf_colors[self.alert_confidence].confidence
-        )
-        mask = ~self.no_data * start_mask * end_mask * confidence_mask
+        mask = ~self.no_data
+
+        if self.alert_confidence:
+            confidence_mask = (
+                self.data_alert_confidence
+                >= self.conf_colors[self.alert_confidence].confidence
+            )
+            mask *= confidence_mask
+
+        if self.start_date:
+            start_mask = self.alert_date >= (
+                np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
+            )
+            mask *= start_mask
+
+        if self.end_date:
+            end_mask = self.alert_date <= (
+                np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
+            )
+            mask *= end_mask
 
         return mask
 
@@ -131,7 +120,6 @@ class Alerts(BaseAlgorithm):
         for properties in self.conf_colors.values():
             confidence = properties.confidence
             colors = properties.colors
-
             r[self.data_alert_confidence >= confidence] = colors.red
             g[self.data_alert_confidence >= confidence] = colors.green
             b[self.data_alert_confidence >= confidence] = colors.blue

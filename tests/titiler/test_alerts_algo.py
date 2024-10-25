@@ -29,12 +29,7 @@ def test_integrated_alerts_defaults():
     """Test default values of the Alerts class."""
     alerts = IntegratedAlerts()
 
-    assert alerts.start_date == (today - relativedelta(days=alert_period)).strftime(
-        "%Y-%m-%d"
-    )
-    assert alerts.end_date == today.strftime("%Y-%m-%d")
-    assert alerts.alert_confidence == AlertConfidence.low
-    assert alerts.record_start_date == "2014-12-31"
+    assert alerts.render_type == RenderType.true_color
 
 
 def test_create_date_range_mask():

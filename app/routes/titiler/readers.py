@@ -6,10 +6,9 @@ from rio_tiler.io import MultiBandReader, Reader
 
 
 @attr.s
-class IntegratedAlertsReader(MultiBandReader):
+class AlertsReader(MultiBandReader):
 
     input: str = attr.ib()
-    # bands: Sequence[str] = attr.ib(init=False)
     tms: morecantile.TileMatrixSet = attr.ib(
         default=morecantile.tms.get("WebMercatorQuad")
     )

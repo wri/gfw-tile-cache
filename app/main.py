@@ -42,6 +42,8 @@ from .routes import wmts
 from .routes import preview
 
 from .routes.titiler import routes as titiler_routes
+from .routes.titiler.integrated_alerts import router as alerts_router
+from .routes.titiler.umd_glad_dist_alerts import router as dist_alerts_router
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
@@ -55,6 +57,8 @@ ROUTERS = (
     burned_areas_tiles.router,
     dynamic_vector_tiles.router,
     vector_tiles.router,
+    alerts_router,
+    dist_alerts_router,
     umd_tree_cover_loss_raster_tiles.router,
     umd_glad_landsat_alerts_raster_tiles.router,
     umd_glad_sentinel2_alerts_raster_tiles.router,
@@ -79,10 +83,6 @@ app.include_router(
 app.include_router(
     titiler_routes.mosaic.router, prefix="/cog/mosaic", tags=["Mosaic Tiles"]
 )
-app.include_router(
-    titiler_routes.custom.router, prefix="/cog/custom", tags=["Custom Tiles"]
-)
-
 
 #####################
 ## Middleware
