@@ -2,10 +2,9 @@ from datetime import date
 
 import numpy as np
 import rasterio
-from dateutil.relativedelta import relativedelta
 from rio_tiler.models import ImageData
 
-from app.models.enumerators.titiler import AlertConfidence, RenderType
+from app.models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 from app.routes.titiler.algorithms.integrated_alerts import IntegratedAlerts
 from tests.conftest import DATE_CONF_TIF, INTENSITY_TIF
 
@@ -50,7 +49,7 @@ def test_create_date_range_mask():
 
 def test_create_confidence_mask():
     """Test confidence filters are applied correctly."""
-    alerts = IntegratedAlerts(alert_confidence=AlertConfidence.highest)
+    alerts = IntegratedAlerts(alert_confidence=IntegratedAlertConfidence.highest)
     alerts.start_date = alerts.record_start_date
 
     img = get_tile_data()
@@ -63,7 +62,7 @@ def test_create_confidence_mask():
 
 def test_mask_logic_with_nodata():
     """Test that the mask properly handles no-data values."""
-    alerts = IntegratedAlerts(alert_confidence=AlertConfidence.low)
+    alerts = IntegratedAlerts(alert_confidence=IntegratedAlertConfidence.low)
 
     img = get_tile_data()
 

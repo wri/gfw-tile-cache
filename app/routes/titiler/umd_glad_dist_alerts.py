@@ -45,7 +45,7 @@ async def glad_dist_alerts_raster_tile(
     render_type: RenderType = Query(
         RenderType.encoded, description="Render true color or encoded tiles"
     ),
-    alert_confidence: Optional[bool] = Query(
+    alert_confidence: Optional[AlertConfidence] = Query(
         AlertConfidence.low,
         description="Show alerts that are at least of this confidence level",
     ),
