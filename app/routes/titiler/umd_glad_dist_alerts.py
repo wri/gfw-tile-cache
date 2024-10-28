@@ -56,6 +56,9 @@ async def glad_dist_alerts_raster_tile(
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         tile_x, tile_y, zoom = xyz
+
+        # NOTE: the bands in the output `image_data` array will be in the order of
+        # the input `bands` list
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
 
     processed_image = DISTAlerts(
