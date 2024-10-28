@@ -9,7 +9,7 @@ from titiler.core.utils import render_image
 from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import IntegratedAlertConfidence, RenderType
-from .. import DATE_REGEX, optional_implementation_dependency, raster_xyz
+from .. import DATE_REGEX, raster_xyz
 from .algorithms.integrated_alerts import IntegratedAlerts
 from .readers import AlertsReader
 
@@ -68,7 +68,6 @@ async def gfw_integrated_alerts_raster_tile(
         IntegratedAlertConfidence.low,
         description="Show alerts with at least this confidence level",
     ),
-    implementation: str = Depends(optional_implementation_dependency),
 ) -> Response:
     """GFW Integrated Alerts raster tiles."""
 

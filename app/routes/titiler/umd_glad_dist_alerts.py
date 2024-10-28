@@ -8,7 +8,7 @@ from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
 from ...models.enumerators.titiler import AlertConfidence, RenderType
-from .. import DATE_REGEX, optional_implementation_dependency, raster_xyz
+from .. import DATE_REGEX, raster_xyz
 from .algorithms.dist_alerts import DISTAlerts
 from .readers import AlertsReader
 
@@ -49,7 +49,6 @@ async def glad_dist_alerts_raster_tile(
         AlertConfidence.low,
         description="Show alerts that are at least of this confidence level",
     ),
-    implementation: str = Depends(optional_implementation_dependency),
 ) -> Response:
     """UMD GLAD DIST alerts raster tiles."""
 
