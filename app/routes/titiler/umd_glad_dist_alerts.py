@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, Depends, Query, Response
+from rio_tiler.io import COGReader
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
@@ -49,24 +50,62 @@ async def glad_dist_alerts_raster_tile(
         AlertConfidence.low,
         description="Show alerts that are at least of this confidence level",
     ),
+    tree_cover_density: Optional[int] = Query(
+        None,
+        ge=0,
+        le=100,
+        description="Alerts in pixels with tree cover density (in percent) below this threshold won't be displayed. `umd_tree_cover_density_2010` is used for this masking.",
+    ),
+    tree_cover_height: Optional[int] = Query(
+        None,
+        description="Alerts in pixels with tree cover height (in meters) below this threshold won't be displayed. `umd_tree_cover_height_2020` dataset in the API is used for this masking.",
+    ),
+    tree_cover_loss_cutoff: bool = Query(
+        False,
+        ge=2021,
+        description="""This filter is to be used on conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests. """
+        """Alerts for pixels that have had tree cover loss this year or earlier (to 2021) won't be displayed.""",
+    ),
 ) -> Response:
     """UMD GLAD DIST alerts raster tiles."""
 
+    tile_x, tile_y, zoom = xyz
     bands = ["default", "intensity"]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
-        tile_x, tile_y, zoom = xyz
-
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
 
-    processed_image = DISTAlerts(
+    dist_alert = DISTAlerts(
         start_date=start_date,
         end_date=end_date,
         render_type=render_type,
         alert_confidence=alert_confidence,
-    )(image_data)
+        tree_cover_density_mask=tree_cover_density,
+        tree_cover_height_mask=tree_cover_height,
+        tree_cover_loss_mask=tree_cover_loss_cutoff,
+    )
+
+    if tree_cover_density:
+        with COGReader(
+            f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_density_2010/v1.6/raster/epsg-4326/cog/default.tif"
+        ) as reader:
+            dist_alert.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
+
+    if tree_cover_height:
+        with COGReader(
+            f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_height_2020/v2022/raster/epsg-4326/cog/default.tif"
+        ) as reader:
+            dist_alert.tree_cover_height_data = reader.tile(tile_x, tile_y, zoom)
+
+    if tree_cover_loss_cutoff:
+        with COGReader(
+            f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_loss/v1.10.1/raster/epsg-4326/cog/default.tif"
+        ) as reader:
+            dist_alert.tree_cover_loss_data = reader.tile(tile_x, tile_y, zoom)
+
+    processed_image = dist_alert(image_data)
 
     content, media_type = render_image(
         processed_image,
