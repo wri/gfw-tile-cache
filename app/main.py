@@ -42,7 +42,7 @@ from .routes import wmts
 from .routes import preview
 
 from .routes.titiler import routes as titiler_routes
-from .routes.titiler.integrated_alerts import router as integrated_alerts_router
+from .routes.titiler.gfw_integrated_alerts import router as integrated_alerts_router
 from .routes.titiler.umd_glad_dist_alerts import router as dist_alerts_router
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
