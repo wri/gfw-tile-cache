@@ -18,7 +18,7 @@ class Alerts(BaseAlgorithm):
     title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
 
-    conf_colors: OrderedDict = None
+    conf_colors: Optional[OrderedDict] = None
 
     record_start_date: str = "2014-12-31"
 

@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from datetime import datetime
 from typing import Optional
 
 from pydantic import ConfigDict
@@ -53,11 +52,13 @@ class DISTAlerts(Alerts):
             )
 
         if self.tree_cover_loss_mask:
+            # Tree cover loss before 2020 can't be used to filter out pixels as not forest
+            # if they had tree cover loss. Instead we use tree cover height taken that year
+            # is used as source of truth.
             mask *= (
-                self.tree_cover_loss_data.array[0, :, :] >= self.tree_cover_loss_mask
-                or self.tree_cover_loss_data.array[0, :, :] == 0
-                or self.tree_cover_loss_data.array[0, :, :]
-                <= datetime.strptime(self.record_start_date, "%Y-%m-%d").year
+                (self.tree_cover_loss_data.array[0, :, :] >= self.tree_cover_loss_mask)
+                | (self.tree_cover_loss_data.array[0, :, :] == 0)
+                | (self.tree_cover_loss_data.array[0, :, :] <= 2020)
             )
 
         return mask
