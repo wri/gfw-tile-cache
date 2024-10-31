@@ -51,7 +51,7 @@ for _version in _versions:
 )
 async def gfw_integrated_alerts_raster_tile(
     *,
-    version,
+    version: GfwIntegratdAlertsVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
