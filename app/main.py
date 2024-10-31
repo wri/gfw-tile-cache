@@ -42,7 +42,7 @@ from .routes import wmts
 from .routes import preview
 
 from .routes.titiler import routes as titiler_routes
-from .routes.titiler.integrated_alerts import router as alerts_router
+from .routes.titiler.integrated_alerts import router as integrated_alerts_router
 from .routes.titiler.umd_glad_dist_alerts import router as dist_alerts_router
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
@@ -57,7 +57,7 @@ ROUTERS = (
     burned_areas_tiles.router,
     dynamic_vector_tiles.router,
     vector_tiles.router,
-    alerts_router,
+    integrated_alerts_router,
     dist_alerts_router,
     umd_tree_cover_loss_raster_tiles.router,
     umd_glad_landsat_alerts_raster_tiles.router,
