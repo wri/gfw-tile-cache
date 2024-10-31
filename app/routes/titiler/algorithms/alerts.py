@@ -6,7 +6,7 @@ from fastapi.logger import logger
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
 
-from app.models.enumerators.titiler import RenderType
+from app.models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 
 Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
 AlertConfig: namedtuple = namedtuple("AlertConfig", ["confidence", "colors"])
@@ -18,14 +18,26 @@ class Alerts(BaseAlgorithm):
     title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
 
-    conf_colors: OrderedDict = None
+    conf_colors: OrderedDict = OrderedDict(
+        {
+            IntegratedAlertConfidence.low: AlertConfig(
+                confidence=2, colors=Colors(237, 164, 194)
+            ),
+            IntegratedAlertConfidence.high: AlertConfig(
+                confidence=3, colors=Colors(220, 102, 153)
+            ),
+            IntegratedAlertConfidence.highest: AlertConfig(
+                confidence=4, colors=Colors(201, 42, 109)
+            ),
+        }
+    )
 
     record_start_date: str = "2014-12-31"
 
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     alert_confidence: Optional[str] = None
-    render_type: Optional[RenderType] = RenderType.true_color
+    render_type: RenderType = RenderType.true_color
 
     # metadata
     input_nbands: int = 2
