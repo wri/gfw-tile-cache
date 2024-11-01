@@ -1,7 +1,5 @@
 def test_viirs_vector_tile_server(client):
-    """
-    Basic test to check if empty data api response as expected
-    """
+    """Basic test to check if empty data api response as expected."""
 
     response = client.get("/_latest")
     api_data = response.json()
@@ -15,6 +13,7 @@ def test_viirs_vector_tile_server(client):
             {"dataset": "umd_tree_cover_loss", "version": "v1.8"},
             {"dataset": "wdpa_protected_areas", "version": "v201912"},
             {"dataset": "wur_radd_alerts", "version": "v20201214"},
+            {"dataset": "gfw_integrated_alerts", "version": "v20201012"},
         ],
         "status": "success",
     }
