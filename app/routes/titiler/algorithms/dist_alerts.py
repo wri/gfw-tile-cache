@@ -52,13 +52,13 @@ class DISTAlerts(Alerts):
             )
 
         if self.tree_cover_loss_mask:
-            # Tree cover loss before 2020 can't be used to filter out pixels as not forest
-            # if they had tree cover loss. Instead we use tree cover height taken that year
-            # is used as source of truth.
+            # Tree cover loss data before 2020 can't be used to filter out pixels as not forest
+            # if they had tree cover loss. Instead, we use tree cover height taken that
+            # year as source of truth. For example, if a pixel had tree cover loss on
+            # 2018, but has tree cover height (2020) that meets the forest threshold, the pixel meets
+            # the forest criteria for alerts.
             mask *= (
-                (self.tree_cover_loss_data.array[0, :, :] >= self.tree_cover_loss_mask)
-                | (self.tree_cover_loss_data.array[0, :, :] == 0)
-                | (self.tree_cover_loss_data.array[0, :, :] <= 2020)
-            )
+                self.tree_cover_loss_data.array[0, :, :] >= self.tree_cover_loss_mask
+            ) | (self.tree_cover_loss_data.array[0, :, :] <= 2020)
 
         return mask

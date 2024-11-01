@@ -18,7 +18,6 @@ class Alerts(BaseAlgorithm):
     title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
 
-
     conf_colors: OrderedDict = OrderedDict(
         {
             IntegratedAlertConfidence.low: AlertConfig(
@@ -32,7 +31,6 @@ class Alerts(BaseAlgorithm):
             ),
         }
     )
-
 
     record_start_date: str = "2014-12-31"
 
