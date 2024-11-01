@@ -33,7 +33,6 @@ class GfwIntegratdAlertsVersions(str, Enum):
 _versions = get_versions(dataset, TileCacheType.cog)
 for _version in _versions:
     extend_enum(GfwIntegratdAlertsVersions, _version, _version)
-# TODO: add version validation
 
 
 # will turn this on when we're ready to replace tile cache service
