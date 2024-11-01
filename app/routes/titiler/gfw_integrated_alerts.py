@@ -33,7 +33,6 @@ class GfwIntegratdAlertsVersions(str, Enum):
 _versions = get_versions(dataset, TileCacheType.cog)
 for _version in _versions:
     extend_enum(GfwIntegratdAlertsVersions, _version, _version)
-# TODO: add version validation
 
 
 # will turn this on when we're ready to replace tile cache service
@@ -51,7 +50,7 @@ for _version in _versions:
 )
 async def gfw_integrated_alerts_raster_tile(
     *,
-    version,
+    version: GfwIntegratdAlertsVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
