@@ -7,13 +7,13 @@ def test_viirs_vector_tile_server(client):
 
     assert api_data == {
         "data": [
+            {"dataset": "gfw_integrated_alerts", "version": "v20201012"},
             {"dataset": "nasa_viirs_fire_alerts", "version": "v202003"},
             {"dataset": "umd_glad_landsat_alerts", "version": "v20210101"},
             {"dataset": "umd_modis_burned_areas", "version": "v202003"},
             {"dataset": "umd_tree_cover_loss", "version": "v1.8"},
             {"dataset": "wdpa_protected_areas", "version": "v201912"},
             {"dataset": "wur_radd_alerts", "version": "v20201214"},
-            {"dataset": "gfw_integrated_alerts", "version": "v20201012"},
         ],
         "status": "success",
     }
