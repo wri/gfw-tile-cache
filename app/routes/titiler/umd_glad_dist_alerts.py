@@ -63,8 +63,7 @@ async def glad_dist_alerts_raster_tile(
     tree_cover_loss_cutoff: bool = Query(
         False,
         ge=2021,
-        description="""This filter is to be used on conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests. """
-        """Alerts for pixels that have had tree cover loss this year or earlier (to 2021) won't be displayed.""",
+        description="""This filter is to be used on conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests by masking out pixels that have had tree cover loss prior to the alert.""",
     ),
 ) -> Response:
     """UMD GLAD DIST alerts raster tiles."""
