@@ -1,7 +1,5 @@
 def test_viirs_vector_tile_server(client):
-    """
-    Basic test to check if empty data api response as expected
-    """
+    """Basic test to check if empty data api response as expected."""
 
     response = client.get("/_latest")
     api_data = response.json()
@@ -9,6 +7,7 @@ def test_viirs_vector_tile_server(client):
 
     assert api_data == {
         "data": [
+            {"dataset": "gfw_integrated_alerts", "version": "v20201012"},
             {"dataset": "nasa_viirs_fire_alerts", "version": "v202003"},
             {"dataset": "umd_glad_landsat_alerts", "version": "v20210101"},
             {"dataset": "umd_modis_burned_areas", "version": "v202003"},

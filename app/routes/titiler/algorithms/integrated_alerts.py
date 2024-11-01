@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from app.models.enumerators.titiler import AlertConfidence
+from app.models.enumerators.titiler import IntegratedAlertConfidence
 
 from .alerts import AlertConfig, Alerts, Colors
 
@@ -13,13 +13,13 @@ class IntegratedAlerts(Alerts):
 
     conf_colors: OrderedDict = OrderedDict(
         {
-            AlertConfidence.low: AlertConfig(
+            IntegratedAlertConfidence.low: AlertConfig(
                 confidence=2, colors=Colors(237, 164, 194)
             ),
-            AlertConfidence.high: AlertConfig(
+            IntegratedAlertConfidence.high: AlertConfig(
                 confidence=3, colors=Colors(220, 102, 153)
             ),
-            AlertConfidence.highest: AlertConfig(
+            IntegratedAlertConfidence.highest: AlertConfig(
                 confidence=4, colors=Colors(201, 42, 109)
             ),
         }
