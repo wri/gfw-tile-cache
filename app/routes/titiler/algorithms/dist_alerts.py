@@ -58,7 +58,7 @@ class DISTAlerts(Alerts):
             # 2018, but has tree cover height (2020) that meets the forest threshold, the pixel meets
             # the forest criteria for alerts.
             mask *= (
-                self.tree_cover_loss_data.array[0, :, :] >= self.tree_cover_loss_mask
+                self.tree_cover_loss_data.array[0, :, :] > self.tree_cover_loss_mask
             ) | (self.tree_cover_loss_data.array[0, :, :] <= 2020)
 
         return mask
