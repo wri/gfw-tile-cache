@@ -63,7 +63,7 @@ async def glad_dist_alerts_raster_tile(
     tree_cover_loss_cutoff: bool = Query(
         False,
         ge=2021,
-        description="""This filter is to be used on conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests by masking out pixels that have had tree cover loss prior to the alert.""",
+        description="""This filter is to be used in conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests, by masking out pixels that have had tree cover loss prior to the alert.""",
     ),
 ) -> Response:
     """UMD GLAD DIST alerts raster tiles."""
@@ -99,6 +99,7 @@ async def glad_dist_alerts_raster_tile(
             dist_alert.tree_cover_height_data = reader.tile(tile_x, tile_y, zoom)
 
     if tree_cover_loss_cutoff:
+        # TODO: update to v1.11 in production
         with COGReader(
             f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_loss/v1.10.1/raster/epsg-4326/cog/default.tif"
         ) as reader:
