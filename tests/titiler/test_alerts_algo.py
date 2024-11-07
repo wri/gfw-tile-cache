@@ -5,6 +5,7 @@ import rasterio
 from rio_tiler.models import ImageData
 
 from app.models.enumerators.titiler import IntegratedAlertConfidence, RenderType
+from app.routes.titiler.algorithms.dist_alerts import DISTAlerts
 from app.routes.titiler.algorithms.integrated_alerts import IntegratedAlerts
 from tests.conftest import DATE_CONF_TIF, INTENSITY_TIF
 
@@ -20,6 +21,50 @@ def get_tile_data():
         intensity = intensity_file.read(1)
 
     data = np.stack([date_conf, intensity], axis=0)
+
+    return ImageData(data)
+
+
+def get_tcl_data():
+    """Tree Cover Loss test data."""
+    with rasterio.open(DATE_CONF_TIF) as date_conf_file:
+        date_conf = date_conf_file.read(1)
+
+    data = np.zeros_like(date_conf)
+
+    data[122, 109] = 2019
+    data[120, 109] = 2022
+    data[154, 71] = 2023
+
+    return ImageData(data)
+
+
+def get_tch_data():
+    """Tree Cover Height test data."""
+
+    with rasterio.open(DATE_CONF_TIF) as date_conf_file:
+        date_conf = date_conf_file.read(1)
+
+    data = np.zeros_like(date_conf)
+
+    data[122, 109] = 2
+    data[120, 109] = 5
+    data[154, 71] = 4
+
+    return ImageData(data)
+
+
+def get_tcd_data():
+    """Tree Cover Density test data."""
+
+    with rasterio.open(DATE_CONF_TIF) as date_conf_file:
+        date_conf = date_conf_file.read(1)
+
+    data = np.zeros_like(date_conf)
+
+    data[122, 109] = 40
+    data[120, 109] = 30
+    data[154, 71] = 20
 
     return ImageData(data)
 
@@ -104,3 +149,33 @@ def test_encoded_rgba():
 
     # test high confidence in alpha channel
     assert rgba.array[3, 154, 71] == 8
+
+
+def test_forest_mask():
+    """Test that only alerts that match forest criteria are shown."""
+
+    alerts_data = get_tile_data()
+    tcl = get_tcl_data()
+    tch = get_tch_data()
+    tcd = get_tcd_data()
+
+    alerts = DISTAlerts(
+        tree_cover_density_mask=30,
+        tree_cover_height_mask=3,
+        tree_cover_loss_mask=2021,
+        render_type=RenderType.true_color,
+    )
+
+    alerts.tree_cover_density_data = tcd
+    alerts.tree_cover_height_data = tch
+    alerts.tree_cover_loss_data = tcl
+
+    rgba = alerts(alerts_data)
+
+    np.testing.assert_array_equal(rgba.array[:, 122, 109], np.array([220, 102, 153, 0]))
+
+    np.testing.assert_array_equal(rgba.array[:, 154, 71], np.array([220, 102, 153, 0]))
+
+    np.testing.assert_array_equal(
+        rgba.array[:, 120, 109], np.array([220, 102, 153, 255])
+    )
