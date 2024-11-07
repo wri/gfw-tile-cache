@@ -1,13 +1,21 @@
 import json
 from json import JSONDecodeError
-from typing import Optional
+from typing import Dict, Optional
 
 from fastapi.logger import logger
 from pydantic import Field, field_validator
-from pydantic_settings import SettingsConfigDict, BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from starlette.datastructures import Secret
 
 from ..models.pydantic.database import DatabaseURL
+
+# NOTE: For non-local deployment, need to update dataset/version here until the terraform
+# JSON decode issue preventing setting this env variable is resolved.
+dist_alerts_forest_filters = {
+    "tree_cover_loss": {"dataset": "umd_tree_cover_loss", "version": "v1.10.1"},
+    "tree_cover_height": {"dataset": "umd_tree_cover_height_2020", "version": "v2022"},
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
+}
 
 
 class Globals(BaseSettings):
@@ -68,6 +76,11 @@ class Globals(BaseSettings):
     )
     api_key_name: str = Field("x-api-key", description="Header key name for API key.")
 
+    dist_alerts_forest_filters: Dict = Field(
+        dist_alerts_forest_filters,
+        description="Datasets that are used as forest filters for DIST alerts",
+    )
+
     @field_validator("token", mode="before")
     def get_token(cls, v: Optional[str]) -> Optional[str]:
         if v:
@@ -121,6 +134,15 @@ class Globals(BaseSettings):
             aws_region = input.get("aws_region")
             v = f"https://lambda.{aws_region}.amazonaws.com"
         return v
+
+    @field_validator("dist_alerts_forest_filters", mode="before")
+    def parse_dist_alerts_forest_filters(cls, v: str | Dict) -> Dict:
+        if isinstance(v, dict):
+            return v
+        try:
+            return json.loads(v)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON for dist_alerts_forest_filters: {e}")
 
     model_config = SettingsConfigDict(case_sensitive=False, validate_assignment=True)
 
