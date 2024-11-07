@@ -9,6 +9,7 @@ from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
 from ...models.enumerators.titiler import AlertConfidence, RenderType
+from ...settings.globals import GLOBALS
 from .. import DATE_REGEX, raster_xyz
 from .algorithms.dist_alerts import DISTAlerts
 from .readers import AlertsReader
@@ -18,13 +19,13 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 router = APIRouter()
 
 # TODO: update to the actual dataset when ready
-dataset = "dan_test"
+DATASET = "dan_test"
 
 today = date.today()
 
 
 @router.get(
-    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
+    f"/{DATASET}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
@@ -70,7 +71,7 @@ async def glad_dist_alerts_raster_tile(
 
     tile_x, tile_y, zoom = xyz
     bands = ["default", "intensity"]
-    folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/{DATASET}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
@@ -86,22 +87,25 @@ async def glad_dist_alerts_raster_tile(
         tree_cover_loss_mask=tree_cover_loss_cutoff,
     )
 
+    filter_datasets = GLOBALS.dist_alerts_forest_filters
     if tree_cover_density:
+        dataset = filter_datasets["tree_cover_density"]
         with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_density_2010/v1.6/raster/epsg-4326/cog/default.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{dataset['dataset']}/{dataset['version']}/raster/epsg-4326/cog/default.tif"
         ) as reader:
             dist_alert.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
 
     if tree_cover_height:
+        dataset = filter_datasets["tree_cover_height"]
         with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_height_2020/v2022/raster/epsg-4326/cog/default.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{dataset['dataset']}/{dataset['version']}/raster/epsg-4326/cog/default.tif"
         ) as reader:
             dist_alert.tree_cover_height_data = reader.tile(tile_x, tile_y, zoom)
 
     if tree_cover_loss_cutoff:
-        # TODO: update to v1.11 in production
+        dataset = filter_datasets["tree_cover_loss"]
         with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/umd_tree_cover_loss/v1.10.1/raster/epsg-4326/cog/default.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{dataset['dataset']}/{dataset['version']}/raster/epsg-4326/cog/default.tif"
         ) as reader:
             dist_alert.tree_cover_loss_data = reader.tile(tile_x, tile_y, zoom)
 
