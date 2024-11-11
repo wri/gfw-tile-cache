@@ -68,8 +68,8 @@ async def glad_dist_alerts_raster_tile(
         None,
         description="Alerts in pixels with tree cover height (in meters) below this threshold won't be displayed. `umd_tree_cover_height_2020` dataset in the API is used for this masking.",
     ),
-    tree_cover_loss_cutoff: bool = Query(
-        False,
+    tree_cover_loss_cutoff: Optional[int] = Query(
+        None,
         ge=2021,
         description="""This filter is to be used in conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests, by masking out pixels that have had tree cover loss prior to the alert.""",
     ),
@@ -96,23 +96,23 @@ async def glad_dist_alerts_raster_tile(
 
     filter_datasets = GLOBALS.dist_alerts_forest_filters
     if tree_cover_density:
-        dataset = filter_datasets["tree_cover_density"]
+        filter_dataset = filter_datasets["tree_cover_density"]
         with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{dataset['dataset']}/{dataset['version']}/raster/epsg-4326/cog/default.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
         ) as reader:
             dist_alert.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
 
     if tree_cover_height:
-        dataset = filter_datasets["tree_cover_height"]
+        filter_dataset = filter_datasets["tree_cover_height"]
         with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{dataset['dataset']}/{dataset['version']}/raster/epsg-4326/cog/default.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
         ) as reader:
             dist_alert.tree_cover_height_data = reader.tile(tile_x, tile_y, zoom)
 
     if tree_cover_loss_cutoff:
-        dataset = filter_datasets["tree_cover_loss"]
+        filter_dataset = filter_datasets["tree_cover_loss"]
         with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{dataset['dataset']}/{dataset['version']}/raster/epsg-4326/cog/default.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
         ) as reader:
             dist_alert.tree_cover_loss_data = reader.tile(tile_x, tile_y, zoom)
 
