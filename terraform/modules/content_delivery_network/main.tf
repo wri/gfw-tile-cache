@@ -423,7 +423,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  # send all Titiler requests to tile cache app
+  # send all generic Titiler requests to tile cache app
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
@@ -455,6 +455,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+# pass requests for DIST alerts test datasets to tile cache app
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
