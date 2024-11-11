@@ -18,8 +18,7 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 router = APIRouter()
 
-# TODO: update to the actual dataset when ready
-DATASET = "dan_test"
+DATASET = "umd_glad_dist_alerts"
 
 today = date.today()
 
@@ -30,8 +29,16 @@ today = date.today()
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
+@router.get(
+    "/{dataset}/{version}/titiler/{z}/{x}/{y}.png",  # for testing datasets - hidden from docs.
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+    include_in_schema=False,
+)
 async def glad_dist_alerts_raster_tile(
     *,
+    dataset: str = DATASET,
     version,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
@@ -71,7 +78,7 @@ async def glad_dist_alerts_raster_tile(
 
     tile_x, tile_y, zoom = xyz
     bands = ["default", "intensity"]
-    folder: str = f"s3://{DATA_LAKE_BUCKET}/{DATASET}/{version}/raster/epsg-4326/cog"
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
