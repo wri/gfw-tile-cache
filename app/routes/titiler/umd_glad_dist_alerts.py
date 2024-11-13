@@ -64,7 +64,7 @@ async def glad_dist_alerts_raster_tile(
             "with a maximum value of `55`. "
             "For example, a pixel RGB value of `(3, 26, 255)` would decode to: "
             "**alert date**: `3 * 255 + 26 = 791` (or 2023-03-02), "
-            "**confidence**: `floor(255, 100) = 2` (high), and "
+            "**confidence**: `floor(255 / 100) = 2` (high), and "
             "**intensity**: `mod(255, 100) = 55`"
         ),
     ),
