@@ -53,7 +53,19 @@ async def glad_dist_alerts_raster_tile(
     ),
     render_type: RenderType = Query(
         RenderType.encoded,
-        description="Render true color or encoded tiles. Encoded tiles have the alert date and confidence packed in the image RGB channels for front-end interactive use, such as date filtering with supported technologies. Decoding instructions: Alert Date is calculated as `red * 255 + green`, representing days since 2020-12-31. Confidence is calculated as `floor(blue / 100)`, with values of `2` (high) or `1` (low). Intensity is calculated as `mod(blue, 100)`, with a maximum value of `55`.",
+        description=(
+            "Render true color or encoded tiles. Encoded tiles have the alert "
+            "date and confidence packed in the image RGB channels for front-end interactive use, "
+            "such as date filtering with supported technologies. "
+            "Decoding instructions: Alert Date is calculated as `red * 255 + green`, "
+            "representing days since 2020-12-31. Confidence is calculated as `floor(blue / 100)`, "
+            "with values of `2` (high) or `1` (low). Intensity is calculated as `mod(blue, 100)`, "
+            "with a maximum value of `55`. "
+            "For example, a pixel RGB value of `(3, 26, 255)` would decode to: "
+            "**alert date**: `3 * 255 + 26 = 791` (or 2023-03-02), "
+            "**confidence**: `floor(255, 100) = 2` (high), and "
+            "**intensity**: `mod(255, 100) = 55`"
+        ),
     ),
     alert_confidence: Optional[AlertConfidence] = Query(
         AlertConfidence.low,
