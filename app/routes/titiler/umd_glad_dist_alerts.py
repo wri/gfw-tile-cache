@@ -55,7 +55,8 @@ async def glad_dist_alerts_raster_tile(
         RenderType.encoded,
         description=(
             "Render true color or encoded tiles. Encoded tiles have the alert "
-            "date and confidence packed in the image RGB channels for front-end interactive use, "
+            "date, confidence and intensity (value for use in alpha/transparency channel to fade out isolated alert pixels at low zoom levels) "
+            "packed in the image RGB channels for front-end interactive use, "
             "such as date filtering with supported technologies. "
             "Decoding instructions: Alert Date is calculated as `red * 255 + green`, "
             "representing days since 2020-12-31. Confidence is calculated as `floor(blue / 100)`, "
@@ -75,16 +76,16 @@ async def glad_dist_alerts_raster_tile(
         None,
         ge=0,
         le=100,
-        description="Alerts in pixels with tree cover density (in percent) below this threshold won't be displayed. `umd_tree_cover_density_2010` is used for this masking.",
+        description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2010` is used for this masking.",
     ),
     tree_cover_height_threshold: Optional[int] = Query(
         None,
-        description="Alerts in pixels with tree cover height (in meters) below this threshold won't be displayed. `umd_tree_cover_height_2020` dataset in the API is used for this masking.",
+        description="Show alerts in pixels with tree cover height (in meters) greater than or equal to this threshold. `umd_tree_cover_height_2020` dataset in the API is used for this masking.",
     ),
     tree_cover_loss_threshold: Optional[int] = Query(
         None,
         ge=2021,
-        description="""This filter is to be used in conjunction with `tree_cover_density` and `tree_cover_height` filters to detect only alerts in forests, by masking out pixels that have had tree cover loss prior to the alert.""",
+        description="""This filter is to be used in conjunction with `tree_cover_density_threshold` and `tree_cover_height_threshold` filters to detect only alerts in forests, by masking out pixels that have had tree cover loss prior to the alert.""",
     ),
 ) -> Response:
     """UMD GLAD DIST alerts raster tiles."""
