@@ -18,6 +18,11 @@ def handler(event, context):
     results in a redirect response like:
 
     /{dataset}/{version}/dynamic/{z}/{x}/{y}.(png|pbf)?implementation={implementation}
+
+    *Implementation Note: The request URI and redirect URL are relative (with a leading '/'). When python `splits` the string
+    of a relative URL, the first element of the list is the empty string (''). Therefore,
+
+    /{dataset}/{version}/{implementation}/{z}/{x}/{y}.(png|pbf) has seven (7) elements after splitting.
     """
 
     response = event["Records"][0]["cf"]["response"]
