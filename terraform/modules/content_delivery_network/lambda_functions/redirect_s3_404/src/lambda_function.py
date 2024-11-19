@@ -10,6 +10,14 @@ def handler(event, context):
     Note the following:
     1. The function is triggered in an origin response
     2. The response status from the origin server is an error status code (404)
+
+    The pattern for the incoming request uri:
+
+    /{dataset}/{version}/{implementation}/{z}/{x}/{y}.(png|pbf)
+
+    results in a redirect response like:
+
+    /{dataset}/{version}/dynamic/{z}/{x}/{y}.(png|pbf)?implementation={implementation}
     """
 
     response = event["Records"][0]["cf"]["response"]
@@ -38,6 +46,7 @@ def handler(event, context):
 
 
 def is_tile(uri):
+    """The resource is a tile if its last path element ends in .png or .pbf."""
     print("REQUEST URI", "/".join(uri))
     return len(uri) == 7 and uri[6][-4:] in [".png", ".pbf"]
 
@@ -45,9 +54,8 @@ def is_tile(uri):
 def replace_implementation_in_path(path_parts):
     """Replace the implementation path segment with "dynamic" and return the
     original implementation."""
-    impl_path_location = 3
-    implementation = path_parts[impl_path_location]
-    path_parts[impl_path_location] = "dynamic"
+    implementation = path_parts[3]
+    path_parts[3] = "dynamic"
     return implementation
 
 
