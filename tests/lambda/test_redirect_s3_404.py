@@ -33,9 +33,8 @@ class TestRedirectOnlyTileRequestsThatAreNotFound:
         self,
     ):
         event = create_event(status="200")
-        context = {}
 
-        response = handler(event, context)
+        response = handler(event, {})
 
         assert response == {
             "status": "200",
@@ -44,13 +43,31 @@ class TestRedirectOnlyTileRequestsThatAreNotFound:
             },
         }
 
-    def test_handler_creates_a_redirect_response_if_status_is_404_and_is_a_tile(self):
+    def test_handler_creates_a_redirect_response_if_status_is_404_and_is_a_png_tile(
+        self,
+    ):
         event = create_event(
             uri="/sbtn_natural_forests_map/v202310/natural_forest/10/20/30.png"
         )
-        context = {}
 
-        response = handler(event, context)
+        response = handler(event, {})
+
+        assert (
+            response.items()
+            >= {
+                "status": "307",
+                "statusDescription": "Temporary Redirect",
+            }.items()
+        )
+
+    def test_handler_creates_a_redirect_response_if_status_is_404_and_is_a_pbf_tile(
+        self,
+    ):
+        event = create_event(
+            uri="/sbtn_natural_forests_map/v202310/natural_forest/10/20/30.pbf"
+        )
+
+        response = handler(event, {})
 
         assert (
             response.items()
@@ -66,9 +83,8 @@ class TestRedirectOnlyTileRequestsThatAreNotFound:
         event = create_event(
             uri="/sbtn_natural_forests_map/v202310/natural_forest/10/20/30.txt"
         )
-        context = {}
 
-        response = handler(event, context)
+        response = handler(event, {})
 
         assert response == {
             "status": "404",
@@ -78,38 +94,72 @@ class TestRedirectOnlyTileRequestsThatAreNotFound:
         }
 
 
-def test_handler():
-    # Mock event and context
-    event = {
-        "Records": [
-            {
-                "cf": {
-                    "response": {
-                        "status": "404",
-                        "headers": {
-                            "content-type": [
-                                {"key": "Content-Type", "value": "text/plain"}
-                            ]
-                        },
-                    },
-                    "request": {
-                        "uri": "/sbtn_natural_forests_map/v202310/natural_forest/10/20/30.png",
-                        "querystring": "some_param=30",
-                    },
-                }
-            }
+class TestRedirectsToADynamicTileResource:
+    def test_original_implementation_is_replaced_with_dynamic(self):
+        implementation = "natural_forest"
+        event = create_event(
+            uri=f"/sbtn_natural_forests_map/v202310/{implementation}/10/20/30.png"
+        )
+
+        response = handler(event, {})
+
+        assert response["headers"]["location"][0]["key"] == "Location"
+        assert (
+            "/sbtn_natural_forests_map/v202310/dynamic/10/20/30.png"
+            in response["headers"]["location"][0]["value"]
+        )
+
+
+class TestAddsOriginalImplementationToTheExistingQueryParams:
+    def test_original_implementation_is_added_to_the_list_of_query_parameters(self):
+        implementation = "natural_forest"
+        event = create_event(
+            uri=f"/sbtn_natural_forests_map/v202310/{implementation}/10/20/30.png",
+            querystring="some_param=30",
+        )
+
+        response = handler(event, {})
+
+        assert response["headers"]["location"][0]["key"] == "Location"
+        assert (
+            "?some_param=30&implementation=natural_forest"
+            in response["headers"]["location"][0]["value"]
+        )
+
+    def test_original_implementation_is_added_as_a_query_parameter(self):
+        implementation = "natural_forest"
+        event = create_event(
+            uri=f"/sbtn_natural_forests_map/v202310/{implementation}/10/20/30.png"
+        )
+
+        response = handler(event, {})
+
+        assert response["headers"]["location"][0]["key"] == "Location"
+        assert (
+            "?implementation=natural_forest"
+            in response["headers"]["location"][0]["value"]
+        )
+
+
+class TestStandardHeaderInfoIsAddedToRedirect:
+    def test_content_type_is_set(self):
+        event = create_event(
+            uri="/sbtn_natural_forests_map/v202310/default/10/20/30.png"
+        )
+
+        response = handler(event, {})
+
+        assert response["headers"]["content-type"] == [
+            {"key": "Content-Type", "value": "application/json"}
         ]
-    }
-    context = {}
 
-    # Call the handler function
-    response = handler(event, context)
+    def test_content_encoding_is_set(self):
+        event = create_event(
+            uri="/sbtn_natural_forests_map/v202310/default/10/20/30.png"
+        )
 
-    # Assertions
-    assert response["status"] == "307"
-    assert response["headers"]["location"][0]["key"] == "Location"
-    assert (
-        response["headers"]["location"][0]["value"]
-        == "/sbtn_natural_forests_map/v202310/dynamic/10/20/30.png?some_param=30&implementation=natural_forest"
-    )
-    assert response["headers"]["content-type"][0]["value"] == "application/json"
+        response = handler(event, {})
+
+        assert response["headers"]["content-encoding"] == [
+            {"key": "Content-Encoding", "value": "UTF-8"}
+        ]

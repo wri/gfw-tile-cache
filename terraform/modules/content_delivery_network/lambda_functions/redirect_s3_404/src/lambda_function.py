@@ -24,30 +24,15 @@ def handler(event, context):
     path_parts = parsed_url.path.split("/")
 
     if int(response["status"]) == 404 and is_tile(path_parts):
-        implementation = replace_implementation(path_parts)
-
-        updated_path = "/".join(path_parts)
-
-        # Append the query string with the `implementation`
-        if request["querystring"]:
-            querystring = f"{request['querystring']}&implementation={implementation}"
-        else:
-            querystring = f"implementation={implementation}"
-
-        updated_url = urlunparse(
-            parsed_url._replace(path=updated_path, query=querystring)
+        implementation = replace_implementation_in_path(path_parts)
+        querystring = add_implementation_to_query_params(
+            implementation, request["querystring"]
         )
-
-        # Set the headers for the redirect response
-        headers["location"] = [{"key": "Location", "value": updated_url}]
-        headers["content-type"] = [{"key": "Content-Type", "value": "application/json"}]
-        headers["content-encoding"] = [{"key": "Content-Encoding", "value": "UTF-8"}]
-
-        response = {
-            "status": "307",
-            "statusDescription": "Temporary Redirect",
-            "headers": headers,
-        }
+        updated_url = urlunparse(
+            parsed_url._replace(path="/".join(path_parts), query=querystring)
+        )
+        update_headers_for_redirect(headers, updated_url)
+        return build_redirect_response(headers)
 
     return response
 
@@ -57,10 +42,34 @@ def is_tile(uri):
     return len(uri) == 7 and uri[6][-4:] in [".png", ".pbf"]
 
 
-def replace_implementation(path_parts):
+def replace_implementation_in_path(path_parts):
     """Replace the implementation path segment with "dynamic" and return the
     original implementation."""
     impl_path_location = 3
     implementation = path_parts[impl_path_location]
     path_parts[impl_path_location] = "dynamic"
     return implementation
+
+
+def add_implementation_to_query_params(implementation, query_string):
+    implementation_param = f"implementation={implementation}"
+    if query_string:
+        querystring = f"{query_string}&{implementation_param}"
+    else:
+        querystring = implementation_param
+    return querystring
+
+
+def update_headers_for_redirect(headers, updated_url):
+    headers["location"] = [{"key": "Location", "value": updated_url}]
+    headers["content-type"] = [{"key": "Content-Type", "value": "application/json"}]
+    headers["content-encoding"] = [{"key": "Content-Encoding", "value": "UTF-8"}]
+
+
+def build_redirect_response(headers):
+    response = {
+        "status": "307",
+        "statusDescription": "Temporary Redirect",
+        "headers": headers,
+    }
+    return response
