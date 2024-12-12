@@ -27,6 +27,7 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 
 def to_bbox(x: int, y: int, z: int) -> Bounds:
+    '''x and y are the tile column and row, z is the zoom level'''
     logger.debug(f"Coordinates (X, Y, Z): {x},{y},{z}")
     left, bottom, right, top = mercantile.xy_bounds(x, y, z)
     logger.debug(f"Bounds (Left, Bottom, Right, Top): {left},{bottom},{right},{top}")
@@ -232,7 +233,9 @@ def validate_dates(start_date: str, end_date: str, force_date_range) -> None:
 
 def validate_bbox(left: float, bottom: float, right: float, top: float) -> None:
     """Tile should be within WebMercator extent."""
+
+    # Extent of whole-world (single) tile at zoom 0, in meters.
     min_left, min_bottom, max_right, max_top = mercantile.xy_bounds(0, 0, 0)
 
-    if left < min_left or bottom < min_bottom or right > max_right or top > max_top:
+    if round(left, 0) < round(min_left, 0) or round(bottom, 0) < round(min_bottom, 0) or round(right, 0) > round(max_right, 0) or round(top, 0) > round(max_top, 0):
         raise HTTPException(status_code=400, detail="Tile index is out of bounds")
