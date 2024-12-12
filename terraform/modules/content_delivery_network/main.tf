@@ -423,7 +423,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-  # send all Titiler requests to tile cache app
+  # send all generic Titiler requests to tile cache app
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
@@ -452,6 +452,32 @@ resource "aws_cloudfront_distribution" "tiles" {
       event_type   = "viewer-request"
       include_body = false
       lambda_arn   = aws_lambda_function.redirect_latest_tile_cache.qualified_arn
+    }
+  }
+
+# pass requests for DIST alerts test datasets to tile cache app
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    target_origin_id       = "dynamic"
+    compress               = true
+    path_pattern           = "*/titiler/*"
+    default_ttl            = 86400
+    max_ttl                = 86400
+    min_ttl                = 0
+    smooth_streaming       = false
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = true
+      query_string_cache_keys = []
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
     }
   }
 

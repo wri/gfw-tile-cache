@@ -80,8 +80,16 @@ def prep_titiler_tifs():
         "s3",
         endpoint_url=AWS_ENDPOINT_URI,
     )
-    s3_client.upload_file(DATE_CONF_TIF, "gfw-data-lake-test", "default.tif")
-    s3_client.upload_file(DATE_CONF_TIF, "gfw-data-lake-test", "intensity.tif")
+    s3_client.upload_file(
+        DATE_CONF_TIF,
+        "gfw-data-lake-test",
+        "gfw_integrated_alerts/v20201012/raster/epsg-4326/cog/default.tif",
+    )
+    s3_client.upload_file(
+        DATE_CONF_TIF,
+        "gfw-data-lake-test",
+        "gfw_integrated_alerts/v20201012/raster/epsg-4326/cog/intensity.tif",
+    )
     s3_client.upload_file(
         COG_TIF,
         "gfw-data-lake-test",
