@@ -35,15 +35,8 @@ for _version in _versions:
     extend_enum(GfwIntegratdAlertsVersions, _version, _version)
 
 
-# will turn this on when we're ready to replace tile cache service
-# @router.get(
-#     f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
-#     response_class=Response,
-#     tags=["Raster Tiles"],
-#     response_description="PNG Raster Tile",
-# )
 @router.get(
-    f"/{dataset}/{{version}}/titiler/{{z}}/{{x}}/{{y}}.png",
+    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",

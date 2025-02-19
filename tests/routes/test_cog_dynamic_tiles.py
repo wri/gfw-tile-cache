@@ -19,7 +19,7 @@ async def test_tile_for_data_api_dataset(client):
 @pytest.mark.asyncio
 async def test_tiling_with_custom_rendering(client):
     """Test Integrated Alerts Tile Rendering."""
-    response = client.get("/gfw_integrated_alerts/v20201012/titiler/14/5305/8879.png")
+    response = client.get("/gfw_integrated_alerts/v20201012/dynamic/14/5305/8879.png")
     response.status_code == 200
 
     assert response.headers["content-type"] == "image/png"
