@@ -1,0 +1,80 @@
+import os
+from typing import Optional, Tuple
+
+from aenum import Enum, extend_enum
+from fastapi import APIRouter, Depends, Query, Response
+from rio_tiler.io import COGReader
+from titiler.core.resources.enums import ImageType
+from titiler.core.utils import render_image
+
+from ...crud.sync_db.tile_cache_assets import get_versions
+from ...models.enumerators.tile_caches import TileCacheType
+from .. import raster_xyz
+from ...settings.globals import GLOBALS
+from .algorithms.carbon_gross_emissions import CarbonGrossEmissions
+from .readers import AlertsReader
+
+DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
+
+router = APIRouter()
+
+dataset = "gfw_forest_carbon_gross_emissions"
+
+
+class GfwForestCarbonGrossEmissions(str, Enum):
+    latest = "v20240402"
+
+
+_versions = get_versions(dataset, TileCacheType.cog)
+for _version in _versions:
+    extend_enum(GfwForestCarbonGrossEmissions, _version, _version)
+
+
+@router.get(
+    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+)
+async def global_forest_carbon_gross_emissions_raster_tile(
+    *,
+    version: GfwForestCarbonGrossEmissions,
+    xyz: Tuple[int, int, int] = Depends(raster_xyz),
+    tree_cover_density_threshold: Optional[int] = Query(
+        None,
+        ge=0,
+        le=100,
+        description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2010` is used for this masking.",
+    )
+) -> Response:
+    """Forest Carbon Gross Emissions raster tiles."""
+
+    tile_x, tile_y, zoom = xyz
+    bands = ["tcd_30", "intensity"]
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
+    with AlertsReader(input=folder, default_band="tcd_30") as reader:
+        # NOTE: the bands in the output `image_data` array will be in the order of
+        # the input `bands` list
+        image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
+
+    carbon_gross_emissions = CarbonGrossEmissions(
+        tree_cover_density_mask=tree_cover_density_threshold,
+    )
+
+    filter_datasets = GLOBALS.carbon_gross_emissions_filters
+    if tree_cover_density_threshold:
+        filter_dataset = filter_datasets["tree_cover_density"]
+        with COGReader(
+            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
+        ) as reader:
+            carbon_gross_emissions.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
+
+    processed_image = carbon_gross_emissions(image_data)
+
+    content, media_type = render_image(
+        processed_image,
+        output_format=ImageType("png"),
+        add_mask=False,
+    )
+
+    return Response(content, media_type=media_type)

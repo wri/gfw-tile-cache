@@ -16,6 +16,10 @@ dist_alerts_forest_filters = {
     "tree_cover_height": {"dataset": "umd_tree_cover_height_2020", "version": "v2022"},
     "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
 }
+carbon_gross_emissions_filters = {
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
+    # "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+}
 
 
 class Globals(BaseSettings):
@@ -79,6 +83,10 @@ class Globals(BaseSettings):
     dist_alerts_forest_filters: Dict = Field(
         dist_alerts_forest_filters,
         description="Datasets that are used as forest filters for DIST alerts",
+    )
+    carbon_gross_emissions_filters: Dict = Field(
+        carbon_gross_emissions_filters,
+        description="Datasets that are used as filters for carbon gross emissions"
     )
 
     @field_validator("token", mode="before")
