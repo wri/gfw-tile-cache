@@ -17,8 +17,7 @@ dist_alerts_forest_filters = {
     "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
 }
 carbon_gross_emissions_filters = {
-    "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
-    # "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
 }
 
 

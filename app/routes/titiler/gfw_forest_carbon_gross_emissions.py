@@ -50,9 +50,9 @@ async def global_forest_carbon_gross_emissions_raster_tile(
     """Forest Carbon Gross Emissions raster tiles."""
 
     tile_x, tile_y, zoom = xyz
-    bands = ["tcd_30", "intensity"]
+    bands = ["default", "intensity"]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
-    with AlertsReader(input=folder, default_band="tcd_30") as reader:
+    with AlertsReader(input=folder, default_band="default") as reader:
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
