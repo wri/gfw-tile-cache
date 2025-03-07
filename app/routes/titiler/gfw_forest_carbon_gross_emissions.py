@@ -42,7 +42,7 @@ async def global_forest_carbon_gross_emissions_raster_tile(
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     tree_cover_density_threshold: Optional[int] = Query(
         None,
-        ge=0,
+        ge=30,
         le=100,
         description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2010` is used for this masking.",
     )
