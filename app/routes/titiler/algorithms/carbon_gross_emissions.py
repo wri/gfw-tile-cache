@@ -1,5 +1,4 @@
 from collections import OrderedDict, namedtuple
-from typing import Optional
 
 import numpy as np
 from pydantic import ConfigDict
@@ -10,7 +9,7 @@ Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
 
 
 class CarbonGrossEmissions(BaseAlgorithm):
-    """Visualize carbon gross emissions"""
+    """Visualize carbon gross emissions."""
 
     title: str = "Carbon gross emissions"
     description: str = "Visualize carbon gross emissions"
@@ -49,12 +48,9 @@ class CarbonGrossEmissions(BaseAlgorithm):
             1223.0: Colors(80, 26, 66),
             1312.0: Colors(72, 21, 57),
             1404.0: Colors(64, 15, 50),
-            1500.0: Colors(57, 8, 42)
+            1500.0: Colors(57, 8, 42),
         }
     )
-
-    tree_cover_density_mask: Optional[int] = None
-    tree_cover_density_data: Optional[ImageData] = None
 
     # metadata
     input_nbands: int = 2
@@ -67,8 +63,6 @@ class CarbonGrossEmissions(BaseAlgorithm):
         self.intensity = img.data[1]
         self.no_data = img.array.mask[0]
 
-        self.mask = self.create_mask()
-
         rgb = self.create_true_color_rgb()
         alpha = self.create_true_color_alpha()
 
@@ -76,17 +70,6 @@ class CarbonGrossEmissions(BaseAlgorithm):
         data = np.ma.MaskedArray(data, mask=False)
 
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
-
-    def create_mask(self):
-        mask = ~self.no_data
-
-        if self.tree_cover_density_mask:
-            mask *= (
-                self.tree_cover_density_data.array[0, :, :]
-                >= self.tree_cover_density_mask
-            )
-
-        return mask
 
     def create_true_color_rgb(self):
         r, g, b = self._rgb_zeros_array()
@@ -100,15 +83,14 @@ class CarbonGrossEmissions(BaseAlgorithm):
 
     def create_true_color_alpha(self):
         """Set the transparency (alpha) channel based on intensity input. The
-        intensity multiplier is used to control how isolated pixels fade out at low
-        zoom levels, matching the rendering behavior in Flagship.
+        intensity multiplier is used to control how isolated pixels fade out at
+        low zoom levels, matching the rendering behavior in Flagship.
 
         Returns:
             np.ndarray: Array representing the alpha (transparency) channel, where pixel
             visibility is adjusted by intensity.
-
         """
-        alpha = np.where(self.mask, self.intensity * 150, 0)
+        alpha = np.where(~self.no_data, self.intensity, 0)
         return np.minimum(255, alpha)
 
     def _rgb_zeros_array(self):
