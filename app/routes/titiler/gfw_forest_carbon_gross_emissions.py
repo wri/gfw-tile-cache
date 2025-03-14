@@ -44,7 +44,7 @@ async def global_forest_carbon_gross_emissions_raster_tile(
     ),
     tree_cover_density_threshold: Optional[TreeCoverDensityThreshold] = Query(
         TreeCoverDensityThreshold.tcd_30,
-        description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2010` is used for this masking.",
+        description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking.",
     ),
 ) -> Response:
     """Forest Carbon Gross Emissions raster tiles."""
