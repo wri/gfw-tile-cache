@@ -9,6 +9,7 @@ from rio_tiler.io import MultiBandReader, Reader
 class AlertsReader(MultiBandReader):
 
     input: str = attr.ib()
+    default_band: str = attr.ib(default="default")
     tms: morecantile.TileMatrixSet = attr.ib(
         default=morecantile.tms.get("WebMercatorQuad")
     )
@@ -29,7 +30,7 @@ class AlertsReader(MultiBandReader):
 
     def __attrs_post_init__(self):
         """Get grid bounds."""
-        band_url: str = self._get_band_url("default")
+        band_url: str = self._get_band_url(self.default_band)
         with self.reader(band_url) as cog:
             self.bounds = cog.bounds
             self.crs = cog.crs
