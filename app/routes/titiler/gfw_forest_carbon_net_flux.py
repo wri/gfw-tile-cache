@@ -43,7 +43,7 @@ async def global_forest_carbon_net_flux_raster_tile(
     tree_cover_density_threshold: int = Query(
         ge=30,
         le=100,
-        description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2010` is used for this masking.",
+        description="Show alerts in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking.",
     )
 ) -> Response:
     """Forest Carbon Net Flux raster tiles."""
