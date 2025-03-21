@@ -17,6 +17,15 @@ dist_alerts_forest_filters = {
     "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
 }
 
+carbon_flux_filters = {
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+    "tree_cover_gain_from_height": {"dataset": "umd_tree_cover_gain_from_height", "version": "v202206"},
+    "mangrove_stock_2000": {"dataset": "jpl_mangrove_aboveground_biomass_stock_2000", "version": "v201902"},
+    # This is assumed to be already masked out of the input dataset, so we don't
+    # use this entry.  Just including it for documentation.
+    "pre_2000_plantations": {"dataset": "gfw_pre_2000_plantations", "version": "v20200724"}
+}
+
 
 class Globals(BaseSettings):
     env: str = Field("dev", description="Environment name.")
@@ -79,6 +88,10 @@ class Globals(BaseSettings):
     dist_alerts_forest_filters: Dict = Field(
         dist_alerts_forest_filters,
         description="Datasets that are used as forest filters for DIST alerts",
+    )
+    carbon_flux_filters: Dict = Field(
+        carbon_flux_filters,
+        description="Datasets that are used as filters for carbon gross emissions"
     )
 
     @field_validator("token", mode="before")
