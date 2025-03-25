@@ -23,7 +23,7 @@ carbon_flux_filters = {
     "mangrove_stock_2000": {"dataset": "jpl_mangrove_aboveground_biomass_stock_2000", "version": "v201902"},
     # This is assumed to be already masked out of the input dataset, so we don't
     # use this entry.  Just including it for documentation.
-    "pre_2000_plantations": {"dataset": "gfw_pre_2000_plantations", "version": "v20200724"}
+    # "pre_2000_plantations": {"dataset": "gfw_pre_2000_plantations", "version": "v20200724"}
 }
 
 

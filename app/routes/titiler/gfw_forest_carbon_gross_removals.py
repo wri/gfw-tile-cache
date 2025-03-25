@@ -1,9 +1,10 @@
 import os
-from typing import Tuple
+from typing import Tuple, Optional
 
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, Depends, Query, Response
 from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
@@ -64,35 +65,22 @@ async def global_forest_carbon_gross_removals_raster_tile(
 
     filter_datasets = GLOBALS.carbon_flux_filters
 
-    filter_dataset = filter_datasets["tree_cover_density"]
-    with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
-    ) as reader:
-        if reader.tile_exists(tile_x, tile_y, zoom):
-            carbon_gross_removals.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
-        else:
-            print("Non-existent tile, tree_cover_density")
-            carbon_gross_removals.tree_cover_density_data = None
+    for filter_name, details in filter_datasets.items():
+        with COGReader(
+            f"s3://{DATA_LAKE_BUCKET}/{details['dataset']}/{details['version']}/raster/epsg-4326/cog/default.tif"
+        ) as reader:
+            filter_data: Optional[ImageData] = None
 
-    filter_dataset = filter_datasets["tree_cover_gain_from_height"]
-    with COGReader(
-        f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
-    ) as reader:
-        if reader.tile_exists(tile_x, tile_y, zoom):
-            carbon_gross_removals.tree_cover_gain_from_height_data = reader.tile(tile_x, tile_y, zoom)
-        else:
-            print("Non-existent tile, tree_cover_gain_from_height")
-            carbon_gross_removals.tree_cover_gain_from_height_data = None
+            if reader.tile_exists(tile_x, tile_y, zoom):
+                filter_data = reader.tile(tile_x, tile_y, zoom)
+            else:
+                print(f"Non-existent tile for filter {filter_name} at z={zoom}, x={tile_x}, y={tile_y}")
 
-    filter_dataset = filter_datasets["mangrove_stock_2000"]
-    with COGReader(
-        f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
-    ) as reader:
-        if reader.tile_exists(tile_x, tile_y, zoom):
-            carbon_gross_removals.mangrove_stock_2000_data = reader.tile(tile_x, tile_y, zoom)
-        else:
-            print("Non-existent tile, mangrove")
-            carbon_gross_removals.mangrove_stock_2000_data = None
+            setattr(
+                carbon_gross_removals,
+                f"{filter_name}_data",
+                filter_data
+            )
 
     processed_image = carbon_gross_removals(image_data)
 
