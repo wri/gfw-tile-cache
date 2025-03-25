@@ -1,5 +1,5 @@
 import os
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, Depends, Query, Response
@@ -50,9 +50,10 @@ async def global_forest_carbon_gross_removals_raster_tile(
     """Forest Carbon Gross Removals raster tiles."""
 
     tile_x, tile_y, zoom = xyz
-    bands = ["removals", "intensity"]
+    bands: List[str] = ["removals", "intensity"]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
-    with AlertsReader(input=folder, default_band="removals") as reader:
+
+    with AlertsReader(input=folder, default_band=bands[0]) as reader:
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
