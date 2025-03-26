@@ -76,9 +76,9 @@ class TreeCoverLossDrivers(BaseAlgorithm):
         r, g, b = self._rgb_zeros_array()
 
         for k, colors in self.conf_colors.items():
-            r[self.driver >= k] = colors.red
-            g[self.driver >= k] = colors.green
-            b[self.driver >= k] = colors.blue
+            r[self.driver == k] = colors.red
+            g[self.driver == k] = colors.green
+            b[self.driver == k] = colors.blue
 
         return np.stack([r, g, b], axis=0)
 
