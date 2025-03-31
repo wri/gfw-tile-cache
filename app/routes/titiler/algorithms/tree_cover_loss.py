@@ -32,10 +32,9 @@ class TreeCoverLoss(BaseAlgorithm):
 
         self.mask = self.create_mask(lossyear_data)
 
-        rgb = self.create_true_color_rgb(lossyear_data)
-        alpha = self.create_true_color_alpha()
+        rgb = self.create_encoded_rgb(lossyear_data)
+        alpha = self.create_encoded_alpha()
         data = np.vstack([rgb, alpha[np.newaxis, ...]]).astype(self.output_dtype)
-        data = np.ma.MaskedArray(data, mask=False)
         data = np.ma.MaskedArray(data, mask=False)
 
         #if self.render_type == RenderType.encoded:
@@ -60,11 +59,24 @@ class TreeCoverLoss(BaseAlgorithm):
 
         return mask
 
-    #def create_encoded_rgb(self):
-    #    r, g, b = self._rgb_zeros_array()
+    def create_encoded_rgb(self, lossyear_data):
+        # Red = intensity
+        r = np.clip(self.intensity, 0, 255).astype("uint8")
+
+        # Green = 0 
+        g = np.zeros_like(r, dtype="uint8")
+
+        # Blue = year of loss (1–24)
+        b = np.where(self.mask, lossyear_data, 0).astype("uint8")
+
+        return np.stack([r, g, b], axis=0)
         
     def create_encoded_alpha(self):
-        pass
+        # Alpha = 255 where intensity > 0 and mask is True
+        alpha = np.where((self.intensity > 0) & self.mask, 255, 0).astype("uint8")
+
+        return alpha
+
     
     def create_true_color_rgb(self, lossyear_data):
         scale_pow = self.scale_intensity(self.zoom)
