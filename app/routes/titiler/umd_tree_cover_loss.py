@@ -27,7 +27,7 @@ for _version in _versions:
     extend_enum(UmdTreeCoverLossVersions, _version, _version)
 
 @router.get(
-    f"/{DATASET}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
+    f"/{DATASET}/{{version}}/titiler/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
