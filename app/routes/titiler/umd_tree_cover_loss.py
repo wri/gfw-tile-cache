@@ -50,21 +50,22 @@ async def umd_tree_cover_loss_raster_tile(
     with AlertsReader(input=folder) as reader:
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)  # Single band for lossyear
 
-    processed_image = TreeCoverLoss(
+    tree_cover_loss = TreeCoverLoss(
         start_year=start_year,
         end_year=end_year,
         render_type=render_type,
         tree_cover_density_threshold=tree_cover_density_threshold,
         zoom=zoom
-    )(image_data)
+    )
 
     with COGReader("s3://gfw-data-lake-staging/umd_tree_cover_density_2010/v1.6/raster/epsg-4326/cog/default.tif") as reader:
         if reader.tile_exists(tile_x, tile_y, zoom):
-            processed_image.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
+            tree_cover_loss.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
         else:
             print(f"Tile does not exist for tree cover density at {tile_x}, {tile_y}, {zoom}")
-            processed_image.tree_cover_density_data = None
+            tree_cover_loss.tree_cover_density_data = None
     
+    processed_image = tree_cover_loss(image_data)
     content, media_type = render_image(
         processed_image,
         output_format=ImageType("png"),
