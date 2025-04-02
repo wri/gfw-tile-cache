@@ -2,6 +2,7 @@ from collections import OrderedDict, namedtuple
 from typing import Optional, Callable
 
 import numpy as np
+from pydantic import ConfigDict
 from fastapi.logger import logger
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
@@ -13,10 +14,15 @@ class TreeCoverLoss(BaseAlgorithm):
     title: str = "Tree Cover Loss"
     description: str = "Decode and visualize tree cover loss"
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     start_year: int = 1
     end_year: int  = 23
     render_type: RenderType = RenderType.true_color
     zoom: int = 12
+
+    tree_cover_density_threshold: Optional[int] = None
+    tree_cover_density_data: Optional[ImageData] = None
 
     # metadata
     input_nbands: int = 2
@@ -56,6 +62,11 @@ class TreeCoverLoss(BaseAlgorithm):
         if self.end_year:
             end_mask = lossyear_data <= self.end_year
             mask &= end_mask
+
+        if self.tree_cover_density_data is not None:
+            if self.tree_cover_density_threshold is not None:
+                density_mask = self.tree_cover_density_data.array[0, :, :] >= self.tree_cover_density_threshold
+                mask &= density_mask
 
         return mask
 
