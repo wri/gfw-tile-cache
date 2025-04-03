@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, Depends, Query, Response
+from fastapi.logger import logger
 from rio_tiler.io import COGReader
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
@@ -11,6 +12,7 @@ from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import RenderType
 from .. import raster_xyz
+from ...settings.globals import GLOBALS
 from .algorithms.tree_cover_loss import TreeCoverLoss
 from .readers import AlertsReader
 
@@ -37,10 +39,10 @@ async def umd_tree_cover_loss_raster_tile(
     *,
     version: UmdTreeCoverLossVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
-    start_year: Optional[str] = Query(2001, description="Only show loss for given year and after"),
-    end_year: Optional[str] = Query(2023, description="Only show loss until given year."),
-    render_type: RenderType = Query(RenderType.encoded, description="Render true color or encoded tiles"),
-    tree_cover_density_threshold: Optional[int] = Query(None, ge=0, le=100)
+    start_year: Optional[int] = Query(2001, ge=2001, le=2022, description="Only show loss for given year and after"),
+    end_year: Optional[int] = Query(2023, ge=2002, le=2023, description="Only show loss until given year."),
+    style: RenderType = Query(RenderType.encoded, description="Render true color or encoded tiles"),
+    tcd: Optional[int] = Query(None, ge=0, le=100)
 ) -> Response:
     """UMD Tree Cover Loss raster tiles."""
 
@@ -53,18 +55,23 @@ async def umd_tree_cover_loss_raster_tile(
     tree_cover_loss = TreeCoverLoss(
         start_year=start_year,
         end_year=end_year,
-        render_type=render_type,
-        tree_cover_density_threshold=tree_cover_density_threshold,
+        render_type=style,
+        tree_cover_density_threshold=tcd,
         zoom=zoom
     )
 
-    with COGReader("s3://gfw-data-lake-staging/umd_tree_cover_density_2010/v1.6/raster/epsg-4326/cog/default.tif") as reader:
-        if reader.tile_exists(tile_x, tile_y, zoom):
-            tree_cover_loss.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
-        else:
-            print(f"Tile does not exist for tree cover density at {tile_x}, {tile_y}, {zoom}")
-            tree_cover_loss.tree_cover_density_data = None
-    
+    filter_datasets = GLOBALS.tree_cover_loss_filters
+    filter_dataset = filter_datasets["tree_cover_density"]
+
+    # Skip if no TCD threshold is set
+    if tcd is not None:
+        with COGReader(f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif") as reader:
+            if reader.tile_exists(tile_x, tile_y, zoom):
+                tree_cover_loss.tree_cover_density_data = reader.tile(tile_x, tile_y, zoom)
+            else:
+                logger.warning(f"TCD tile does not exist at {tile_x}, {tile_y}, {zoom}")
+                tree_cover_loss.tree_cover_density_data = None
+
     processed_image = tree_cover_loss(image_data)
     content, media_type = render_image(
         processed_image,

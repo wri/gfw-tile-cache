@@ -16,11 +16,10 @@ class TreeCoverLoss(BaseAlgorithm):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    start_year: int = 1
-    end_year: int  = 23
+    start_date: Optional[int] = 2001
+    end_year: Optional[int]  = 2023
     render_type: RenderType = RenderType.true_color
     zoom: int = 12
-
     tree_cover_density_threshold: Optional[int] = None
     tree_cover_density_data: Optional[ImageData] = None
 
@@ -32,37 +31,40 @@ class TreeCoverLoss(BaseAlgorithm):
     def __call__(self, img: ImageData) -> ImageData:
 
         # Read data
-        lossyear_data = img.data[0]
+        self.tree_cover_loss_data = img.data[0]
         self.intensity = img.data[1]
         self.no_data = img.array.mask[0]
 
-        self.mask = self.create_mask(lossyear_data)
+        # Mask by lossyear and tree cover density filters
+        self.mask = self.create_mask()
 
-        rgb = self.create_encoded_rgb(lossyear_data)
-        alpha = self.create_encoded_alpha()
+        # Create encoded or true color RGB and alpha arrays
+        if self.render_type == RenderType.encoded:
+            rgb = self.create_encoded_rgb()
+            alpha = self.create_encoded_alpha()
+        else:   # true color
+            rgb = self.create_true_color_rgb()
+            alpha = self.create_true_color_alpha()
+
+        # Stack RGB and alpha channels
         data = np.vstack([rgb, alpha[np.newaxis, ...]]).astype(self.output_dtype)
         data = np.ma.MaskedArray(data, mask=False)
-
-        #if self.render_type == RenderType.encoded:
-        #    return self.create_encoded_rgb()
-        #    alpha = self.create_encoded_alpha(self.intensity)
-        #else:   # true color
-        #return self.create_true_color_rgb(lossyear_data)
-        #    alpha = self.create_true_color_alpha(self.intensity)
-        
+    
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
 
-    def create_mask(self, lossyear_data):
+    def create_mask(self):
         mask = ~self.no_data
 
-        if self.start_year:
-            start_mask = lossyear_data >= self.start_year
+        # TCL goes from 2001 to 2023 by default, only filter if start_year or end_year is specified
+        if self.start_year != 2001:
+            start_mask = self.tree_cover_loss_data >= (self.start_year - 2000)
             mask &= start_mask
 
-        if self.end_year:
-            end_mask = lossyear_data <= self.end_year
+        if self.end_year != 2023:
+            end_mask = self.tree_cover_loss_data <= (self.start_year - 2000)
             mask &= end_mask
 
+        # Threshold by TCD if specified
         if self.tree_cover_density_data is not None:
             if self.tree_cover_density_threshold is not None:
                 density_mask = self.tree_cover_density_data.array[0, :, :] >= self.tree_cover_density_threshold
@@ -70,7 +72,7 @@ class TreeCoverLoss(BaseAlgorithm):
 
         return mask
 
-    def create_encoded_rgb(self, lossyear_data):
+    def create_encoded_rgb(self):
         # Red = intensity
         r = np.clip(self.intensity, 0, 255).astype("uint8")
 
@@ -78,7 +80,7 @@ class TreeCoverLoss(BaseAlgorithm):
         g = np.zeros_like(r, dtype="uint8")
 
         # Blue = year of loss (1–24)
-        b = np.where(self.mask, lossyear_data, 0).astype("uint8")
+        b = np.where(self.mask, self.tree_cover_loss_data, 0).astype("uint8")
 
         return np.stack([r, g, b], axis=0)
         
@@ -87,20 +89,19 @@ class TreeCoverLoss(BaseAlgorithm):
         alpha = np.where((self.intensity > 0) & self.mask, 255, 0).astype("uint8")
 
         return alpha
-
     
-    def create_true_color_rgb(self, lossyear_data):
+    def create_true_color_rgb(self):
         scale_pow = self.scale_intensity(self.zoom)
         scaled_intensity = scale_pow(self.intensity).astype("uint8")
 
-        r = np.full(lossyear_data.shape, 228, dtype="float32")
+        r = np.full(self.tree_cover_loss_data.shape, 228, dtype="float32")
         g = (
-            np.ones(lossyear_data.shape, dtype="float32") * 102
+            np.ones(self.tree_cover_loss_data.shape, dtype="float32") * 102
             + (72 - self.zoom) 
             - (scaled_intensity * (3 / max(self.zoom, 1)))
         )
         b = (
-            np.ones(lossyear_data.shape, dtype="float32") * 153
+            np.ones(self.tree_cover_loss_data.shape, dtype="float32") * 153
             + (33 - self.zoom) 
             - (self.intensity / max(self.zoom, 1))
         )

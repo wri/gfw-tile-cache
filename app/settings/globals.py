@@ -30,6 +30,9 @@ tree_cover_loss_drivers_filters = {
     "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
 }
 
+tree_cover_loss_filters = {
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
+}
 
 class Globals(BaseSettings):
     env: str = Field("dev", description="Environment name.")
@@ -102,6 +105,11 @@ class Globals(BaseSettings):
         description="Datasets that are used as filters for tree cover loss drivers"
     )
 
+    tree_cover_loss_filters: Dict = Field(
+        tree_cover_loss_filters,
+        description= "Tree cover density thresholding for TCL"
+    )
+    
     @field_validator("token", mode="before")
     def get_token(cls, v: Optional[str]) -> Optional[str]:
         if v:
