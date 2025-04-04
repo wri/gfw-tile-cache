@@ -48,7 +48,7 @@ async def umd_tree_cover_loss_raster_tile(
 
     tile_x, tile_y, zoom = xyz
     bands = ["default", "intensity"]
-    folder: str = f"s3://{DATA_LAKE_BUCKET}/{DATASET}/v1.11/raster/epsg-4326/cog"
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/{DATASET}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)  # Single band for lossyear
 

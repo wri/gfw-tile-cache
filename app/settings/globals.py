@@ -31,7 +31,7 @@ tree_cover_loss_drivers_filters = {
 }
 
 tree_cover_loss_filters = {
-    "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
 }
 
 class Globals(BaseSettings):
