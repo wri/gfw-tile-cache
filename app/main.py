@@ -66,7 +66,6 @@ ROUTERS = (
     carbon_flux_router,
     tree_cover_loss_drivers_router,
     umd_tree_cover_loss_router,
-    umd_tree_cover_loss_router,
     umd_glad_landsat_alerts_raster_tiles.router,
     umd_glad_sentinel2_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,
