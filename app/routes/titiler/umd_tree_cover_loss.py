@@ -41,7 +41,7 @@ async def umd_tree_cover_loss_raster_tile(
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_year: Optional[int] = Query(2001, ge=2001, le=2022, description="Only show loss for given year and after"),
     end_year: Optional[int] = Query(2023, ge=2002, le=2023, description="Only show loss until given year."),
-    style: RenderType = Query(RenderType.encoded, description="Render true color or encoded tiles"),
+    render_type: RenderType = Query(RenderType.encoded, description="Render true color or encoded tiles"),
     tcd: Optional[int] = Query(None, ge=0, le=100)
 ) -> Response:
     """UMD Tree Cover Loss raster tiles."""
@@ -55,7 +55,7 @@ async def umd_tree_cover_loss_raster_tile(
     tree_cover_loss = TreeCoverLoss(
         start_year=start_year,
         end_year=end_year,
-        render_type=style,
+        render_type=render_type,
         tree_cover_density_threshold=tcd,
         zoom=zoom
     )

@@ -64,10 +64,9 @@ class TreeCoverLoss(BaseAlgorithm):
             mask &= end_mask
 
         # Threshold by TCD if specified
-        if self.tree_cover_density_data is not None:
-            if self.tree_cover_density_threshold is not None:
-                density_mask = self.tree_cover_density_data.array[0, :, :] >= self.tree_cover_density_threshold
-                mask &= density_mask
+        if self.tree_cover_density_data is not None and self.tree_cover_density_threshold is not None:
+            density_mask = self.tree_cover_density_data.array[0, :, :] >= self.tree_cover_density_threshold
+            mask &= density_mask
 
         return mask
 
@@ -119,8 +118,12 @@ class TreeCoverLoss(BaseAlgorithm):
         return np.stack([r.astype("uint8"), g, b], axis=0)
 
     def create_true_color_alpha(self):
-        scale_pow = self.scale_intensity(self.zoom)
-        scaled_intensity = scale_pow(self.intensity).astype("uint8")
+        # Scale intensity if zoom level < 11, otherwise use original intensity
+        if self.zoom < 11:
+            scale_pow = self.scale_intensity(self.zoom)
+            scaled_intensity = scale_pow(self.intensity).astype("uint8")
+        else:
+            scaled_intensity = self.intensity.astype("uint8")
 
         alpha = (scaled_intensity if self.zoom < 13 else self.intensity) * self.mask
         return np.clip(alpha, 0, 255).astype("uint8")
