@@ -28,8 +28,7 @@ class TreeCoverLoss(BaseAlgorithm):
     output_nbands: int = 4
     output_dtype: str = "uint8"
 
-    def __call__(self, img: ImageData) -> ImageData:
-
+    def __call__(self, img: ImageData) -> ImageData
         # Read data
         self.tree_cover_loss_data = img.data[0]
         self.intensity = img.data[1]
@@ -61,7 +60,7 @@ class TreeCoverLoss(BaseAlgorithm):
             mask &= start_mask
 
         if self.end_year != 2023:
-            end_mask = self.tree_cover_loss_data <= (self.start_year - 2000)
+            end_mask = self.tree_cover_loss_data <= (self.end_year - 2000)
             mask &= end_mask
 
         # Threshold by TCD if specified
@@ -90,22 +89,30 @@ class TreeCoverLoss(BaseAlgorithm):
 
         return alpha
     
-    def create_true_color_rgb(self):
+    def create_true_color_rgb(self):    
+        # Scale intensity based on zoom level
         scale_pow = self.scale_intensity(self.zoom)
         scaled_intensity = scale_pow(self.intensity).astype("uint8")
 
+        # Red = 228
         r = np.full(self.tree_cover_loss_data.shape, 228, dtype="float32")
+        
+        # Green = 102 by default, but scales down with zoom level and intensity
         g = (
             np.ones(self.tree_cover_loss_data.shape, dtype="float32") * 102
             + (72 - self.zoom) 
             - (scaled_intensity * (3 / max(self.zoom, 1)))
         )
+
+        # Blue = 153 by default, but scales down with zoom level and intensity
         b = (
             np.ones(self.tree_cover_loss_data.shape, dtype="float32") * 153
             + (33 - self.zoom) 
             - (self.intensity / max(self.zoom, 1))
         )
 
+        # Clip values to [0, 255] and convert to uint8
+        # Adapted from bugfix: https://gfw.atlassian.net/browse/GTC-2916 
         g = np.clip(g, 0, 255).astype("uint8")
         b = np.clip(b, 0, 255).astype("uint8")
 
@@ -120,14 +127,30 @@ class TreeCoverLoss(BaseAlgorithm):
     
     @staticmethod
     def scale_intensity(zoom) -> Callable:
-        """Power scale function for intensity scaling."""
+        """
+        Returns callable that applies power scaling to an array of
+        intensity values based on the given zoom level.
+
+        Adapted from: https://github.com/wri/gfw/blob/develop/providers/datasets-provider/config.js#L28
+        """
+        
+        # Exponent for the power scaling function (only when below raw data resolution of zoom 12)
         exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
+        
+        # Min/max of input intensity values
         domain = (0, 255)
+
+        # Min/max of scaled output intensity values
         scale_range = (0, 255)
-        m = scale_range[1] / domain[1] ** exp
+
+        # Scaling factor that ensures the scaled intensity value is below the max value
+        scaling_factor = scale_range[1] / domain[1] ** exp
+
+        # Scaling offset based on min of input intensity value
         b = scale_range[0]
 
+        # Apply the power scaling function to an array of intensity values
         def scale_pow(x: np.ndarray) -> np.ndarray:
-            return m * x**exp + b
+            return scaling_factor * x**exp + b
 
         return scale_pow
