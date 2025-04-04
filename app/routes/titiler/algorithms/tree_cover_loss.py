@@ -28,7 +28,7 @@ class TreeCoverLoss(BaseAlgorithm):
     output_nbands: int = 4
     output_dtype: str = "uint8"
 
-    def __call__(self, img: ImageData) -> ImageData
+    def __call__(self, img: ImageData) -> ImageData:
         # Read data
         self.tree_cover_loss_data = img.data[0]
         self.intensity = img.data[1]
