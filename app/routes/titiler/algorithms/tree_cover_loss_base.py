@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
 import numpy as np
@@ -8,7 +9,7 @@ from titiler.core.algorithm import BaseAlgorithm
 from app.models.enumerators.titiler import RenderType
 
 
-class TreeCoverLossBase(BaseAlgorithm):
+class TreeCoverLossBase(BaseAlgorithm, ABC):
 
     title: str = "Tree Cover Loss"
     description: str = "Decode and visualize tree cover loss"
@@ -93,6 +94,7 @@ class TreeCoverLossBase(BaseAlgorithm):
 
         return alpha
 
+    @abstractmethod
     def create_true_color_rgb(self):
         pass
 
