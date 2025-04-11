@@ -19,7 +19,7 @@ DATASET = "umd_tree_cover_loss"
 
 
 class UmdTreeCoverLossVersions(str, Enum):
-    latest = "v1.11"
+    latest = "latest"
 
 
 _versions = get_versions(DATASET, TileCacheType.cog)
