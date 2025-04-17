@@ -52,6 +52,13 @@ async def umd_tree_cover_loss_raster_tile(
         le=100,
         description="Show tree cover loss in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking.",
     ),
+    tcd: Optional[int] = Query(
+        None,
+        ge=0,
+        le=100,
+        description="Same as `tree_cover_density_threshold`",
+        include_in_schema=False,
+    ),
 ) -> Response:
     """UMD Tree Cover Loss raster tiles."""
 
@@ -63,5 +70,5 @@ async def umd_tree_cover_loss_raster_tile(
         start_year=start_year,
         end_year=end_year,
         render_type=render_type,
-        tcd=tree_cover_density_threshold,
+        tcd=tree_cover_density_threshold or tcd,
     )
