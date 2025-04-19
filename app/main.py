@@ -45,8 +45,13 @@ from .routes.titiler.gfw_integrated_alerts import router as integrated_alerts_ro
 from .routes.titiler.umd_glad_dist_alerts import router as dist_alerts_router
 from .routes.titiler.gfw_forest_carbon_gross_emissions import router as emissions_router
 from .routes.titiler.gfw_forest_carbon_net_flux import router as carbon_flux_router
-from .routes.titiler.wri_tree_cover_loss_drivers import router as tree_cover_loss_drivers_router
+from .routes.titiler.wri_tree_cover_loss_drivers import (
+    router as tree_cover_loss_drivers_router,
+)
 from .routes.titiler.umd_tree_cover_loss import router as umd_tree_cover_loss_router
+from .routes.titiler.umd_tree_cover_loss_from_fires import (
+    router as umd_tree_cover_loss_from_fires_router,
+)
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 logger.handlers = gunicorn_logger.handlers
@@ -66,6 +71,7 @@ ROUTERS = (
     carbon_flux_router,
     tree_cover_loss_drivers_router,
     umd_tree_cover_loss_router,
+    umd_tree_cover_loss_from_fires_router,
     umd_glad_landsat_alerts_raster_tiles.router,
     umd_glad_sentinel2_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,

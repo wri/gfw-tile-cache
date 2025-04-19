@@ -8,23 +8,23 @@ from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import RenderType
 from .. import raster_xyz
-from .algorithms.tree_cover_loss import TreeCoverLoss
+from .algorithms.tree_cover_loss_from_fires import TreeCoverLossFromFires
 from .tree_cover_loss_core import tree_cover_loss_core
 
 DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 router = APIRouter()
 
-DATASET = "umd_tree_cover_loss"
+DATASET = "umd_tree_cover_loss_from_fires"
 
 
-class UmdTreeCoverLossVersions(str, Enum):
+class UmdTreeCoverLossFromFiresVersions(str, Enum):
     latest = "latest"
 
 
 _versions = get_versions(DATASET, TileCacheType.cog)
 for _version in _versions:
-    extend_enum(UmdTreeCoverLossVersions, _version, _version)
+    extend_enum(UmdTreeCoverLossFromFiresVersions, _version, _version)
 
 
 @router.get(
@@ -35,7 +35,7 @@ for _version in _versions:
 )
 async def umd_tree_cover_loss_raster_tile(
     *,
-    version: UmdTreeCoverLossVersions,
+    version: UmdTreeCoverLossFromFiresVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_year: Optional[int] = Query(
         2001, ge=2001, le=2022, description="Only show loss for given year and after"
@@ -60,12 +60,12 @@ async def umd_tree_cover_loss_raster_tile(
         include_in_schema=False,
     ),
 ) -> Response:
-    """UMD Tree Cover Loss raster tiles."""
+    """UMD Tree Cover Loss from Fires raster tiles."""
 
     return await tree_cover_loss_core(
-        dataset="umd_tree_cover_loss",
+        dataset="umd_tree_cover_loss_from_fires",
         version=version,
-        algorithm=TreeCoverLoss,
+        algorithm=TreeCoverLossFromFires,
         xyz=xyz,
         start_year=start_year,
         end_year=end_year,
