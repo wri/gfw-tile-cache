@@ -95,6 +95,11 @@ def prep_titiler_tifs():
         "gfw-data-lake-test",
         "umd_glad_landsat_alerts/v20210101/raster/epsg-4326/cog/default.tif",
     )
+    s3_client.upload_file(
+        COG_TIF,
+        "gfw-data-lake-test",
+        "umd_tree_cover_loss/v1.8/raster/epsg-4326/cog/default.tif",
+    )
 
 
 ##################
