@@ -17,7 +17,7 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     start_date: Optional[int] = 2001
-    end_year: Optional[int] = 2023
+    end_year: Optional[int] = 2024
     render_type: RenderType = RenderType.true_color
     zoom: int = 12
     tree_cover_density_threshold: Optional[int] = None
@@ -54,12 +54,12 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
     def create_mask(self):
         mask = ~self.no_data
 
-        # TCL goes from 2001 to 2023 by default, only filter if start_year or end_year is specified
+        # TCL goes from 2001 to 2024 by default, only filter if start_year or end_year is specified
         if self.start_year != 2001:
             start_mask = self.tree_cover_loss_data >= (self.start_year - 2000)
             mask &= start_mask
 
-        if self.end_year != 2023:
+        if self.end_year != 2024:
             end_mask = self.tree_cover_loss_data <= (self.end_year - 2000)
             mask &= end_mask
 
