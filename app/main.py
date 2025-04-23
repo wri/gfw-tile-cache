@@ -45,6 +45,7 @@ from .routes.titiler import routes as titiler_routes
 from .routes.titiler.gfw_integrated_alerts import router as integrated_alerts_router
 from .routes.titiler.umd_glad_dist_alerts import router as dist_alerts_router
 from .routes.titiler.gfw_forest_carbon_gross_emissions import router as emissions_router
+from .routes.titiler.gfw_forest_carbon_gross_removals import router as removals_router
 from .routes.titiler.gfw_forest_carbon_net_flux import router as carbon_flux_router
 from .routes.titiler.wri_tree_cover_loss_drivers import router as tree_cover_loss_drivers_router
 
@@ -63,6 +64,7 @@ ROUTERS = (
     integrated_alerts_router,
     dist_alerts_router,
     emissions_router,
+    removals_router,
     carbon_flux_router,
     tree_cover_loss_drivers_router,
     umd_tree_cover_loss_raster_tiles.router,
