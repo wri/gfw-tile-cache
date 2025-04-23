@@ -26,6 +26,10 @@ carbon_flux_filters = {
     # "pre_2000_plantations": {"dataset": "gfw_pre_2000_plantations", "version": "v20200724"}
 }
 
+tree_cover_loss_drivers_filters = {
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+}
+
 
 class Globals(BaseSettings):
     env: str = Field("dev", description="Environment name.")
@@ -92,6 +96,10 @@ class Globals(BaseSettings):
     carbon_flux_filters: Dict = Field(
         carbon_flux_filters,
         description="Datasets that are used as filters for carbon gross emissions"
+    )
+    tree_cover_loss_drivers_filters: Dict = Field(
+        tree_cover_loss_drivers_filters,
+        description="Datasets that are used as filters for tree cover loss drivers"
     )
 
     @field_validator("token", mode="before")
