@@ -1,7 +1,7 @@
 import os
 from typing import Optional, Tuple
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, Path
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
@@ -27,7 +27,7 @@ dataset = "gfw_integrated_alerts"
 )
 async def gfw_integrated_alerts_raster_tile(
     *,
-    version: str,
+    version: str = Path(..., description="Version name of dataset. Either 'latest' or version string beginning with 'v'"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
