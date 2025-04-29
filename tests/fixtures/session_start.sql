@@ -223,6 +223,10 @@ INSERT INTO public.versions (dataset, version, is_latest, status)
 INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
     VALUES ('umd_tree_cover_loss', 'v1.8', 'Raster tile cache', '{"min_zoom": 0, "max_zoom": 12, "max_static_zoom": 12, "implementation": "tcd_30", "symbology": null, "source_asset_id": null, "resampling":"average"}', '{}', '[]', '8086c7f5-5f2f-491f-8792-5fc67b6a7b96', 'saved', 'my_uri6', true, false);
 
+INSERT INTO public.assets (dataset, version, asset_type, creation_options, metadata, fields, asset_id, status, asset_uri, is_managed, is_default)
+    VALUES ('umd_tree_cover_loss', 'v1.8', 'COG', '{"implementation": "default", "source_asset_id": "3ac4028e-798d-4854-9b5e-6a9771ed06ed", "resampling":"mode", "blocksize": 1024}', '{}', '[]', '821f0211-e439-4302-93bb-0925099df65d', 'saved', 'my_uri15', true, false);
+
+
 INSERT INTO public.datasets (dataset) VALUES ('umd_glad_landsat_alerts');
 INSERT INTO public.versions (dataset, version, is_latest, status)
   VALUES ('umd_glad_landsat_alerts', 'v20210101', true, 'saved');
