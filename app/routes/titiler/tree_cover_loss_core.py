@@ -4,14 +4,14 @@ raster tiles."""
 import os
 from typing import Optional, Tuple, Type
 
-from fastapi import Response
+from fastapi import Response, Query
 from fastapi.logger import logger
 from rio_tiler.io import COGReader
 from titiler.core.algorithm import BaseAlgorithm
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
-from ...models.enumerators.titiler import RenderType
+from ...models.enumerators.titiler import RenderType, TreeCoverDensityThreshold
 from ...settings.globals import GLOBALS
 from .readers import AlertsReader
 
@@ -27,11 +27,19 @@ async def tree_cover_loss_core(
     start_year: Optional[int],
     end_year: Optional[int],
     render_type: RenderType,
-    tcd: Optional[int],
+    tcd: Optional[TreeCoverDensityThreshold] = Query(
+        None,
+        description="Show tree cover loss in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking."
+    ),
     bands: list[str] = ["default", "intensity"],
 ) -> Response:
     tile_x, tile_y, zoom = xyz
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
+
+    if tcd is not None:
+        bands = [f"year__tcd{tcd}_2000", "intensity__tcd{tcd}_2000"]
+    else: # tcd is None
+        bands = ["default", "intensity"]
 
     with AlertsReader(input=folder) as reader:
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
@@ -44,20 +52,20 @@ async def tree_cover_loss_core(
         zoom=zoom,
     )
 
-    filter_datasets = GLOBALS.tree_cover_loss_filters
-    filter_dataset = filter_datasets["tree_cover_density"]
+    #filter_datasets = GLOBALS.tree_cover_loss_filters
+    #filter_dataset = filter_datasets["tree_cover_density"]
 
-    if tcd is not None:
-        with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/default.tif"
-        ) as reader:
-            if reader.tile_exists(tile_x, tile_y, zoom):
-                tree_cover_loss.tree_cover_density_data = reader.tile(
-                    tile_x, tile_y, zoom
-                )
-            else:
-                logger.warning(f"TCD tile does not exist at {tile_x}, {tile_y}, {zoom}")
-                tree_cover_loss.tree_cover_density_data = None
+    #if tcd is not None:
+    #    with COGReader(
+    #        f"s3://gfw-data-lake/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/tcd_75.tif"
+    #    ) as reader:
+    #        if reader.tile_exists(tile_x, tile_y, zoom):
+    #            tree_cover_loss.tree_cover_density_data = reader.tile(
+    #                tile_x, tile_y, zoom
+    #            )
+    #        else:
+    #            logger.warning(f"TCD tile does not exist at {tile_x}, {tile_y}, {zoom}")
+    #            tree_cover_loss.tree_cover_density_data = None
 
     processed_image = tree_cover_loss(image_data)
     content, media_type = render_image(
