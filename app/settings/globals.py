@@ -27,7 +27,7 @@ carbon_flux_filters = {
 }
 
 tree_cover_loss_drivers_filters = {
-    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+    "tree_cover_loss": {"dataset": "umd_tree_cover_loss", "version": "v1.12"},
 }
 
 

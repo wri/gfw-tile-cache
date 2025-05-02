@@ -31,7 +31,8 @@ class TreeCoverLossDrivers(BaseAlgorithm):
     # Value of None for the *_data fields means the tile didn't exist (tile was all
     # no_data).
     tree_cover_density_mask: Optional[int] = None
-    tree_cover_density_data: Optional[ImageData] = None
+    tree_cover_loss_intensity_data: Optional[ImageData] = None
+    zoom: int = 12
 
     # metadata
     input_nbands: int = 2
@@ -41,8 +42,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
     def __call__(self, img: ImageData) -> ImageData:
 
         self.driver = img.data[0]
-        self.intensity = img.data[1]
-        self.no_data = img.array.mask[0]
+        self.intensity = self.tree_cover_loss_intensity_data.data[0]
 
         # self.mask should be True for pixels where we have valid data which is not
         # filtered out.
@@ -57,19 +57,9 @@ class TreeCoverLossDrivers(BaseAlgorithm):
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
 
     def create_mask(self):
-        mask = ~self.no_data
-
-        if self.tree_cover_density_mask:
-            if self.tree_cover_density_data:
-                mask *= (
-                    self.tree_cover_density_data.array[0, :, :]
-                    >= self.tree_cover_density_mask
-                )
-            else:
-                # There was a full no-data tile for tcd, so we should mask
-                # out everything on the base raster.
-                mask = np.zeros_like(mask)
-
+        # it seems to not be creating the mask correctly for non-zero NoData, so just
+        # directly applying the NoData
+        mask = ~((self.driver == 0) & (self.driver == 255))
         return mask
 
     def create_true_color_rgb(self):
@@ -82,22 +72,50 @@ class TreeCoverLossDrivers(BaseAlgorithm):
 
         return np.stack([r, g, b], axis=0)
 
-    def create_true_color_alpha(self):
-        """Set the transparency (alpha) channel based on intensity input. The
-        intensity multiplier is used to control how isolated pixels fade out at low
-        zoom levels, matching the rendering behavior in Flagship.
-
-        Returns:
-            np.ndarray: Array representing the alpha (transparency) channel, where pixel
-            visibility is adjusted by intensity.
-
-        """
-        alpha = np.where(self.mask, self.intensity, 0)
-        return np.minimum(255, alpha)
-
     def _rgb_zeros_array(self):
         r = np.zeros_like(self.driver, dtype=np.uint8)
         g = np.zeros_like(self.driver, dtype=np.uint8)
         b = np.zeros_like(self.driver, dtype=np.uint8)
 
         return r, g, b
+    
+    def create_true_color_alpha(self):
+        # Scale intensity if zoom level < 11, otherwise use original intensity
+        if self.zoom < 11:
+            scale_pow = self.scale_intensity(self.zoom)
+            scaled_intensity = scale_pow(self.intensity).astype("uint8")
+        else:
+            scaled_intensity = self.intensity.astype("uint8")
+
+        alpha = (scaled_intensity if self.zoom < 13 else self.intensity) * self.mask
+        return np.clip(alpha, 0, 255).astype("uint8")
+    
+    @staticmethod
+    def scale_intensity(zoom):
+        """
+        Returns callable that applies power scaling to an array of
+        intensity values based on the given zoom level.
+
+        Adapted from: https://github.com/wri/gfw/blob/develop/providers/datasets-provider/config.js#L28
+        """
+        
+        # Exponent for the power scaling function (only when below raw data resolution of zoom 12)
+        exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
+        
+        # Min/max of input intensity values
+        domain = (0, 255)
+
+        # Min/max of scaled output intensity values
+        scale_range = (0, 255)
+
+        # Scaling factor that ensures the scaled intensity value is below the max value
+        scaling_factor = scale_range[1] / domain[1] ** exp
+
+        # Scaling offset based on min of input intensity value
+        b = scale_range[0]
+
+        # Apply the power scaling function to an array of intensity values
+        def scale_pow(x: np.ndarray) -> np.ndarray:
+            return scaling_factor * x**exp + b
+
+        return scale_pow
