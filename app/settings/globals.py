@@ -109,7 +109,7 @@ class Globals(BaseSettings):
         tree_cover_loss_filters,
         description= "Tree cover density thresholding for TCL"
     )
-    
+
     @field_validator("token", mode="before")
     def get_token(cls, v: Optional[str]) -> Optional[str]:
         if v:

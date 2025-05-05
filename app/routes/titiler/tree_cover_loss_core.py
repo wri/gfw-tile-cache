@@ -5,14 +5,11 @@ import os
 from typing import Optional, Tuple, Type
 
 from fastapi import Response, Query
-from fastapi.logger import logger
-from rio_tiler.io import COGReader
 from titiler.core.algorithm import BaseAlgorithm
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
 from ...models.enumerators.titiler import RenderType, TreeCoverDensityThreshold
-from ...settings.globals import GLOBALS
 from .readers import AlertsReader
 
 DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
