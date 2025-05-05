@@ -63,16 +63,6 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
             end_mask = self.tree_cover_loss_data <= (self.end_year - 2000)
             mask &= end_mask
 
-        # Threshold by TCD where TCD
-        #if (
-        #    self.tree_cover_density_data is not None
-        #    and self.tree_cover_density_threshold is not None
-        #):
-        #    density_mask = (
-        #        self.tree_cover_density_data.array[0, :, :] == 1
-        #    )
-        #    mask &= density_mask
-
         return mask
 
     def create_encoded_rgb(self):

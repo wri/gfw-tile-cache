@@ -37,7 +37,7 @@ async def tree_cover_loss_core(
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
 
     if tcd is not None:
-        bands = [f"year__tcd{tcd}_2000", "intensity__tcd{tcd}_2000"]
+        bands = [f"year__tcd{tcd}_2000", f"intensity__tcd{tcd}_2000"]
     else: # tcd is None
         bands = ["default", "intensity"]
 
@@ -51,21 +51,6 @@ async def tree_cover_loss_core(
         tree_cover_density_threshold=tcd,
         zoom=zoom,
     )
-
-    #filter_datasets = GLOBALS.tree_cover_loss_filters
-    #filter_dataset = filter_datasets["tree_cover_density"]
-
-    #if tcd is not None:
-    #    with COGReader(
-    #        f"s3://gfw-data-lake/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/tcd_75.tif"
-    #    ) as reader:
-    #        if reader.tile_exists(tile_x, tile_y, zoom):
-    #            tree_cover_loss.tree_cover_density_data = reader.tile(
-    #                tile_x, tile_y, zoom
-    #            )
-    #        else:
-    #            logger.warning(f"TCD tile does not exist at {tile_x}, {tile_y}, {zoom}")
-    #            tree_cover_loss.tree_cover_density_data = None
 
     processed_image = tree_cover_loss(image_data)
     content, media_type = render_image(

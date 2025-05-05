@@ -18,9 +18,16 @@ class RenderType(str, Enum):
 
 
 class TreeCoverDensityThreshold(str, Enum):
+
+    tcd_30 = 30
+    tcd_50 = 50
+    tcd_75 = 75
+
+
+class TCLTreeCoverDensityThreshold(str, Enum):
     tcd_10 = 10
     tcd_15 = 15
-    tcd_20 = 20    
+    tcd_20 = 20
     tcd_25 = 25
     tcd_30 = 30
     tcd_50 = 50

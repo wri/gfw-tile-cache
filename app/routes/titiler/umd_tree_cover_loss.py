@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Response
 
 from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
-from ...models.enumerators.titiler import RenderType, TreeCoverDensityThreshold
+from ...models.enumerators.titiler import RenderType, TCLTreeCoverDensityThreshold
 from .. import raster_xyz
 from .algorithms.tree_cover_loss import TreeCoverLoss
 from .tree_cover_loss_core import tree_cover_loss_core
@@ -46,12 +46,12 @@ async def umd_tree_cover_loss_raster_tile(
     render_type: RenderType = Query(
         RenderType.encoded, description="Render true color or encoded tiles"
     ),
-    tree_cover_density_threshold: Optional[TreeCoverDensityThreshold] = Query(
-        TreeCoverDensityThreshold.tcd_30,
+    tree_cover_density_threshold: Optional[TCLTreeCoverDensityThreshold] = Query(
+        None,
         description="Show tree cover loss in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking."
     ),
-    tcd: Optional[TreeCoverDensityThreshold] = Query(
-        TreeCoverDensityThreshold.tcd_30,
+    tcd: Optional[TCLTreeCoverDensityThreshold] = Query(
+        None,
         description="Same as `tree_cover_density_threshold`",
         include_in_schema=False,
     ),
