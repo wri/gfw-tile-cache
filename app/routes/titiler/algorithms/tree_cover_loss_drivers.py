@@ -42,7 +42,12 @@ class TreeCoverLossDrivers(BaseAlgorithm):
     def __call__(self, img: ImageData) -> ImageData:
 
         self.driver = img.data[0]
-        self.intensity = self.tree_cover_loss_intensity_data.data[0]
+
+        if self.tree_cover_loss_intensity_data is not None:
+            self.intensity = self.tree_cover_loss_intensity_data.data[0]
+        else:
+            # if intensity is defined for area, just set everything to 255 to ignore opacity
+            self.intensity = np.ones_like(self.driver) * 255
 
         # self.mask should be True for pixels where we have valid data which is not
         # filtered out.
@@ -87,7 +92,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
         else:
             scaled_intensity = self.intensity.astype("uint8")
 
-        alpha = (scaled_intensity if self.zoom < 13 else self.intensity) * self.mask
+        alpha = scaled_intensity * self.mask
         return np.clip(alpha, 0, 255).astype("uint8")
     
     @staticmethod
@@ -99,7 +104,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
         Adapted from: https://github.com/wri/gfw/blob/develop/providers/datasets-provider/config.js#L28
         """
         
-        # Exponent for the power scaling function (only when below raw data resolution of zoom 12)
+        # Exponent for the power scaling function (only when below raw data resolution of zoom 11)
         exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
         
         # Min/max of input intensity values
@@ -109,7 +114,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
         scale_range = (0, 255)
 
         # Scaling factor that ensures the scaled intensity value is below the max value
-        scaling_factor = scale_range[1] / domain[1] ** exp
+        scaling_factor = scale_range[1] / (domain[1] ** exp)
 
         # Scaling offset based on min of input intensity value
         b = scale_range[0]
