@@ -21,7 +21,7 @@ dataset = "gfw_forest_carbon_gross_emissions"
 
 
 class GfwForestCarbonGrossEmissions(str, Enum):
-    latest = "v20240402"
+    latest = "v20250430"
 
 
 _versions = get_versions(dataset, TileCacheType.cog)
@@ -55,9 +55,7 @@ async def global_forest_carbon_gross_emissions_raster_tile(
         f"intensity_tcd_{tree_cover_density_threshold}",
     ]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
-    with AlertsReader(
-        input=folder, default_band=f"emission_tcd_{tree_cover_density_threshold}"
-    ) as reader:
+    with AlertsReader(input=folder, default_band=bands[0]) as reader:
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
         image_data = reader.tile(

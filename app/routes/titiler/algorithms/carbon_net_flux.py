@@ -1,5 +1,4 @@
 from collections import OrderedDict, namedtuple
-from typing import Optional
 
 import numpy as np
 from pydantic import ConfigDict
@@ -86,17 +85,6 @@ class CarbonNetFlux(BaseAlgorithm):
         }
     )
 
-    # Value of None for the *_data fields means the tile didn't exist (tile was all
-    # no_data).
-    tree_cover_density_mask: Optional[int] = None
-    tree_cover_density_data: Optional[ImageData] = None
-
-    tree_cover_gain_from_height_mask: Optional[int] = None
-    tree_cover_gain_from_height_data: Optional[ImageData] = None
-
-    mangrove_stock_2000_mask: Optional[float] = None
-    mangrove_stock_2000_data: Optional[ImageData] = None
-
     # metadata
     input_nbands: int = 2
     output_nbands: int = 4
@@ -108,10 +96,6 @@ class CarbonNetFlux(BaseAlgorithm):
         self.intensity = img.data[1]
         self.no_data = img.array.mask[0]
 
-        # self.mask should be True for pixels where we have valid data which is not
-        # filtered out.
-        self.mask = self.create_mask()
-
         rgb = self.create_true_color_rgb()
         alpha = self.create_true_color_alpha()
 
@@ -119,30 +103,6 @@ class CarbonNetFlux(BaseAlgorithm):
         data = np.ma.MaskedArray(data, mask=False)
 
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
-
-    def create_mask(self):
-        mask = ~self.no_data
-
-        # Include a pixel if it has minimum canopy density OR tree cover gain OR
-        # mangroves. Since this is ORing and each condition can only possibly be true
-        # with real data (not the no-data value), we just skip a condition if its
-        # tile was non-existent (all no-data).
-        #
-        #  The masking out of areas with pre-2000 tree plantations must already be
-        #  done in the input dataset.
-        or_conditions = np.zeros_like(mask)
-        if self.tree_cover_density_data:
-            or_conditions = np.where(self.tree_cover_density_data.array[0, :, :]
-                                     >= self.tree_cover_density_mask, True, or_conditions)
-        if self.tree_cover_gain_from_height_data:
-            or_conditions = np.where(self.tree_cover_gain_from_height_data.array[0, :, :]
-                                     > self.tree_cover_gain_from_height_mask, True, or_conditions)
-        if self.mangrove_stock_2000_data:
-            or_conditions = np.where(self.mangrove_stock_2000_data.array[0, :, :]
-                                     > self.mangrove_stock_2000_mask, True, or_conditions)
-        mask *= or_conditions
-
-        return mask
 
     def create_true_color_rgb(self):
         r, g, b = self._rgb_zeros_array()
@@ -162,9 +122,8 @@ class CarbonNetFlux(BaseAlgorithm):
         Returns:
             np.ndarray: Array representing the alpha (transparency) channel, where pixel
             visibility is adjusted by intensity.
-
         """
-        alpha = np.where(self.mask, self.intensity, 0)
+        alpha = np.where(~self.no_data, self.intensity, 0)
         return np.minimum(255, alpha)
 
     def _rgb_zeros_array(self):
