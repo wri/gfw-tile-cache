@@ -9,7 +9,7 @@ from titiler.core.algorithm import BaseAlgorithm
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
-from ...models.enumerators.titiler import RenderType, TreeCoverDensityThreshold
+from ...models.enumerators.titiler import RenderType, TCLTreeCoverDensityThreshold
 from .readers import AlertsReader
 
 DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
@@ -24,7 +24,7 @@ async def tree_cover_loss_core(
     start_year: Optional[int],
     end_year: Optional[int],
     render_type: RenderType,
-    tcd: Optional[TreeCoverDensityThreshold] = Query(
+    tcd: Optional[TCLTreeCoverDensityThreshold] = Query(
         None,
         description="Show tree cover loss in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking."
     ),
