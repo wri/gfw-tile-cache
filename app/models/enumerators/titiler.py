@@ -32,3 +32,4 @@ class TCLTreeCoverDensityThreshold(str, Enum):
     tcd_30 = 30
     tcd_50 = 50
     tcd_75 = 75
+    tcd_90 = 90
