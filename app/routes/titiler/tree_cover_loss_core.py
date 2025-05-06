@@ -16,7 +16,6 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 
 async def tree_cover_loss_core(
-    *,
     dataset: str,
     version: str,
     algorithm: Type[BaseAlgorithm],

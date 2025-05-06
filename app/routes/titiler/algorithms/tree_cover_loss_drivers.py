@@ -83,7 +83,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
         b = np.zeros_like(self.driver, dtype=np.uint8)
 
         return r, g, b
-    
+
     def create_true_color_alpha(self):
         # Scale intensity if zoom level < 11, otherwise use original intensity
         if self.zoom < 11:
@@ -94,7 +94,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
 
         alpha = scaled_intensity * self.mask
         return np.clip(alpha, 0, 255).astype("uint8")
-    
+
     @staticmethod
     def scale_intensity(zoom):
         """
@@ -103,10 +103,10 @@ class TreeCoverLossDrivers(BaseAlgorithm):
 
         Adapted from: https://github.com/wri/gfw/blob/develop/providers/datasets-provider/config.js#L28
         """
-        
+
         # Exponent for the power scaling function (only when below raw data resolution of zoom 11)
         exp = 0.3 + ((zoom - 3) / 20) if zoom < 11 else 1
-        
+
         # Min/max of input intensity values
         domain = (0, 255)
 
