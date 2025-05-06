@@ -23,13 +23,16 @@ carbon_flux_filters = {
     "mangrove_stock_2000": {"dataset": "jpl_mangrove_aboveground_biomass_stock_2000", "version": "v201902"},
     # This is assumed to be already masked out of the input dataset, so we don't
     # use this entry.  Just including it for documentation.
-    "pre_2000_plantations": {"dataset": "gfw_pre_2000_plantations", "version": "v20200724"}
+    # "pre_2000_plantations": {"dataset": "gfw_pre_2000_plantations", "version": "v20200724"}
 }
 
 tree_cover_loss_drivers_filters = {
-    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+    "tree_cover_loss": {"dataset": "umd_tree_cover_loss", "version": "v1.12"},
 }
 
+tree_cover_loss_filters = {
+    "tree_cover_density": {"dataset": "umd_tree_cover_density_2000", "version": "v1.8"},
+}
 
 class Globals(BaseSettings):
     env: str = Field("dev", description="Environment name.")
@@ -100,6 +103,11 @@ class Globals(BaseSettings):
     tree_cover_loss_drivers_filters: Dict = Field(
         tree_cover_loss_drivers_filters,
         description="Datasets that are used as filters for tree cover loss drivers"
+    )
+
+    tree_cover_loss_filters: Dict = Field(
+        tree_cover_loss_filters,
+        description= "Tree cover density thresholding for TCL"
     )
 
     @field_validator("token", mode="before")

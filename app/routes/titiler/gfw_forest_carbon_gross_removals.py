@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Tuple
+from typing import Tuple, Optional
 
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, Depends, Query, Response
@@ -10,23 +10,23 @@ from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import TreeCoverDensityThreshold
 from .. import raster_xyz
-from .algorithms.carbon_net_flux import CarbonNetFlux
+from .algorithms.carbon_gross_removals import CarbonGrossRemovals
 from .readers import AlertsReader
 
 DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 router = APIRouter()
 
-dataset = "gfw_forest_carbon_net_flux"
+dataset = "gfw_forest_carbon_gross_removals"
 
 
-class GfwForestCarbonNetFlux(str, Enum):
-    latest = "v20250430"
+class GfwForestCarbonGrossRemovals(str, Enum):
+    latest = "v20250416"
 
 
 _versions = get_versions(dataset, TileCacheType.cog)
 for _version in _versions:
-    extend_enum(GfwForestCarbonNetFlux, _version, _version)
+    extend_enum(GfwForestCarbonGrossRemovals, _version, _version)
 
 
 @router.get(
@@ -35,16 +35,16 @@ for _version in _versions:
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
-async def global_forest_carbon_net_flux_raster_tile(
+async def global_forest_carbon_gross_removals_raster_tile(
     *,
-    version: GfwForestCarbonNetFlux,
+    version: GfwForestCarbonGrossRemovals,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     tree_cover_density_threshold: Optional[TreeCoverDensityThreshold] = Query(
         TreeCoverDensityThreshold.tcd_30,
-        description="Show carbon net flux pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking.",
-    ),
+        description="Show gross removals in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking.",
+    )
 ) -> Response:
-    """Forest Carbon Net Flux raster tiles."""
+    """Forest Carbon Gross Removals raster tiles."""
 
     tile_x, tile_y, zoom = xyz
     bands = [
@@ -59,7 +59,7 @@ async def global_forest_carbon_net_flux_raster_tile(
             tile_x, tile_y, zoom, bands=bands
         )
 
-    processed_image = CarbonNetFlux()(image_data)
+    processed_image = CarbonGrossRemovals()(image_data)
 
     content, media_type = render_image(
         processed_image,
