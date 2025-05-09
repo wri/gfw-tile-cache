@@ -95,7 +95,7 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
         else:
             scaled_intensity = self.intensity.astype("uint8")
 
-        alpha = (scaled_intensity if self.zoom < 13 else self.intensity) * self.mask
+        alpha = (scaled_intensity if self.zoom < 11 else self.intensity) * self.mask
         return np.clip(alpha, 0, 255).astype("uint8")
 
     @staticmethod
