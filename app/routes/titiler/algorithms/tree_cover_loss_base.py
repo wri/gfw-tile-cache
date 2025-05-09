@@ -67,19 +67,19 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
 
     def create_encoded_rgb(self):
         # Red = intensity
-        r = np.clip(self.intensity, 0, 255).astype("uint8")
+        r = self.intensity
 
         # Green = 0
         g = np.zeros_like(r, dtype="uint8")
 
         # Blue = year of loss (1–24)
-        b = np.where(self.mask, self.tree_cover_loss_data, 0).astype("uint8")
+        b = self.tree_cover_loss_data
 
         return np.stack([r, g, b], axis=0)
 
     def create_encoded_alpha(self):
         # Alpha = 255 where intensity > 0 and mask is True
-        alpha = np.where((self.intensity > 0) & self.mask, 255, 0).astype("uint8")
+        alpha = np.where((self.intensity > 0), 255, 0).astype("uint8")
 
         return alpha
 
