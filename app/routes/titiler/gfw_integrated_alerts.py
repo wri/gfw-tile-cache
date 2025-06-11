@@ -36,6 +36,11 @@ for _version in _versions:
 
 
 @router.get(
+    f"/{dataset}/{{version}}/default/{{z}}/{{x}}/{{y}}.png",
+    response_class=Response,
+    response_description="PNG Raster Tile",
+)
+@router.get(
     f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
