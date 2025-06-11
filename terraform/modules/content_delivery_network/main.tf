@@ -483,7 +483,7 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
-# pass requests for DIST alerts test datasets to tile cache app
+# pass requests for titiler endpoints
   ordered_cache_behavior {
     allowed_methods        = local.methods
     cached_methods         = local.methods
