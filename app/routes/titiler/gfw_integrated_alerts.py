@@ -1,13 +1,10 @@
 import os
 from typing import Optional, Tuple
 
-from aenum import Enum, extend_enum
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, Path
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
-from ...crud.sync_db.tile_cache_assets import get_versions
-from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 from .. import DATE_REGEX, raster_xyz
 from .algorithms.integrated_alerts import IntegratedAlerts
@@ -18,23 +15,15 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 router = APIRouter()
 
 dataset = "gfw_integrated_alerts"
+# We don't set a fixed set of versions that can be used, since we want to be able
+# to serve any new integrated_alerts versiond created since this server started.
 
 
-class GfwIntegratdAlertsVersions(str, Enum):
-    """GFW Integrated Alerts versions.
-
-    When using `latest` call will be redirected (307) to version tagged
-    as latest.
-    """
-
-    latest = "latest"
-
-
-_versions = get_versions(dataset, TileCacheType.cog)
-for _version in _versions:
-    extend_enum(GfwIntegratdAlertsVersions, _version, _version)
-
-
+@router.get(
+    f"/{dataset}/{{version}}/default/{{z}}/{{x}}/{{y}}.png",
+    response_class=Response,
+    response_description="PNG Raster Tile",
+)
 @router.get(
     f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
@@ -43,7 +32,7 @@ for _version in _versions:
 )
 async def gfw_integrated_alerts_raster_tile(
     *,
-    version: GfwIntegratdAlertsVersions,
+    version: str = Path(..., description="Version name of dataset. Either 'latest' or version string beginning with 'v'"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,

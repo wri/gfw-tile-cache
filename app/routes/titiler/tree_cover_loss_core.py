@@ -39,7 +39,7 @@ async def tree_cover_loss_core(
         bands = ["default", "intensity"]
 
     with AlertsReader(input=folder) as reader:
-        image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
+        image_data = reader.tile(tile_x, tile_y, zoom, bands=bands, tilesize=512)
 
     tree_cover_loss = algorithm(
         start_year=start_year,
