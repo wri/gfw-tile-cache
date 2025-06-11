@@ -64,7 +64,7 @@ class TreeCoverLossDrivers(BaseAlgorithm):
     def create_mask(self):
         # it seems to not be creating the mask correctly for non-zero NoData, so just
         # directly applying the NoData
-        mask = ~((self.driver == 0) & (self.driver == 255))
+        mask = ~((self.driver == 0) | (self.driver == 255))
         return mask
 
     def create_true_color_rgb(self):
