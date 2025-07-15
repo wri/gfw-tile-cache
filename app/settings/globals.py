@@ -12,7 +12,7 @@ from ..models.pydantic.database import DatabaseURL
 # NOTE: For non-local deployment, need to update dataset/version here until the terraform
 # JSON decode issue preventing setting this env variable is resolved.
 dist_alerts_forest_filters = {
-    "tree_cover_loss": {"dataset": "umd_tree_cover_loss", "version": "latest"},
+    "tree_cover_loss": {"dataset": "umd_tree_cover_loss", "version": "1.12"},
     "tree_cover_height": {"dataset": "umd_tree_cover_height_2020", "version": "v2022"},
     "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"},
 }
