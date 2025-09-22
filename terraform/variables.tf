@@ -82,7 +82,7 @@ variable "auto_scaling_max_cpu_util" {
 variable "lambda_edge_runtime" {
   description = "Runtime name and version (example: python3.10) for Lambda Edge"
   type        = string
-  default     = "python3.9"
+  default     = "python3.10"
 }
 
 variable "lambda_runtime" {

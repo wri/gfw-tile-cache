@@ -54,7 +54,7 @@ async def tree_cover_loss_drivers_raster_tile(
     with AlertsReader(input=folder, default_band="default") as reader:
         # NOTE: the bands in the output `image_data` array will be in the order of
         # the input `bands` list
-        image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
+        image_data = reader.tile(tile_x, tile_y, zoom, bands=bands, tilesize=512)
 
     tree_cover_loss_drivers = TreeCoverLossDrivers(
         tree_cover_density_mask=tree_cover_density_threshold, zoom=zoom
@@ -67,7 +67,7 @@ async def tree_cover_loss_drivers_raster_tile(
             f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/intensity__tcd{tree_cover_density_threshold}_2000.tif"
     ) as reader:
         if reader.tile_exists(tile_x, tile_y, zoom):
-            tree_cover_loss_drivers.tree_cover_loss_intensity_data = reader.tile(tile_x, tile_y, zoom)
+            tree_cover_loss_drivers.tree_cover_loss_intensity_data = reader.tile(tile_x, tile_y, zoom, tilesize=512)
         else:
             print("Non-existent tile, tree_cover_density")
             tree_cover_loss_drivers.tree_cover_loss_intensity_data = None
