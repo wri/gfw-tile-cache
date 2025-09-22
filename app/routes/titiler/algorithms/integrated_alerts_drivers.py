@@ -2,7 +2,6 @@ from collections import OrderedDict, namedtuple
 from typing import Optional
 
 import numpy as np
-from fastapi.logger import logger
 from pydantic import ConfigDict
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
@@ -10,7 +9,6 @@ from titiler.core.algorithm import BaseAlgorithm
 from app.models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 
 Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
-AlertConfig: namedtuple = namedtuple("AlertConfig", ["confidence", "colors"])
 
 
 class IntegratedAlertsDrivers(BaseAlgorithm):

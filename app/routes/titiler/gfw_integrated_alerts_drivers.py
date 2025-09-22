@@ -12,7 +12,6 @@ from ...crud.sync_db.tile_cache_assets import get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 from .. import DATE_REGEX, raster_xyz
-from .algorithms.integrated_alerts import IntegratedAlerts
 from .readers import AlertsReader
 from rio_tiler.io import COGReader
 
@@ -85,7 +84,7 @@ async def gfw_integrated_alerts_drivers_raster_tile(
         if reader.tile_exists(tile_x, tile_y, zoom):
             integrated_alerts_drivers.alert_drivers = reader.tile(tile_x, tile_y, zoom).data[0]
         else:
-            print("Non-existent tile, tree_cover_density")
+            print("Non-existent tile, wur_integration_alert_drivers_class")
             integrated_alerts_drivers.alert_drivers = None
 
     processed_image = integrated_alerts_drivers(image_data)
