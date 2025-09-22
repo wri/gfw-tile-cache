@@ -29,7 +29,7 @@ class GfwIntegratdAlertsVersions(str, Enum):
     as latest.
     """
 
-    latest = "latest"
+    latest = "v20250925"
 
 
 _versions = get_versions(dataset, TileCacheType.cog)
@@ -66,7 +66,7 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     """GFW Integrated Alerts raster tiles."""
 
     bands = ["default", "intensity"]
-    folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/gfw_integrated_alerts/v20250921/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         tile_x, tile_y, zoom = xyz
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
