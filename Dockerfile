@@ -14,6 +14,7 @@ ARG VENV_DIR
 
 RUN apt-get -qy update && \
     apt-get install -qy --no-install-recommends --no-install-suggests \
+      ca-certificates \
       curl \
       gcc \
       jq \
@@ -61,6 +62,7 @@ ENV DEV_PKGS="curl git postgresql-client lsb-release apt-transport-https ca-cert
 
 RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
         echo "Install terraform and dev dependencies" && \
+        apt-get -qy update && \
         apt-get install -qy --no-install-recommends ${DEV_PKGS} && \
         curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
         echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
