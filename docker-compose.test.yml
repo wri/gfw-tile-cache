@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   app:
     build:
@@ -41,8 +39,8 @@ services:
       - localstack
 
   test_database:
-    container_name: gfw-tile-cache-test-database
-    image: postgis/postgis:12-2.5-alpine
+    container_name: gfw-tile-cache-test-database-14
+    image: postgis/postgis:14-3.4-alpine
     ports:
       - "54322:5432"
     environment:
