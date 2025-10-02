@@ -8,7 +8,7 @@ from titiler.core.utils import render_image
 
 from app.routes.titiler.algorithms.integrated_alerts_drivers import IntegratedAlertsDrivers
 
-from ...crud.sync_db.tile_cache_assets import get_versions
+from ...crud.sync_db.tile_cache_assets import get_latest_versions, get_versions
 from ...models.enumerators.tile_caches import TileCacheType
 from ...models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 from .. import DATE_REGEX, raster_xyz
@@ -65,8 +65,19 @@ async def gfw_integrated_alerts_drivers_raster_tile(
 ) -> Response:
     """GFW Integrated Alerts raster tiles."""
 
+    # this should be cached, get latest version of integrated alerts
+    integrated_alerts_version = None
+
+    latest_versions = get_latest_versions()
+    for latest_version in latest_versions:
+        if latest_version["dataset"] == "gfw_integrated_alerts":
+            integrated_alerts_version = latest_version["version"]
+
+    if integrated_alerts_version is None:
+        raise RuntimeError("No latest version set for gfw_integrated_alerts.")
+     
     bands = ["default", "intensity"]
-    folder: str = f"s3://{DATA_LAKE_BUCKET}/gfw_integrated_alerts/v20250215/raster/epsg-4326/cog"
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/gfw_integrated_alerts/{integrated_alerts_version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         tile_x, tile_y, zoom = xyz
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
@@ -79,7 +90,7 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     )
 
     with COGReader(
-        f"s3://{DATA_LAKE_BUCKET}/wur_integration_alert_drivers_class/v20250925/raster/epsg-4326/cog/class.tif"
+        f"s3://{DATA_LAKE_BUCKET}/wur_integration_alert_drivers_class/{version}/raster/epsg-4326/cog/class.tif"
     ) as reader:
         if reader.tile_exists(tile_x, tile_y, zoom):
             integrated_alerts_drivers.alert_drivers = reader.tile(tile_x, tile_y, zoom).data[0]
