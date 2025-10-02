@@ -26,23 +26,6 @@ RUN apt-get -qy update && \
       libffi-dev \
       make
 
-RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
-        echo "Install terraform and dev dependencies" && \
-        apt-get install -qy --no-install-recommends ${DEV_PKGS} && \
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
-        apt-get update && \
-        apt-get install -y --no-install-recommends terraform=0.13.3 && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists && \
-        rm -rf /var/cache/apt; \
-    else \
-        echo "Skipping terraform and dev dependencies"; \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists && \
-        rm -rf /var/cache/apt; \
-       fi
-
 # Set uv env variables for behavior and venv directory
 ENV PATH=${USR_LOCAL_BIN}:${PATH} \
     UV_LINK_MODE=copy \
@@ -71,10 +54,28 @@ RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
 # Start the runtime stage
 FROM --platform=linux/amd64 ubuntu:noble
 
+ARG ENV
 ARG USR_LOCAL_BIN
 ARG VENV_DIR
 
 SHELL ["sh", "-exc"]
+
+RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
+        echo "Install terraform and dev dependencies" && \
+        apt-get install -qy --no-install-recommends ${DEV_PKGS} && \
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
+        apt-get update && \
+        apt-get install -y --no-install-recommends terraform=0.13.3 && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists && \
+        rm -rf /var/cache/apt; \
+    else \
+        echo "Skipping terraform and dev dependencies"; \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists && \
+        rm -rf /var/cache/apt; \
+       fi
 
 ENV PATH=${VENV_DIR}/bin:${USR_LOCAL_BIN}:${PATH}
 ENV TZ=UTC
