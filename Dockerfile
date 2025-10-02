@@ -12,9 +12,6 @@ ARG USR_LOCAL_BIN
 ARG UV_VERSION
 ARG VENV_DIR
 
-
-ENV DEV_PKGS="git postgresql-client lsb-release apt-transport-https ca-certificates gnupg"
-
 RUN apt-get -qy update && \
     apt-get install -qy --no-install-recommends --no-install-suggests \
       curl \
@@ -59,6 +56,8 @@ ARG USR_LOCAL_BIN
 ARG VENV_DIR
 
 SHELL ["sh", "-exc"]
+
+ENV DEV_PKGS="git postgresql-client lsb-release apt-transport-https ca-certificates gnupg"
 
 RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
         echo "Install terraform and dev dependencies" && \
