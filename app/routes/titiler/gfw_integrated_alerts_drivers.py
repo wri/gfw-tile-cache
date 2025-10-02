@@ -72,6 +72,7 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     for latest_version in latest_versions:
         if latest_version["dataset"] == "gfw_integrated_alerts":
             integrated_alerts_version = latest_version["version"]
+            break
 
     if integrated_alerts_version is None:
         raise RuntimeError("No latest version set for gfw_integrated_alerts.")
