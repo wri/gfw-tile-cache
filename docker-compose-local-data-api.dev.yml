@@ -1,5 +1,3 @@
-version: "3.5"
-
 services:
   app:
     build:
@@ -12,9 +10,9 @@ services:
       - $HOME/.aws:/root/.aws:ro
       - ./app:/app/app
     networks:
-      - gfw-data-api
+      - default
     environment:
-      - DB_HOST_RO=database_12
+      - DB_HOST_RO=database_14
       - DATABASE_RO=geostore
       - DB_USER_RO=gfw_readonly
       - DB_PASSWORD_RO=readonly  # pragma: allowlist secret
@@ -26,8 +24,9 @@ services:
       - PLANET_API_KEY
     ports:
       - 8088:80
-    entrypoint: wait_for_postgres.sh /start-reload.sh
+    entrypoint: wait_for_postgres.sh /app/start.sh
 
 networks:
-  gfw-data-api:
+  default:
+    external: true
     name: gfw-data-api_dev_default
