@@ -76,7 +76,7 @@ RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
         apt-get clean && \
         rm -rf /var/lib/apt/lists && \
         rm -rf /var/cache/apt; \
-       fi
+    fi
 
 ENV PATH=${VENV_DIR}/bin:${USR_LOCAL_BIN}:${PATH}
 ENV TZ=UTC
