@@ -57,7 +57,7 @@ ARG VENV_DIR
 
 SHELL ["sh", "-exc"]
 
-ENV DEV_PKGS="git postgresql-client lsb-release apt-transport-https ca-certificates gnupg"
+ENV DEV_PKGS="curl git postgresql-client lsb-release apt-transport-https ca-certificates gnupg"
 
 RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
         echo "Install terraform and dev dependencies" && \
