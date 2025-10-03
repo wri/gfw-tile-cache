@@ -70,7 +70,7 @@ async def tree_cover_loss_drivers_raster_tile(
             tree_cover_loss_drivers.tree_cover_loss_intensity_data = reader.tile(tile_x, tile_y, zoom, tilesize=512)
         else:
             print("Non-existent tile, tree_cover_density")
-            tree_cover_loss_drivers.tree_cover_intensity_data = None
+            tree_cover_loss_drivers.tree_cover_loss_intensity_data = None
 
     processed_image = tree_cover_loss_drivers(image_data)
 
