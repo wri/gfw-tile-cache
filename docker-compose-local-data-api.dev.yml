@@ -12,7 +12,7 @@ services:
     networks:
       - default
     environment:
-      - DB_HOST_RO=database_14
+      - DB_HOST_RO=gfw-data-api-database_14
       - DATABASE_RO=geostore
       - DB_USER_RO=gfw_readonly
       - DB_PASSWORD_RO=readonly  # pragma: allowlist secret
