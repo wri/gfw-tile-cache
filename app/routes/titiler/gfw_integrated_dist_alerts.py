@@ -14,22 +14,19 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 router = APIRouter()
 
-# Integrated disturbance alerts are generated within the gfw_integrated_alerts Data
-# API dataset, but we have a distinct route name to access them in titiler.
-route_name = "gfw_integrated_dist_alerts"
-dataset = "gfw_integrated_alerts"
+dataset = "gfw_integrated_dist_alerts"
 
 # We don't set a fixed set of versions that can be used, since we want to be able
-# to serve any new integrated_alerts version created since this server started.
+# to serve any new integrated_dist_alerts version created since this server started.
 
 
 @router.get(
-    f"/{route_name}/{{version}}/default/{{z}}/{{x}}/{{y}}.png",
+    f"/{dataset}/{{version}}/default/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     response_description="PNG Raster Tile",
 )
 @router.get(
-    f"/{route_name}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
+    f"/{dataset}/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
@@ -56,7 +53,7 @@ async def gfw_integrated_alerts_raster_tile(
 ) -> Response:
     """GFW Integrated Disturbance Alerts raster tiles."""
 
-    bands = ["intdist", "intdistintensity"]
+    bands = ["default", "intensity"]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder, default_band=bands[0]) as reader:
         tile_x, tile_y, zoom = xyz
