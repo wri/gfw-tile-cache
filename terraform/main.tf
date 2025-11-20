@@ -20,14 +20,14 @@ locals {
 
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.4"
+  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.9"
   image_name = lower("${local.project}${local.name_suffix}")
   root_dir   = "../${path.root}"
   tag        = local.container_tag
 }
 
 module "orchestration" {
-  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.2.4"
+  source                       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/fargate_autoscaling?ref=v0.4.2.9"
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
@@ -105,4 +105,20 @@ module "lambda_raster_tiler" {
 resource "aws_iam_policy" "read_new_relic_secret" {
   name = substr("${local.project}-read_new-relic_secret${local.name_suffix}", 0, 64)
   policy = data.aws_iam_policy_document.read_new_relic_lic.json
+}
+
+module "ssm" {
+  source      = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/ssm?ref=v0.4.2.9"
+  environment = var.environment
+  namespace   = "gfw-tile-cache"
+  contract = {
+    tile_cache_bucket        = module.storage.tiles_bucket_name
+    tile_cache_cloudfront_id = module.content_delivery_network.cloudfront_distribution_id
+    tile_cache_url           = local.tile_cache_url
+    tile_cache_cluster       = module.orchestration.ecs_cluster_name
+    tile_cache_service       = module.orchestration.ecs_service_name
+  }
+  lists = {}
+  strings = {}
+  secure_strings = {}
 }
