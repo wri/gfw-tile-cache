@@ -33,7 +33,7 @@ to access the database. If so, you can interrupt `scripts/develop` after it has 
 the docker and gotten hung accessing the database. You can then start the docker by
 hand via:
 
-```docker run -it -p 127.0.0.1:8088:80 --entrypoint /bin/bash gfw-tile-cache_app:latest```
+```docker run -it -p 127.0.0.1:8088:80 --entrypoint /bin/bash gfw-tile-cache-app:latest```
 
 In that case, you will need to copy your `.ssh/id_rsa` and `.aws/credentials` files
 into the docker and set all the needed environmental variables in the shell. You then
