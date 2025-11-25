@@ -1,6 +1,7 @@
 from collections import OrderedDict, namedtuple
 from typing import Optional
 
+from pydantic import ConfigDict
 import numpy as np
 from fastapi.logger import logger
 from rio_tiler.models import ImageData
@@ -18,6 +19,7 @@ class Alerts(BaseAlgorithm):
     title: str = "Deforestation Alerts"
     description: str = "Decode and visualize alerts"
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     conf_colors: OrderedDict = OrderedDict(
         {
             IntegratedAlertConfidence.low: AlertConfig(
@@ -38,6 +40,17 @@ class Alerts(BaseAlgorithm):
     end_date: Optional[str] = None
     alert_confidence: Optional[str] = None
     render_type: RenderType = RenderType.true_color
+
+    tree_cover_density_mask: Optional[int] = None
+    tree_cover_density_data: Optional[ImageData] = None
+
+    tree_cover_height_mask: Optional[int] = None
+    tree_cover_height_data: Optional[ImageData] = None
+
+    # the highest loss year that is used to exclude alerts for
+    # the purpose of showing only alerts in forests
+    tree_cover_loss_mask: Optional[int] = None
+    tree_cover_loss_data: Optional[ImageData] = None
 
     # metadata
     input_nbands: int = 2
@@ -106,6 +119,28 @@ class Alerts(BaseAlgorithm):
                 np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
             )
             mask *= end_mask
+
+        if self.tree_cover_density_mask:
+            mask *= (
+                self.tree_cover_density_data.array[0, :, :]
+                >= self.tree_cover_density_mask
+            )
+
+        if self.tree_cover_height_mask:
+            mask *= (
+                self.tree_cover_height_data.array[0, :, :]
+                >= self.tree_cover_height_mask
+            )
+
+        if self.tree_cover_loss_mask:
+            # Tree cover loss data before 2020 can't be used to filter out pixels as not forest.
+            # Instead, we use tree cover height taken that year as source of truth.
+            # For example, if a pixel had tree cover loss in 2018, but has tree cover
+            # height (2020) that meets the forest threshold, the pixel meets
+            # the forest criteria for alerts and is not masked out.
+            mask *= (
+                self.tree_cover_loss_data.array[0, :, :] > self.tree_cover_loss_mask
+            ) | (self.tree_cover_loss_data.array[0, :, :] <= 2020)
 
         return mask
 

@@ -20,10 +20,11 @@ locals {
 
 # Docker file for FastAPI app
 module "container_registry" {
-  source     = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.9"
-  image_name = lower("${local.project}${local.name_suffix}")
-  root_dir   = "../${path.root}"
-  tag        = local.container_tag
+  source       = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/container_registry?ref=v0.4.2.9"
+  image_name   = lower("${local.project}${local.name_suffix}")
+  root_dir     = "../${path.root}"
+  tag          = local.container_tag
+  force_delete = var.force_delete_ecr_repos
 }
 
 module "orchestration" {
