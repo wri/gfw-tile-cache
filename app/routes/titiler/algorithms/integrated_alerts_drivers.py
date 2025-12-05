@@ -28,8 +28,8 @@ class IntegratedAlertsDrivers(BaseAlgorithm):
             6: Colors(0, 176, 240),     # Selective logging & skidding 
             7: Colors(188, 157, 217),   # Mining 
             8: Colors(70, 153, 144),    # Flooding
-            9: Colors(58, 31, 154),     # Other natural disturbance 
-            10: Colors(137, 81, 40),    # Wildfire 
+            9: Colors(137, 81, 40),     # Wildfire 
+            10: Colors(58, 31, 154),    # Other natural disturbance
             11: Colors(237, 164, 195),  # Unconfident / unlabeled 
         }
     )

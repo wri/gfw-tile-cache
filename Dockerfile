@@ -22,7 +22,8 @@ RUN apt-get -qy update && \
       libgeos-dev \
       libpq-dev \
       libffi-dev \
-      make
+      make \
+      openssh-client
 
 # Set uv env variables for behavior and venv directory
 ENV PATH=${USR_LOCAL_BIN}:${PATH} \

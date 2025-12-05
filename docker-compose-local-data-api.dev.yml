@@ -28,5 +28,5 @@ services:
 
 networks:
   default:
-    external: true
     name: gfw-data-api_dev_default
+    external: true
