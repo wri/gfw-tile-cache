@@ -1,40 +1,115 @@
-FROM --platform=linux/amd64 tiangolo/uvicorn-gunicorn-fastapi:python3.10-slim
-
-# Optional build argument for different environments
+# Note that this ENV is the name of an argument/variable, not the Dockerfile ENV command
 ARG ENV
+ARG PYTHON_VERSION="3.11"
+ARG USR_LOCAL_BIN=/usr/local/bin
+ARG UV_VERSION="0.9.11"
+ARG VENV_DIR=/app/.venv
 
-RUN apt-get -y update && apt-get -y --no-install-recommends install \
-        make gcc libc-dev libgeos-dev musl-dev libpq-dev libffi-dev jq openssh-client
+FROM --platform=linux/amd64 ubuntu:noble AS build
 
-RUN pip install --upgrade pip && pip install pipenv==v2022.11.30
-RUN pip install newrelic
+ARG ENV
+ARG PYTHON_VERSION
+ARG USR_LOCAL_BIN
+ARG UV_VERSION
+ARG VENV_DIR
 
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
+RUN apt-get -qy update && \
+    apt-get install -qy --no-install-recommends --no-install-suggests \
+      ca-certificates \
+      curl \
+      gcc \
+      jq \
+      libc-dev \
+      libgeos-dev \
+      libpq-dev \
+      libffi-dev \
+      make \
+      openssh-client
+
+# Set uv env variables for behavior and venv directory
+ENV PATH=${USR_LOCAL_BIN}:${PATH} \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PROJECT_ENVIRONMENT=${VENV_DIR} \
+    UV_UNMANAGED_INSTALL=${USR_LOCAL_BIN}
+
+# Create a virtual environment with uv inside the container
+RUN curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | sh && \
+    uv venv ${VENV_DIR} --python ${PYTHON_VERSION} --seed
+
+# Copy pyproject.toml and uv.lock to a temporary directory and install
+# dependencies into the venv
+COPY pyproject.toml /_lock/
+COPY uv.lock /_lock/
+RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
+        echo "Install all dependencies" && \
+        cd /_lock && \
+        uv sync --locked --no-install-project --dev; \
+    else \
+        echo "Install production dependencies only" && \
+        cd /_lock && \
+        uv sync --locked --no-install-project --no-dev; \
+    fi
+
+# Start the runtime stage
+FROM --platform=linux/amd64 ubuntu:noble
+
+ARG ENV
+ARG USR_LOCAL_BIN
+ARG VENV_DIR
+
+SHELL ["sh", "-exc"]
+
+ENV DEV_PKGS="curl git postgresql-client lsb-release apt-transport-https ca-certificates gnupg"
 
 RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
-	     echo "Install all dependencies" && \
-	     apt-get install -y --no-install-recommends git postgresql-client lsb-release && \
-	     pipenv install --system --deploy --ignore-pipfile --dev && \
-         apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl gnupg && \
-         curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-		 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
-         apt-get update && apt-get install -y --no-install-recommends terraform=0.13.3; \
-	else \
-	     echo "Install production dependencies only" && \
-	     pipenv install --system --deploy; \
-	fi
+        echo "Install terraform and dev dependencies" && \
+        apt-get -qy update && \
+        apt-get install -qy --no-install-recommends ${DEV_PKGS} && \
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
+        apt-get update && \
+        apt-get install -y --no-install-recommends terraform=0.13.3 && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists && \
+        rm -rf /var/cache/apt; \
+    else \
+        echo "Skipping terraform and dev dependencies"; \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists && \
+        rm -rf /var/cache/apt; \
+    fi
 
-RUN apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+ENV PATH=${VENV_DIR}/bin:${USR_LOCAL_BIN}:${PATH}
+ENV TZ=UTC
+ENV VENV_DIR=${VENV_DIR}
 
-COPY ./app /app/app
-COPY wait_for_postgres.sh /usr/local/bin/wait_for_postgres.sh
-COPY app/settings/start.sh /app/start.sh
+RUN echo $TZ > /etc/timezone
+
+RUN apt-get update -qy && \
+    apt-get install -qyy \
+        -o APT::Install-Recommends=false \
+        -o APT::Install-Suggests=false \
+        expat \
+        jq \
+        postgresql-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists && \
+    rm -rf /var/cache/apt
+
+COPY --chmod=777 wait_for_postgres.sh /usr/local/bin/wait_for_postgres.sh
+
+# Copy the pre-built `/app` directory from the build stage
+COPY --from=build --chmod=777 /app /app
+COPY --from=build --chmod=777 /root /root
+
 COPY newrelic.ini /app/newrelic.ini
 
-RUN chmod +x /usr/local/bin/wait_for_postgres.sh
+COPY --chmod=777 app/settings/gunicorn_conf.py /app/gunicorn_conf.py
+COPY --chmod=777 app/settings/start.sh /app/start.sh
 
-RUN chmod +x /app/start.sh
+COPY ./app /app/app
+
+WORKDIR /app
 
 ENTRYPOINT [ "/app/start.sh" ]
