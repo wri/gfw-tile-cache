@@ -1,6 +1,13 @@
 import multiprocessing
 import os
 
+# This file was taken from
+# https://github.com/tiangolo/uvicorn-gunicorn-docker/blob/master/docker-images/gunicorn_conf.py
+# when transitioning from tiangolo/uvicorn-gunicorn-docker to the plain ubuntu Docker base image
+# No values have been customized, feel free to change as needed. That being said, I suspect we
+# will migrate away from gunicorn (to using just uvicorn) in the near future, so this file will
+# likely go away anyway. -Daniel
+
 workers_per_core_str = os.getenv("WORKERS_PER_CORE", "1")
 max_workers_str = os.getenv("MAX_WORKERS")
 use_max_workers = None
