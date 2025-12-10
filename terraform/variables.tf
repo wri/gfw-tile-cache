@@ -101,9 +101,3 @@ variable "data_lake_bucket_name" {
   description = "Data Lake S3 bucket name"
   default = ""
 }
-
-variable "force_delete_ecr_repos" {
-  type = bool
-  description = "Whether or not to delete non-empty ECR repos"
-  default = false
-}

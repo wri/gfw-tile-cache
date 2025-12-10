@@ -7,4 +7,3 @@ auto_scaling_max_capacity = 5
 fargate_cpu               = 4096
 fargate_memory            = 8192
 data_lake_bucket_name     = "gfw-data-lake-staging"
-force_delete_ecr_repos    = true

@@ -2,6 +2,7 @@
 # Lambda Function
 ######################
 
+
 data "archive_file" "default" {
   type        = "zip"
   source_dir  = var.source_dir
@@ -65,6 +66,7 @@ data "aws_iam_policy_document" "default" {
   }
 }
 
+
 resource "aws_iam_role" "default" {
   name               = "${var.project}_role"
   assume_role_policy = data.aws_iam_policy_document.default.json
@@ -79,6 +81,7 @@ resource "aws_iam_role_policy_attachment" "read_s3" {
   role       = aws_iam_role.default.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
+
 
 data "template_file" "iam_lambda_invoke" {
   template = file("${path.module}/templates/lambda_invoke_policy.json.tmpl")

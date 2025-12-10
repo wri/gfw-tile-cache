@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   app:
     build:
@@ -5,8 +7,6 @@ services:
       args:
         - ENV=test
     container_name: tile-cache_test
-    networks:
-      - gfw-tile-cache_test_default
     volumes:
       - ./app:/app/app:ro
       - ./lambdas:/app/lambdas:ro
@@ -41,10 +41,8 @@ services:
       - localstack
 
   test_database:
-    container_name: gfw-tile-cache-test-database-14
-    image: postgis/postgis:14-3.4-alpine
-    networks:
-      - gfw-tile-cache_test_default
+    container_name: gfw-tile-cache-test-database
+    image: postgis/postgis:12-2.5-alpine
     ports:
       - "54322:5432"
     environment:
@@ -59,8 +57,6 @@ services:
   localstack:
     container_name: localstack
     image: localstack/localstack-pro:2.2.0  # required for Pro
-    networks:
-      - gfw-tile-cache_test_default
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -83,10 +79,6 @@ services:
       - "${TMPDIR:-./localstack}:/tmp/localstack"
       - '/var/run/docker.sock:/var/run/docker.sock'
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
-
-networks:
-  gfw-tile-cache_test_default:
-    name: gfw-tile-cache_test_default
 
 volumes:
   test_database_data:
