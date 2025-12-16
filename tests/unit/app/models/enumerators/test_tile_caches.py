@@ -1,7 +1,7 @@
 from app.models.enumerators.tile_caches import TileCacheType
 
 
-def test_TileCacheType():
+def test_TileCacheType_f_string_equals_enum_value():
     class_under_test = TileCacheType
 
     # Get an arbitrary (the first) element

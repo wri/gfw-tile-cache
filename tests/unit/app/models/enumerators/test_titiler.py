@@ -3,7 +3,7 @@ from app.models.enumerators.titiler import (
 )
 
 
-def test_AlertConfidence():
+def test_AlertConfidence_f_string_equals_enum_value():
     class_under_test = AlertConfidence
 
     # Get an arbitrary (the first) element
@@ -11,7 +11,7 @@ def test_AlertConfidence():
     assert f"{val}" == getattr(class_under_test, val.name).value
 
 
-def test_IntegratedAlertConfidence():
+def test_IntegratedAlertConfidence_f_string_equals_enum_value():
     class_under_test = IntegratedAlertConfidence
 
     # Get an arbitrary (the first) element
@@ -19,7 +19,7 @@ def test_IntegratedAlertConfidence():
     assert f"{val}" == getattr(class_under_test, val.name).value
 
 
-def test_RenderType():
+def test_RenderType_f_string_equals_enum_value():
     class_under_test = RenderType
 
     # Get an arbitrary (the first) element
@@ -27,7 +27,7 @@ def test_RenderType():
     assert f"{val}" == getattr(class_under_test, val.name).value
 
 
-def test_TCLTreeCoverDensityThreshold():
+def test_TCLTreeCoverDensityThreshold_f_string_equals_enum_value():
     class_under_test = TCLTreeCoverDensityThreshold
 
     # Get an arbitrary (the first) element
@@ -35,7 +35,7 @@ def test_TCLTreeCoverDensityThreshold():
     assert f"{val}" == getattr(class_under_test, val.name).value
 
 
-def test_TreeCoverDensityThreshold():
+def test_TreeCoverDensityThreshold_f_string_equals_enum_value():
     class_under_test = TreeCoverDensityThreshold
 
     # Get an arbitrary (the first) element
