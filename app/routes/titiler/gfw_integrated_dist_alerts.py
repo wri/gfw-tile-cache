@@ -70,10 +70,10 @@ async def gfw_integrated_alerts_raster_tile(
 ) -> Response:
     """GFW Integrated Disturbance Alerts raster tiles."""
 
+    tile_x, tile_y, zoom = xyz
     bands = ["default", "intensity"]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder, default_band=bands[0]) as reader:
-        tile_x, tile_y, zoom = xyz
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
 
     int_dist_alert = IntegratedAlerts(
