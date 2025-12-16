@@ -1,11 +1,18 @@
-from aenum import Enum
+# After upgrading to Python 3.11, this can become just
+# from enum import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 
 
-class Attributes(str, Enum):
+class Attributes(StrEnum):
     __doc__ = "Attribute name"
 
 
-class TcdEnum(str, Enum):
+class TcdEnum(StrEnum):
     tcd_10 = "10"
     tcd_15 = "15"
     tcd_20 = "20"
@@ -15,7 +22,7 @@ class TcdEnum(str, Enum):
     tcd_75 = "75"
 
 
-class TcdStyleEnum(str, Enum):
+class TcdStyleEnum(StrEnum):
     tcd_10 = "tcd_10"
     tcd_15 = "tcd_15"
     tcd_20 = "tcd_20"
