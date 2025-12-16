@@ -101,25 +101,30 @@ class Alerts(BaseAlgorithm):
 
         mask = ~self.no_data
 
-        if self.alert_confidence:
-            confidence_mask = (
-                self.data_alert_confidence
-                >= self.conf_colors[self.alert_confidence].confidence
-            )
-            mask *= confidence_mask
+        if self.render_type == RenderType.true_color:
+            # Only apply alert_confidence, start_date, and end_date filters to the
+            # mask if we are doing render_type of "true_color". For render_type of
+            # "encoded", we want all dates and confidences.
+            if self.alert_confidence:
+                confidence_mask = (
+                    self.data_alert_confidence
+                    >= self.conf_colors[self.alert_confidence].confidence
+                )
+                mask *= confidence_mask
 
-        if self.start_date:
-            start_mask = self.alert_date >= (
-                np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
-            )
-            mask *= start_mask
+            if self.start_date:
+                start_mask = self.alert_date >= (
+                    np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
+                )
+                mask *= start_mask
 
-        if self.end_date:
-            end_mask = self.alert_date <= (
-                np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
-            )
-            mask *= end_mask
+            if self.end_date:
+                end_mask = self.alert_date <= (
+                    np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
+                )
+                mask *= end_mask
 
+        # We apply the tree cover filters for both "true_color" and "encoded".
         if self.tree_cover_density_mask:
             mask *= (
                 self.tree_cover_density_data.array[0, :, :]
