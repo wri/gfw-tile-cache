@@ -91,12 +91,14 @@ class Alerts(BaseAlgorithm):
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
 
     def create_mask(self):
-        """Generate a mask for pixel visibility based on date and confidence
-        filters, and no data values.
+        """Generate a mask for pixel visibility based no data valules, date and
+        confidence filters, and (only when render type is true_color) any tree-cover
+        filters that are specified.
 
         Returns:
-            np.ndarray: A mask array pixels with no alert or alerts not meeting filter
-            condition are masked.
+            np.ndarray: A mask array (where False means mask the pixel). Pixels
+            with no alerts or alerts not meeting filter condition are masked.
+
         """
 
         mask = ~self.no_data
