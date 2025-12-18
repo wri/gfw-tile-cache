@@ -1,23 +1,15 @@
-# import core state
-data "terraform_remote_state" "core" {
-  backend = "s3"
-  config = {
-    bucket = local.tf_state_bucket
-    region = "us-east-1"
-    key    = "core.tfstate"
-  }
+data "aws_ssm_parameter" "core_contract" {
+  name = "/infra/${var.environment}/gfw-aws-core-infra/contract"
 }
 
-
-data "terraform_remote_state" "lambda_layers" {
-  backend = "s3"
-  config = {
-    bucket = local.tf_state_bucket
-    region = "us-east-1"
-    key    = "lambda-layers.tfstate"
-  }
+data "aws_ssm_parameter" "lambda_layers_contract" {
+  name = "/infra/${var.environment}/gfw-lambda-layers/contract"
 }
 
+locals {
+  core          = jsondecode(data.aws_ssm_parameter.core_contract.value)
+  lambda_layers = jsondecode(data.aws_ssm_parameter.lambda_layers_contract.value)
+}
 
 data "template_file" "container_definition" {
   template = file("${path.root}/templates/container_definition.json.tmpl")
@@ -29,15 +21,15 @@ data "template_file" "container_definition" {
 
     log_group = aws_cloudwatch_log_group.default.name
 
-    reader_secret_arn        = data.terraform_remote_state.core.outputs.secrets_postgresql-reader_arn
-    token_secret_arn         = data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_arn
-    log_level                = var.log_level
-    project                  = local.project
-    environment              = var.environment
-    aws_region               = var.region
-    tile_cache_url           = local.tile_cache_url
-    raster_tiler_lambda_name = module.lambda_raster_tiler.lambda_name
-    tiles_bucket_name        = module.storage.tiles_bucket_name
+    reader_secret_arn         = local.core.postgresql_reader_secret_arn
+    token_secret_arn          = local.core.gfw_data_api_token_arn
+    log_level                 = var.log_level
+    project                   = local.project
+    environment               = var.environment
+    aws_region                = var.region
+    tile_cache_url            = local.tile_cache_url
+    raster_tiler_lambda_name  = module.lambda_raster_tiler.lambda_name
+    tiles_bucket_name         = module.storage.tiles_bucket_name
     new_relic_license_key_arn = data.aws_secretsmanager_secret.newrelic_license.arn
     data_lake_bucket_name     = local.data_lake_bucket_name
   }
