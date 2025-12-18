@@ -1,6 +1,13 @@
-from enum import Enum
+# After upgrading to Python 3.11, this can become just
+# from enum import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 
 
-class GeostoreOrigin(str, Enum):
+class GeostoreOrigin(StrEnum):
     gfw = "gfw"
     rw = "rw"
