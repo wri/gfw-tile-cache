@@ -49,4 +49,11 @@ class IntegratedAlerts(Alerts):
         alpha[self.data_alert_confidence == self.conf_colors["high"].confidence] = 8
         alpha[self.data_alert_confidence == self.conf_colors["highest"].confidence] = 24
 
+        # When we are doing encoded gfw_integrated_dist_alerts, we still need to
+        # apply a tree cover filter, if provided. When render_type is encoded,
+        # Alerts.create_mask() will build the mask using only the tree cover
+        # parameters, and then we use that mask here. Integrated alerts doesn't have
+        # tree cover parameters, so self.mask will just ~self.no_data.
+        alpha = np.where(self.mask, alpha, 0)
+
         return alpha
