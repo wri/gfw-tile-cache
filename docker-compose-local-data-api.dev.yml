@@ -24,7 +24,7 @@ services:
       - PLANET_API_KEY
     ports:
       - 8088:80
-    entrypoint: wait_for_postgres.sh /start-reload.sh
+    entrypoint: wait_for_postgres.sh /app/start.sh
 
 networks:
   default:
