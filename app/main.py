@@ -167,6 +167,22 @@ async def rve_error_handler(
     )
 
 
+@app.exception_handler(ExceptionGroup)
+async def catch_all_handler_too(request: Request, exc: ExceptionGroup) -> ORJSONResponse:
+    """Use JSEND protocol for validation errors."""
+    # FixMe: While the exception is correctly formatted, this still throws the actual exception.
+    #  this might be related to https://github.com/tiangolo/fastapi/issues/2750
+    #  other ways to catch any uncaught exception did not work
+    #  - creating a custom router resulting in catching any exception, even 422 errors
+    #  - adding an extra piece of middleware to catch exceptions interferes with background tasks.
+    #  While not perfect the current implementation does it job. The user gets a correctly parsed response,
+    #  and there is no need to log the error, since the exception is thrown anyways
+
+    return ORJSONResponse(
+        status_code=500, content={"status": "error", "message": "Internal Server Error - EG"}
+    )
+
+
 @app.exception_handler(Exception)
 async def catch_all_handler(request: Request, exc: Exception) -> ORJSONResponse:
     """Use JSEND protocol for validation errors."""
@@ -178,7 +194,7 @@ async def catch_all_handler(request: Request, exc: Exception) -> ORJSONResponse:
     #  While not perfect the current implementation does it job. The user gets a correctly parsed response,
     #  and there is no need to log the error, since the exception is thrown anyways
     return ORJSONResponse(
-        status_code=500, content={"status": "error", "message": "Internal Server Error"}
+        status_code=500, content={"status": "error", "message": "Internal Server Error - E"}
     )
 
 
