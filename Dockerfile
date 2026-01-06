@@ -1,8 +1,8 @@
 # Note that this ENV is the name of an argument/variable, not the Dockerfile ENV command
 ARG ENV
-ARG PYTHON_VERSION="3.11"
+ARG PYTHON_VERSION="3.12"
 ARG USR_LOCAL_BIN=/usr/local/bin
-ARG UV_VERSION="0.9.11"
+ARG UV_VERSION="0.9.22"
 ARG VENV_DIR=/app/.venv
 
 FROM --platform=linux/amd64 ubuntu:noble AS build
