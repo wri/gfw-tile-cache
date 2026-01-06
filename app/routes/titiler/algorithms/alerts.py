@@ -91,34 +91,63 @@ class Alerts(BaseAlgorithm):
         return ImageData(data, assets=img.assets, crs=img.crs, bounds=img.bounds)
 
     def create_mask(self):
-        """Generate a mask for pixel visibility based on date and confidence
-        filters, and no data values.
+        """Generate a mask for pixel visibility based no data valules, date and
+        confidence filters, and (only when render type is true_color) any tree-cover
+        filters that are specified.
 
         Returns:
-            np.ndarray: A mask array pixels with no alert or alerts not meeting filter
-            condition are masked.
+            np.ndarray: A mask array (where False means mask the pixel). Pixels
+            with no alerts or alerts not meeting filter condition are masked.
+
         """
 
         mask = ~self.no_data
 
-        if self.alert_confidence:
-            confidence_mask = (
-                self.data_alert_confidence
-                >= self.conf_colors[self.alert_confidence].confidence
-            )
-            mask *= confidence_mask
+        if self.render_type == RenderType.true_color:
+            # Only apply alert_confidence, start_date, and end_date filters to the
+            # mask if we are doing render_type of "true_color". For render_type of
+            # "encoded", we want all dates and confidences.
+            if self.alert_confidence:
+                confidence_mask = (
+                    self.data_alert_confidence
+                    >= self.conf_colors[self.alert_confidence].confidence
+                )
+                mask *= confidence_mask
 
-        if self.start_date:
-            start_mask = self.alert_date >= (
-                np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
-            )
-            mask *= start_mask
+            if self.start_date:
+                start_mask = self.alert_date >= (
+                    np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
+                )
+                mask *= start_mask
 
-        if self.end_date:
-            end_mask = self.alert_date <= (
-                np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
+            if self.end_date:
+                end_mask = self.alert_date <= (
+                    np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
+                )
+                mask *= end_mask
+
+        # We apply the tree cover filters for both "true_color" and "encoded".
+        if self.tree_cover_density_mask:
+            mask *= (
+                self.tree_cover_density_data.array[0, :, :]
+                >= self.tree_cover_density_mask
             )
-            mask *= end_mask
+
+        if self.tree_cover_height_mask:
+            mask *= (
+                self.tree_cover_height_data.array[0, :, :]
+                >= self.tree_cover_height_mask
+            )
+
+        if self.tree_cover_loss_mask:
+            # Tree cover loss data before 2020 can't be used to filter out pixels as not forest.
+            # Instead, we use tree cover height taken that year as source of truth.
+            # For example, if a pixel had tree cover loss in 2018, but has tree cover
+            # height (2020) that meets the forest threshold, the pixel meets
+            # the forest criteria for alerts and is not masked out.
+            mask *= (
+                self.tree_cover_loss_data.array[0, :, :] > self.tree_cover_loss_mask
+            ) | (self.tree_cover_loss_data.array[0, :, :] <= 2020)
 
         if self.tree_cover_density_mask:
             mask *= (
