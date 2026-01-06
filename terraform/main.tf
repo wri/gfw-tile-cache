@@ -50,7 +50,6 @@ module "orchestration" {
   ]
   task_execution_role_policies = [
     local.core.postgresql_reader_secret_policy_arn,
-    local.core.planet_secret_policy_arn,
     local.core.gfw_data_api_token_read_policy_arn,
     aws_iam_policy.read_new_relic_secret.arn
   ]

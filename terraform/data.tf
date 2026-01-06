@@ -22,7 +22,6 @@ data "template_file" "container_definition" {
     log_group = aws_cloudwatch_log_group.default.name
 
     reader_secret_arn         = local.core.postgresql_reader_secret_arn
-    planet_secret_arn         = local.core.planet_secret_arn
     token_secret_arn          = local.core.gfw_data_api_token_arn
     log_level                 = var.log_level
     project                   = local.project
