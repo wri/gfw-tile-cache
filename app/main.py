@@ -36,7 +36,6 @@ from .routes.umd_glad_sentinel2_alerts import (
     raster_tiles as umd_glad_sentinel2_alerts_raster_tiles,
 )
 from .routes.wur_radd_alerts import raster_tiles as wur_radd_alerts_raster_tiles
-from .routes.planet import raster_tiles as planet_raster_tiles
 from .routes import wmts
 from .routes import preview
 
@@ -85,7 +84,6 @@ ROUTERS = (
     umd_glad_landsat_alerts_raster_tiles.router,
     umd_glad_sentinel2_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,
-    planet_raster_tiles.router,
     raster_tiles.router,
     wmts.router,
     viirs_esri_vector_tile_server.router,
