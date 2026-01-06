@@ -423,7 +423,6 @@ resource "aws_cloudfront_distribution" "tiles" {
       }
     }
   }
-}
 
   # send all generic Titiler requests to tile cache app
   ordered_cache_behavior {
