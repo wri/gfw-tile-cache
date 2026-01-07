@@ -2,7 +2,6 @@ from collections import OrderedDict, namedtuple
 from typing import Optional
 
 import numpy as np
-from fastapi import HTTPException, status
 from pydantic import ConfigDict
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
