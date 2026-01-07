@@ -2,6 +2,7 @@ from collections import OrderedDict, namedtuple
 from typing import Optional
 
 import numpy as np
+from fastapi import HTTPException, status
 from pydantic import ConfigDict
 from rio_tiler.models import ImageData
 from titiler.core.algorithm import BaseAlgorithm
@@ -97,12 +98,7 @@ class IntegratedAlertsDrivers(BaseAlgorithm):
             condition are masked.
         """
 
-        # Deal with case where the alert_drivers data is missing
-        if self.alert_drivers is not None:
-            # Adding mutiplication by no_data for clarity, but not sure necessary
-            mask = ~self.no_data * (self.alert_drivers > 0)
-        else:
-            mask = ~self.no_data
+        mask = ~self.no_data * (self.alert_drivers > 0)
 
         if self.alert_confidence:
             confidence_mask = (
