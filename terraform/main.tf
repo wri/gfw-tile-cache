@@ -106,11 +106,12 @@ resource "aws_iam_policy" "read_new_relic_secret" {
 }
 
 module "ssm" {
-  source      = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/ssm?ref=v0.4.2.9"
+  source      = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/ssm?ref=v0.4.2.12"
   environment = var.environment
   namespace   = "gfw-tile-cache"
   contract = {
     tile_cache_bucket        = module.storage.tiles_bucket_name
+    tile_cache_bucket_arn    = module.storage.tiles_bucket_arn
     tile_cache_cloudfront_id = module.content_delivery_network.cloudfront_distribution_id
     tile_cache_url           = local.tile_cache_url
     tile_cache_cluster       = module.orchestration.ecs_cluster_name

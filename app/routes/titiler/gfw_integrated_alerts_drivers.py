@@ -2,7 +2,8 @@ import os
 from typing import Optional, Tuple
 
 from aenum import Enum, extend_enum
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, HTTPException
+from rio_tiler.errors import TileOutsideBounds
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
@@ -81,7 +82,10 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     folder: str = f"s3://{DATA_LAKE_BUCKET}/gfw_integrated_alerts/{integrated_alerts_version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         tile_x, tile_y, zoom = xyz
-        image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
+        try:
+            image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
+        except TileOutsideBounds:
+            raise HTTPException(status_code=404, detail="Tile outside of bounds of this dataset")
 
     integrated_alerts_drivers = IntegratedAlertsDrivers(
         start_date=start_date,
@@ -93,11 +97,10 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     with COGReader(
         f"s3://{DATA_LAKE_BUCKET}/wur_integration_alert_drivers_class/{version}/raster/epsg-4326/cog/class.tif"
     ) as reader:
-        if reader.tile_exists(tile_x, tile_y, zoom):
+        try:
             integrated_alerts_drivers.alert_drivers = reader.tile(tile_x, tile_y, zoom).data[0]
-        else:
-            print("Non-existent tile, wur_integration_alert_drivers_class")
-            integrated_alerts_drivers.alert_drivers = None
+        except TileOutsideBounds:
+            raise HTTPException(status_code=404, detail="Tile outside of bounds of this dataset")
 
     processed_image = integrated_alerts_drivers(image_data)
 
