@@ -15,7 +15,7 @@ Raster and vector tile API for datasets in the [GFW Data API](https://github.com
 
 {bastion_host} might be something like: `ec2-18-215-196-0.compute-1.amazonaws.com`
 
-* Set the environment variables for the **read only** credentials of the above database. The environment variables are `GFW_DB_NAME`,  `GFW_DB_USER_RO`, `GFW_DB_PASSWORD_RO`, and `PLANET_API_KEY`. These are also listed in the `docker-compose.dev.yml` file. You get the values of secrets from the secrets manager of the appropriate AWS environment (production, staging, etc.)
+* Set the environment variables for the **read only** credentials of the above database. The environment variables are `GFW_DB_NAME`,  `GFW_DB_USER_RO`, and `GFW_DB_PASSWORD_RO`. These are also listed in the `docker-compose.dev.yml` file. You get the values of secrets from the secrets manager of the appropriate AWS environment (production, staging, etc.)
 
 * In `docker-compose.dev.yml`, set `DATA_LAKE_BUCKET`  to the desired environment's bucket name. By default, the `staging` environment bucket (`gfw-data-lake-staging`)  will be used.
 

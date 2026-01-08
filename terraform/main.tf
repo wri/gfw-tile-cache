@@ -6,16 +6,14 @@ terraform {
   }
 }
 
-
 locals {
   name_suffix     = terraform.workspace == "default" ? "" : "-${terraform.workspace}"
   bucket_suffix   = var.environment == "production" ? "" : "-${var.environment}"
-  tf_state_bucket = "gfw-terraform${local.bucket_suffix}"
-  tags            = data.terraform_remote_state.core.outputs.tags
+  tags            = local.core.tags
   project         = "gfw-tile-cache"
   container_tag   = substr(var.git_sha, 0, 7)
   tile_cache_url  = "https://${var.tile_cache_url}"
-  data_lake_bucket_name = var.data_lake_bucket_name == "" ? data.terraform_remote_state.core.outputs.data-lake_bucket : var.data_lake_bucket_name
+  data_lake_bucket_name = var.data_lake_bucket_name == "" ? local.core.data_lake_bucket_name : var.data_lake_bucket_name
 }
 
 # Docker file for FastAPI app
@@ -32,9 +30,9 @@ module "orchestration" {
   project                      = local.project
   name_suffix                  = local.name_suffix
   tags                         = local.tags
-  vpc_id                       = data.terraform_remote_state.core.outputs.vpc_id
-  private_subnet_ids           = data.terraform_remote_state.core.outputs.private_subnet_ids
-  public_subnet_ids            = data.terraform_remote_state.core.outputs.public_subnet_ids
+  vpc_id                       = local.core.vpc_id
+  private_subnet_ids           = local.core.private_subnet_ids
+  public_subnet_ids            = local.core.public_subnet_ids
   container_name               = var.container_name
   container_port               = var.container_port
   desired_count                = var.desired_count
@@ -44,16 +42,15 @@ module "orchestration" {
   auto_scaling_max_capacity    = var.auto_scaling_max_capacity
   auto_scaling_max_cpu_util    = var.auto_scaling_max_cpu_util
   auto_scaling_min_capacity    = var.auto_scaling_min_capacity
-  security_group_ids           = [data.terraform_remote_state.core.outputs.postgresql_security_group_id]
+  security_group_ids           = [local.core.postgresql_security_group_id]
   task_role_policies           = [
     module.lambda_raster_tiler.lambda_invoke_policy_arn,
     module.storage.s3_write_tiles_arn,
     "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
   ]
   task_execution_role_policies = [
-    data.terraform_remote_state.core.outputs.secrets_postgresql-reader_policy_arn,
-    data.terraform_remote_state.core.outputs.secrets_planet_api_key_policy_arn,
-    data.terraform_remote_state.core.outputs.secrets_read-gfw-api-token_policy_arn,
+    local.core.postgresql_reader_secret_policy_arn,
+    local.core.gfw_data_api_token_read_policy_arn,
     aws_iam_policy.read_new_relic_secret.arn
   ]
   container_definition         = data.template_file.container_definition.rendered
@@ -62,7 +59,7 @@ module "orchestration" {
 module "content_delivery_network" {
   source              = "./modules/content_delivery_network"
   bucket_domain_name  = module.storage.tiles_bucket_domain_name
-  certificate_arn     = data.terraform_remote_state.core.outputs.acm_certificate
+  certificate_arn     = local.core.acm_certificate_arn
   environment         = var.environment
   name_suffix         = local.name_suffix
   project             = local.project
@@ -89,18 +86,18 @@ module "lambda_raster_tiler" {
   source      = "./modules/lambda_raster_tiler"
   environment = var.environment
   lambda_layers = [
-    data.terraform_remote_state.lambda_layers.outputs.py310_numpy_1264_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py310_pillow_950_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py310_rasterio_no_numpy_arn,
-    data.terraform_remote_state.lambda_layers.outputs.py310_mercantile_121_arn
+    local.lambda_layers.py310_numpy_arn,
+    local.lambda_layers.py310_pillow_950_arn,
+    local.lambda_layers.py310_rasterio_no_numpy_arn,
+    local.lambda_layers.py310_mercantile_121_arn
   ]
-  lambda_runtime = var.lambda_runtime
-  log_level  = var.log_level
-  project    = local.project
-  source_dir = "${path.root}/../lambdas/raster_tiler"
-  tags       = local.tags
+  lambda_runtime        = var.lambda_runtime
+  log_level             = var.log_level
+  project               = local.project
+  source_dir            = "${path.root}/../lambdas/raster_tiler"
+  tags                  = local.tags
   data_lake_bucket_name = local.data_lake_bucket_name
-  tile_cache_url = local.tile_cache_url
+  tile_cache_url        = local.tile_cache_url
 }
 
 resource "aws_iam_policy" "read_new_relic_secret" {
@@ -109,11 +106,12 @@ resource "aws_iam_policy" "read_new_relic_secret" {
 }
 
 module "ssm" {
-  source      = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/ssm?ref=v0.4.2.9"
+  source      = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/ssm?ref=v0.4.2.12"
   environment = var.environment
   namespace   = "gfw-tile-cache"
   contract = {
     tile_cache_bucket        = module.storage.tiles_bucket_name
+    tile_cache_bucket_arn    = module.storage.tiles_bucket_arn
     tile_cache_cloudfront_id = module.content_delivery_network.cloudfront_distribution_id
     tile_cache_url           = local.tile_cache_url
     tile_cache_cluster       = module.orchestration.ecs_cluster_name

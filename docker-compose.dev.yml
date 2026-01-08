@@ -24,7 +24,6 @@ services:
       - LOG_LEVEL=debug
       - RASTER_TILER_LAMBDA_NAME=test
       - ENV=dev
-      - PLANET_API_KEY=${PLANET_API_KEY}
       - AWS_REQUEST_PAYER=requester
       - 'DIST_ALERTS_FOREST_FILTERS={"tree_cover_loss": {"dataset": "umd_tree_cover_loss", "version": "v1.10.1"}, "tree_cover_height": {"dataset": "umd_tree_cover_height_2020", "version": "v2022"}, "tree_cover_density": {"dataset": "umd_tree_cover_density_2010", "version": "v1.6"}}'
     ports:
