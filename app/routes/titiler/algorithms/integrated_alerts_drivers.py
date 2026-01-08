@@ -97,7 +97,7 @@ class IntegratedAlertsDrivers(BaseAlgorithm):
             condition are masked.
         """
 
-        mask = self.alert_drivers > 0
+        mask = ~self.no_data * (self.alert_drivers > 0)
 
         if self.alert_confidence:
             confidence_mask = (
