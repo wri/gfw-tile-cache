@@ -24,7 +24,6 @@ variable "container_port" {
   default     = 80
   type        = number
   description = "Port tile cache app will listen on."
-
 }
 
 variable "desired_count" {
