@@ -16,6 +16,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_production }}
         AWS_REGION: ${{ secrets.aws_region_production }}
       run: ./scripts/infra plan
+
     - name: Plan staging
       if: github.base_ref == 'staging'
       env:
@@ -24,6 +25,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_staging }}
         AWS_REGION: ${{ secrets.aws_region_staging }}
       run: ./scripts/infra plan
+
     - name: Plan dev
       if: github.base_ref == 'dev'
       env:
