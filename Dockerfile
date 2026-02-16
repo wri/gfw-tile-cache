@@ -2,7 +2,7 @@
 ARG ENV
 ARG PYTHON_VERSION="3.11"
 ARG USR_LOCAL_BIN=/usr/local/bin
-ARG UV_VERSION="0.9.11"
+ARG UV_VERSION="0.10.2"
 ARG VENV_DIR=/app/.venv
 
 FROM --platform=linux/amd64 ubuntu:noble AS build
@@ -44,11 +44,11 @@ COPY uv.lock /_lock/
 RUN if [ "$ENV" = "dev" ] || [ "$ENV" = "test" ]; then \
         echo "Install all dependencies" && \
         cd /_lock && \
-        uv sync --locked --no-install-project --dev; \
+        uv sync --locked --no-install-project --all-groups; \
     else \
         echo "Install production dependencies only" && \
         cd /_lock && \
-        uv sync --locked --no-install-project --no-dev; \
+        uv sync --locked --no-install-project --no-group dev; \
     fi
 
 # Start the runtime stage
