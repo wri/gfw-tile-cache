@@ -97,16 +97,18 @@ RUN apt-get update -qy && \
     rm -rf /var/lib/apt/lists && \
     rm -rf /var/cache/apt
 
-COPY --chmod=777 wait_for_postgres.sh /usr/local/bin/wait_for_postgres.sh
+COPY wait_for_postgres.sh /usr/local/bin/wait_for_postgres.sh
+RUN chmod 777 /usr/local/bin/wait_for_postgres.sh
 
 # Copy the pre-built `/app` directory from the build stage
-COPY --from=build --chmod=777 /app /app
-COPY --from=build --chmod=777 /root /root
-
+COPY --from=build /app /app
+COPY app/settings/gunicorn_conf.py /app/gunicorn_conf.py
+COPY app/settings/start.sh /app/start.sh
 COPY newrelic.ini /app/newrelic.ini
+RUN chmod -R 777 /app
 
-COPY --chmod=777 app/settings/gunicorn_conf.py /app/gunicorn_conf.py
-COPY --chmod=777 app/settings/start.sh /app/start.sh
+COPY --from=build /root /root
+RUN chmod -R 777 /root
 
 COPY ./app /app/app
 
