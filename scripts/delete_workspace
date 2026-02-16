@@ -1,7 +1,4 @@
 #!/bin/bash
-
-export COMPOSE_DOCKER_CLI_BUILD="1" DOCKER_BUILDKIT="1"
-
 set -e
 
 docker compose -f terraform/docker/docker-compose.yml build
