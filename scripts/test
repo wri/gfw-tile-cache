@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export COMPOSE_DOCKER_CLI_BUILD="1" DOCKER_BUILDKIT="1"
+
 set -e
 
 PYTHON_RUNTIME="python3.10"
@@ -41,7 +43,7 @@ for filename in $MERCANTILE_FILENAME $NUMPY_FILENAME $PILLOW_FILENAME $RASTERIO_
 done
 
 if [ "${BUILD}" = true ]; then
-  COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
+  docker compose -f docker-compose.test.yml --project-name gfw-tile-cache_test build app
 fi
 
 set +e

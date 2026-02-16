@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export COMPOSE_DOCKER_CLI_BUILD="1" DOCKER_BUILDKIT="1"
+
 set -e
 
 # Default values
@@ -30,7 +32,7 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "${BUILD}" = true ]; then
-  COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans --build
+  docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans --build
 else
   docker compose -f "${COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans
 fi
