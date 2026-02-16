@@ -134,7 +134,7 @@ class Globals(BaseSettings):
         if db_reader_secret:
             secret = json.loads(db_reader_secret)
             v = DatabaseURL(
-                drivername="postgresql+asyncpg",
+                drivername="asyncpg",
                 username=secret["username"],
                 password=secret["password"],
                 host=secret["host"],
@@ -143,7 +143,7 @@ class Globals(BaseSettings):
             )
         else:
             v = DatabaseURL(
-                drivername="postgresql+asyncpg",
+                drivername="asyncpg",
                 username=input.get("reader_username"),
                 password=input.get("reader_password"),
                 host=input.get("reader_host"),
