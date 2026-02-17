@@ -9,17 +9,6 @@ from sqlalchemy.orm import Session, sessionmaker
 from .gino import Gino, GinoEngine
 from .settings.globals import GLOBALS
 
-# Explicitly register the gino asyncpg dialect with SQLAlchemy
-# This ensures it's available before any database connections are attempted
-try:
-    from sqlalchemy.dialects import registry
-    import gino.dialects.asyncpg
-    registry.register("asyncpg", "gino.dialects.asyncpg", "AsyncpgDialect")
-    registry.register("postgresql.asyncpg", "gino.dialects.asyncpg", "AsyncpgDialect")
-except Exception:
-    # If registration fails, the normal import should still work
-    pass
-
 READ_ENGINE: Optional[GinoEngine] = None
 SessionLocal: Optional[Session] = None
 Base = declarative_base()
@@ -31,7 +20,6 @@ if not GLOBALS.database_config:
 
 db = Gino(
     app,
-    driver="asyncpg",
     host=GLOBALS.database_config.host,
     port=GLOBALS.database_config.port,
     user=GLOBALS.database_config.username,
@@ -53,20 +41,8 @@ def get_synchronous_db() -> Iterator[Session]:
         raise RuntimeError("No database url set.")
 
     if SessionLocal is None:
-        # Create a synchronous database URL using psycopg2 instead of asyncpg
-        # asyncpg only works with async engines, not synchronous ones
-        from sqlalchemy.engine.url import URL
-
-        db_config = GLOBALS.database_config
-        sync_url = URL(
-            drivername="postgresql+psycopg2",
-            username=db_config.username,
-            password=str(db_config.password) if db_config.password else None,
-            host=db_config.host,
-            port=db_config.port,
-            database=db_config.database,
-        )
-        engine = create_engine(sync_url, pool_size=5, max_overflow=0)
+        db_conn = GLOBALS.database_config.url
+        engine = create_engine(db_conn, pool_size=5, max_overflow=0)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     synchronous_db: Optional[Session] = None

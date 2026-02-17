@@ -17,9 +17,6 @@ from starlette import status
 from starlette.exceptions import HTTPException
 from starlette.types import Receive, Scope, Send
 
-# Explicitly import the asyncpg dialect to ensure it's registered with SQLAlchemy
-import gino.dialects.asyncpg  # noqa: F401
-
 logger = logging.getLogger("gino.ext.starlette")
 
 
