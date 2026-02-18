@@ -126,6 +126,7 @@ class Alerts(BaseAlgorithm):
                 )
                 mask *= end_mask
 
+        # We apply the tree cover filters for both "true_color" and "encoded".
         if self.tree_cover_density_mask:
             mask *= (
                 self.tree_cover_density_data.array[0, :, :]
