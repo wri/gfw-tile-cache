@@ -1,4 +1,8 @@
+import base64
+from io import BytesIO
+
 import numpy as np
+from PIL import Image
 
 from lambdas.raster_tiler.lambda_function import (
     array_to_img,
@@ -50,7 +54,9 @@ def test_array_to_img():
     data = np.array([[[1, 2, 4, 5]], [[2, 3, 5, 6]], [[3, 4, 5, 6]], [[4, 5, 6, 7]]])
     img = array_to_img(data)
     assert isinstance(img, str)
-    assert (
-        img
-        == "iVBORw0KGgoAAAANSUhEUgAAAAQAAAABCAYAAAD5PA/NAAAAHElEQVR4AQERAO7/AAEAAAAAAAAAAgAAAAAAAAAAMQAEwqwNZAAAAABJRU5ErkJggg=="
-    )
+
+    # Decode back and verify pixel data instead of the raw bytes
+    decoded = Image.open(BytesIO(base64.b64decode(img)))
+    result = np.array(decoded)
+    expected = np.moveaxis(data, 0, -1)  # convert from (bands, h, w) to (h, w, bands)
+    np.testing.assert_array_equal(result, expected)
