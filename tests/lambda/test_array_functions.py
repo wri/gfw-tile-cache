@@ -51,7 +51,7 @@ def test_combine_bands():
 
 
 def test_array_to_img():
-    data = np.array([[[1, 2, 4, 5]], [[2, 3, 5, 6]], [[3, 4, 5, 6]], [[4, 5, 6, 7]]])
+    data = np.array([[[1, 2, 4, 5]], [[2, 3, 5, 6]], [[3, 4, 5, 6]], [[4, 5, 6, 7]]], dtype=np.uint8)
     img = array_to_img(data)
     assert isinstance(img, str)
 
