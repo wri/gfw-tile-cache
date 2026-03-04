@@ -87,7 +87,7 @@ variable "lambda_edge_runtime" {
 variable "lambda_runtime" {
   description = "Runtime name and version (example: python3.10)"
   type        = string
-  default     = "python3.10"
+  default     = "python3.11"
 }
 
 variable "newrelic_license_key_secret" {

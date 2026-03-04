@@ -21,7 +21,7 @@ dependencies = [
     "jinja2",
     "mercantile",
     "newrelic",
-    "numpy",
+    "numpy==2.2.6",
     "orjson",
     "pendulum",
     "psycopg2",
