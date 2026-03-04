@@ -57,29 +57,22 @@ services:
 
   localstack:
     container_name: localstack
-    image: localstack/localstack-pro:2.2.0  # required for Pro
+    image: localstack/localstack-pro:4.14  # required for Pro
     networks:
       - gfw-tile-cache_test_default
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
-      - "127.0.0.1:53:53"                # DNS config (required for Pro)
-      - "127.0.0.1:53:53/udp"            # DNS config (required for Pro)
-      - "127.0.0.1:443:443"              # LocalStack HTTPS Gateway (required for Pro)
-      - '8055:8080'
-      - '${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}'
+      - "127.0.0.1:4566:4566"
+      - "127.0.0.1:4510-4559:4510-4559"
     environment:
-      - SERVICES=iam,lambda,sts,cloudwatch,events,s3,logs
       - DEBUG=1
       - DISABLE_EVENTS=1
       - LAMBDA_DOCKER_NETWORK=gfw-tile-cache_test_default
+      - LAMBDA_RUNTIME_EXECUTOR=docker
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
       - LAMBDA_KEEPALIVE_MS=0
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - HOSTNAME_EXTERNAL=localstack
       - HOSTNAME=localstack
     volumes:
-      - "${TMPDIR:-./localstack}:/tmp/localstack"
       - '/var/run/docker.sock:/var/run/docker.sock'
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
