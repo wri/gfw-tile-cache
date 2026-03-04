@@ -117,13 +117,13 @@ class Alerts(BaseAlgorithm):
             if self.start_date:
                 start_mask = self.alert_date >= (
                     np.datetime64(self.start_date) - np.datetime64(self.record_start_date)
-                )
+                ).astype("timedelta64[D]").astype(int)
                 mask *= start_mask
 
             if self.end_date:
                 end_mask = self.alert_date <= (
                     np.datetime64(self.end_date) - np.datetime64(self.record_start_date)
-                )
+                ).astype("timedelta64[D]").astype(int)
                 mask *= end_mask
 
         # We apply the tree cover filters for both "true_color" and "encoded".
