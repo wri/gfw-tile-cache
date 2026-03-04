@@ -38,6 +38,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "boto3",
+    "localstack-utils",
     "pillow>=11.3.0",
     "pre-commit",
     "pytest",
