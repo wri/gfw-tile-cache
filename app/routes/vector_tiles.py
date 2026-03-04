@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/{dataset}/{version}/default/{z}/{x}/{y}.pbf",
+    "/{dataset}/{version}/{implementation}/{z}/{x}/{y}.pbf",
     response_class=VectorTileResponse,
     tags=["Vector Tiles"],
     response_description="PBF Vector Tile",

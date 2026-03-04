@@ -565,6 +565,31 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+  # Non default static vector tiles are stored on S3
+  # They won't change and can stay in cache for a year
+  # We will set response headers for selected tile caches in S3 if required
+  ordered_cache_behavior {
+    allowed_methods  = local.methods
+    cached_methods   = local.methods
+    target_origin_id = "static"
+    compress         = true
+    path_pattern     = "*.pbf"
+
+    forwarded_values {
+      query_string = false
+      headers      = local.headers
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
+
+  }
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -581,7 +606,8 @@ resource "aws_cloudfront_distribution" "tiles" {
 
   tags = var.tags
 
-}
+} 
+
 
 #########################
 ## IAM
