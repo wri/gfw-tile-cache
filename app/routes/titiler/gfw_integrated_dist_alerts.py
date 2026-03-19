@@ -71,7 +71,15 @@ async def gfw_integrated_alerts_raster_tile(
     """GFW Integrated Disturbance Alerts raster tiles."""
 
     tile_x, tile_y, zoom = xyz
-    bands = ["default", "intensity"]
+
+    # These VRTs for the split int-dist COGs are created in the datapump by commands
+    # like:
+    # 
+    # gdalbuildvrt intdist.vrt /vsis3/gfw-data-lake/gfw_integrated_dist_alerts/v20260228/raster/epsg-4326/cog/nonoverlap.tif /vsis3/gfw-data-lake/gfw_integrated_dist_alerts/v20260228/raster/epsg-4326/cog/overlap.tif
+    #
+    # gdalbuildvrt intdistintensity.vrt /vsis3/gfw-data-lake/gfw_integrated_dist_alerts/v20260228/raster/epsg-4326/cog/nonoverlapintensity.tif /vsis3/gfw-data-lake/gfw_integrated_dist_alerts/v20260228/raster/epsg-4326/cog/overlapintensity.tif
+    bands = ["intdist.vrt", "intdistintensity.vrt"]
+
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder, default_band=bands[0]) as reader:
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands)
