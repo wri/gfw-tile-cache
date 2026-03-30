@@ -62,9 +62,10 @@ async def tree_cover_loss_drivers_raster_tile(
 
     filter_datasets = GLOBALS.tree_cover_loss_drivers_filters
 
+    # use aligned TCL version for masking/intensity
     filter_dataset = filter_datasets["tree_cover_loss"]
     with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/intensity__tcd{tree_cover_density_threshold}_2000.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{version}/raster/epsg-4326/cog/intensity__tcd{tree_cover_density_threshold}_2000.tif"
     ) as reader:
         if reader.tile_exists(tile_x, tile_y, zoom):
             tree_cover_loss_drivers.tree_cover_loss_intensity_data = reader.tile(tile_x, tile_y, zoom, tilesize=512)
