@@ -21,7 +21,7 @@ dataset = "gfw_forest_carbon_net_flux"
 
 
 class GfwForestCarbonNetFlux(str, Enum):
-    latest = "v20250430"
+    latest = "v20260327"
 
 
 _versions = get_versions(dataset, TileCacheType.cog)
