@@ -38,7 +38,7 @@ async def umd_tree_cover_loss_raster_tile(
     version: UmdTreeCoverLossVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_year: Optional[int] = Query(
-        2001, ge=2001, le=2023, description="Only show loss for given year and after"
+        2001, ge=2001, le=2024, description="Only show loss for given year and after"
     ),
     end_year: Optional[int] = Query(
         2025, ge=2002, le=2025, description="Only show loss until given year."
