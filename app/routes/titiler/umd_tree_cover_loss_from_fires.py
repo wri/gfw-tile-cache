@@ -38,10 +38,10 @@ async def umd_tree_cover_loss_raster_tile(
     version: UmdTreeCoverLossFromFiresVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_year: Optional[int] = Query(
-        2001, ge=2001, le=2023, description="Only show loss for given year and after"
+        TreeCoverLossFromFires.DEFAULT_START_YEAR, ge=TreeCoverLossFromFires.DEFAULT_START_YEAR, le=TreeCoverLossFromFires.DEFAULT_END_YEAR, description="Only show loss for given year and after"
     ),
     end_year: Optional[int] = Query(
-        2023, ge=2002, le=2024, description="Only show loss until given year."
+        TreeCoverLossFromFires.DEFAULT_END_YEAR, ge=TreeCoverLossFromFires.DEFAULT_START_YEAR, le=TreeCoverLossFromFires.DEFAULT_END_YEAR, description="Only show loss until given year."
     ),
     render_type: RenderType = Query(
         RenderType.encoded, description="Render true color or encoded tiles"
