@@ -57,7 +57,7 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
     def create_mask(self):
         mask = ~self.no_data
 
-        # TCL goes from 2001 to 2024 by default, only filter if start_year or end_year is specified
+        # only filter if start_year or end_year is specified
         if self.start_year != self.DEFAULT_START_YEAR:
             start_mask = self.tree_cover_loss_data >= (self.start_year - 2000)
             mask &= start_mask
