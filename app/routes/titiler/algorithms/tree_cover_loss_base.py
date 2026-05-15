@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Callable, ClassVar, Optional
 
 import numpy as np
 from pydantic import ConfigDict
@@ -16,8 +16,11 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    start_date: Optional[int] = 2001
-    end_year: Optional[int] = 2024
+    DEFAULT_START_YEAR: ClassVar[int] = 2001
+    DEFAULT_END_YEAR: ClassVar[int] = 2025
+
+    start_year: Optional[int] = DEFAULT_START_YEAR
+    end_year: Optional[int] = DEFAULT_END_YEAR
     render_type: RenderType = RenderType.true_color
     zoom: int = 12
     tree_cover_density_threshold: Optional[int] = None
@@ -55,11 +58,11 @@ class TreeCoverLossBase(BaseAlgorithm, ABC):
         mask = ~self.no_data
 
         # TCL goes from 2001 to 2024 by default, only filter if start_year or end_year is specified
-        if self.start_year != 2001:
+        if self.start_year != self.DEFAULT_START_YEAR:
             start_mask = self.tree_cover_loss_data >= (self.start_year - 2000)
             mask &= start_mask
 
-        if self.end_year != 2024:
+        if self.end_year != self.DEFAULT_END_YEAR:
             end_mask = self.tree_cover_loss_data <= (self.end_year - 2000)
             mask &= end_mask
 
