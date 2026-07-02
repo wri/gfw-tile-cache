@@ -20,11 +20,13 @@ DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
 router = APIRouter()
 
-dataset = "gfw_integrated_alerts"
+drivers_route_name = "gfw_integrated_alerts_drivers"
+drivers_dataset = "wur_integration_alert_drivers_class"
+integrated_alerts_dataset = "gfw_integrated_alerts"
 
 
-class GfwIntegratdAlertsVersions(str, Enum):
-    """GFW Integrated Alerts versions.
+class GfwIntegratedAlertsDriverVersions(str, Enum):
+    """GFW Integrated Alerts Drivers versions.
 
     When using `latest` call will be redirected (307) to version tagged
     as latest.
@@ -33,20 +35,20 @@ class GfwIntegratdAlertsVersions(str, Enum):
     latest = "v20250925"
 
 
-_versions = get_versions(dataset, TileCacheType.cog)
+_versions = get_versions(drivers_dataset, TileCacheType.cog)
 for _version in _versions:
-    extend_enum(GfwIntegratdAlertsVersions, _version, _version)
+    extend_enum(GfwIntegratedAlertsDriverVersions, _version, _version)
 
 
 @router.get(
-    f"/{dataset}_drivers/{{version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
+    f"/{drivers_route_name}/{{drivers_version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
 )
 async def gfw_integrated_alerts_drivers_raster_tile(
     *,
-    version: GfwIntegratdAlertsVersions,
+    drivers_version: GfwIntegratedAlertsDriverVersions,
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
@@ -71,15 +73,15 @@ async def gfw_integrated_alerts_drivers_raster_tile(
 
     latest_versions = get_latest_versions()
     for latest_version in latest_versions:
-        if latest_version["dataset"] == "gfw_integrated_alerts":
+        if latest_version["dataset"] == integrated_alerts_dataset:
             integrated_alerts_version = latest_version["version"]
             break
 
     if integrated_alerts_version is None:
         raise RuntimeError("No latest version set for gfw_integrated_alerts.")
-     
+
     bands = ["default", "intensity"]
-    folder: str = f"s3://{DATA_LAKE_BUCKET}/gfw_integrated_alerts/{integrated_alerts_version}/raster/epsg-4326/cog"
+    folder: str = f"s3://{DATA_LAKE_BUCKET}/{integrated_alerts_dataset}/{integrated_alerts_version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         tile_x, tile_y, zoom = xyz
         try:
@@ -95,7 +97,7 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     )
 
     with COGReader(
-        f"s3://{DATA_LAKE_BUCKET}/wur_integration_alert_drivers_class/{version}/raster/epsg-4326/cog/class.tif"
+        f"s3://{DATA_LAKE_BUCKET}/{drivers_dataset}/{drivers_version}/raster/epsg-4326/cog/class.tif"
     ) as reader:
         try:
             integrated_alerts_drivers.alert_drivers = reader.tile(tile_x, tile_y, zoom).data[0]
