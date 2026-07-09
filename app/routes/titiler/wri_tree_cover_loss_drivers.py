@@ -3,6 +3,7 @@ from typing import Tuple
 
 from aenum import Enum, extend_enum
 from fastapi import APIRouter, Depends, Query, Response
+from app.routes.titiler.umd_tree_cover_loss import UmdTreeCoverLossVersions
 from rio_tiler.io import COGReader
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
@@ -22,7 +23,11 @@ dataset = "wri_google_tree_cover_loss_drivers"
 
 
 class WriTreeCoverLossDrivers(str, Enum):
-    latest = "v20241224"
+    """
+    Version of WRI tree cover loss, which should be aligned with the version of TCL used to 
+    generate it.
+    """
+    latest = "latest"
 
 
 _versions = get_versions(dataset, TileCacheType.cog)
@@ -62,9 +67,10 @@ async def tree_cover_loss_drivers_raster_tile(
 
     filter_datasets = GLOBALS.tree_cover_loss_drivers_filters
 
+    # use aligned TCL version for masking/intensity
     filter_dataset = filter_datasets["tree_cover_loss"]
     with COGReader(
-            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{filter_dataset['version']}/raster/epsg-4326/cog/intensity__tcd{tree_cover_density_threshold}_2000.tif"
+            f"s3://{DATA_LAKE_BUCKET}/{filter_dataset['dataset']}/{version}/raster/epsg-4326/cog/intensity__tcd{tree_cover_density_threshold}_2000.tif"
     ) as reader:
         if reader.tile_exists(tile_x, tile_y, zoom):
             tree_cover_loss_drivers.tree_cover_loss_intensity_data = reader.tile(tile_x, tile_y, zoom, tilesize=512)

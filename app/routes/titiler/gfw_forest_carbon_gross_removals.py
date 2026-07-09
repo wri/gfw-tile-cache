@@ -21,7 +21,7 @@ dataset = "gfw_forest_carbon_gross_removals"
 
 
 class GfwForestCarbonGrossRemovals(str, Enum):
-    latest = "v20250416"
+    latest = "v20260327"
 
 
 _versions = get_versions(dataset, TileCacheType.cog)
