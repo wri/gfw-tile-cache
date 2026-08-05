@@ -53,11 +53,11 @@ async def umd_tree_cover_loss_raster_tile(
         RenderType.encoded, description="Render true color or encoded tiles"
     ),
     tree_cover_density_threshold: Optional[TCLTreeCoverDensityThreshold] = Query(
-        None,
+        "30",
         description="Show tree cover loss in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking.",
     ),
     tcd: Optional[TCLTreeCoverDensityThreshold] = Query(
-        None,
+        "30",
         description="Same as `tree_cover_density_threshold`",
         include_in_schema=False,
     ),
