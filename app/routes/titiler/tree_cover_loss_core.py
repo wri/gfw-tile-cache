@@ -25,18 +25,14 @@ async def tree_cover_loss_core(
     end_year: Optional[int],
     render_type: RenderType,
     tcd: Optional[TCLTreeCoverDensityThreshold] = Query(
-        None,
+        "30",
         description="Show tree cover loss in pixels with tree cover density (in percent) greater than or equal to this threshold. `umd_tree_cover_density_2000` is used for this masking."
     ),
-    bands: list[str] = ["default", "intensity"],
 ) -> Response:
     tile_x, tile_y, zoom = xyz
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{version}/raster/epsg-4326/cog"
 
-    if tcd is not None:
-        bands = [f"year__tcd{tcd}_2000", f"intensity__tcd{tcd}_2000"]
-    else: # tcd is None
-        bands = ["default", "intensity"]
+    bands = [f"year__tcd{tcd}_2000", f"intensity__tcd{tcd}_2000"]
 
     with AlertsReader(input=folder) as reader:
         image_data = reader.tile(tile_x, tile_y, zoom, bands=bands, tilesize=512)

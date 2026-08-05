@@ -31,6 +31,7 @@ class TreeCoverDensityThreshold(StrEnum):
 
 
 class TCLTreeCoverDensityThreshold(StrEnum):
+    tcd_0 = "0"
     tcd_10 = "10"
     tcd_15 = "15"
     tcd_20 = "20"
