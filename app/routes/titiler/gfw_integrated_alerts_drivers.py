@@ -25,8 +25,18 @@ integrated_alerts_dataset = "gfw_integrated_alerts"
 # We don't set a fixed set of versions that can be used, since we want to be able
 # to serve any new drivers version created since this server started.
 
+# Serve not only a gfw_integrated_alerts_drivers route, but also a route via
+# wur_integration_alert_drivers_class, since that is the dataset actually being used,
+# so it is the one that will have the correct 'latest' version.
+
 @router.get(
     f"/{drivers_route_name}/{{drivers_version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
+    response_class=Response,
+    tags=["Raster Tiles"],
+    response_description="PNG Raster Tile",
+)
+@router.get(
+    f"/{drivers_dataset}/{{drivers_version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
