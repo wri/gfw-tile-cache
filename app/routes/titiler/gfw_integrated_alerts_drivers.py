@@ -1,16 +1,14 @@
 import os
 from typing import Optional, Tuple
 
-from aenum import Enum, extend_enum
-from fastapi import APIRouter, Depends, Query, Response, HTTPException
+from fastapi import APIRouter, Depends, Query, Response, Path, HTTPException
 from rio_tiler.errors import TileOutsideBounds
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
 from app.routes.titiler.algorithms.integrated_alerts_drivers import IntegratedAlertsDrivers
 
-from ...crud.sync_db.tile_cache_assets import get_latest_versions, get_versions
-from ...models.enumerators.tile_caches import TileCacheType
+from ...crud.sync_db.tile_cache_assets import get_latest_versions
 from ...models.enumerators.titiler import IntegratedAlertConfidence, RenderType
 from .. import DATE_REGEX, raster_xyz
 from .readers import AlertsReader
@@ -24,21 +22,8 @@ drivers_route_name = "gfw_integrated_alerts_drivers"
 drivers_dataset = "wur_integration_alert_drivers_class"
 integrated_alerts_dataset = "gfw_integrated_alerts"
 
-
-class GfwIntegratedAlertsDriverVersions(str, Enum):
-    """GFW Integrated Alerts Drivers versions.
-
-    When using `latest` call will be redirected (307) to version tagged
-    as latest.
-    """
-
-    latest = "v20250925"
-
-
-_versions = get_versions(drivers_dataset, TileCacheType.cog)
-for _version in _versions:
-    extend_enum(GfwIntegratedAlertsDriverVersions, _version, _version)
-
+# We don't set a fixed set of versions that can be used, since we want to be able
+# to serve any new drivers version created since this server started.
 
 @router.get(
     f"/{drivers_route_name}/{{drivers_version}}/dynamic/{{z}}/{{x}}/{{y}}.png",
@@ -48,7 +33,7 @@ for _version in _versions:
 )
 async def gfw_integrated_alerts_drivers_raster_tile(
     *,
-    drivers_version: GfwIntegratedAlertsDriverVersions,
+    drivers_version: str = Path(..., description="Version name of dataset. Either 'latest' or version string beginning with 'v'"),
     xyz: Tuple[int, int, int] = Depends(raster_xyz),
     start_date: Optional[str] = Query(
         None,
