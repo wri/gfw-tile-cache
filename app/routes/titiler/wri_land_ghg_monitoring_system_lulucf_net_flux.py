@@ -1,8 +1,10 @@
 import os
 from typing import Tuple
 
+from cogeo_mosaic.backends import MosaicBackend
+from cogeo_mosaic.errors import NoAssetFoundError
+from rio_tiler.errors import EmptyMosaicError
 from fastapi import APIRouter, Depends, Response
-from rio_tiler.io import Reader
 from titiler.core.resources.enums import ImageType
 from titiler.core.utils import render_image
 
@@ -17,8 +19,7 @@ router = APIRouter()
 dataset = "wri_land_ghg_monitoring_system_lulucf_net_flux"
 VERSION = "v1.0.3"
 
-
-COG_FILENAME = "africa.tif"
+MOSAIC_URL = f"s3://{DATA_LAKE_BUCKET}/wri_land_ghg_monitoring_system/{VERSION}/raster/epsg-4326/cog/mosaic.json"
 
 
 @router.get(
@@ -34,13 +35,11 @@ async def wri_land_ghg_monitoring_system_lulucf_net_flux_raster_tile(
     """LULUCF (2016-2024 average) net GHG flux raster tiles."""
 
     tile_x, tile_y, zoom = xyz
-    cog_url: str = (
-        f"s3://{DATA_LAKE_BUCKET}/wri_land_ghg_monitoring_system/{VERSION}/raster/epsg-4326/cog/"
-        f"{COG_FILENAME}"
-    )
-    print("cog url ", cog_url)
-    with Reader(cog_url) as reader:
-        image_data = reader.tile(tile_x, tile_y, zoom)
+    try:
+        with MosaicBackend(MOSAIC_URL) as mosaic:
+            image_data, _ = mosaic.tile(tile_x, tile_y, zoom)
+    except (NoAssetFoundError, EmptyMosaicError):
+        return Response(b"", media_type="image/png")
 
     processed_image = LulucfNetFlux()(image_data)
 
