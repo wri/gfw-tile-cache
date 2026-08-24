@@ -32,6 +32,8 @@ data "template_file" "container_definition" {
     tiles_bucket_name         = module.storage.tiles_bucket_name
     new_relic_license_key_arn = data.aws_secretsmanager_secret.newrelic_license.arn
     data_lake_bucket_name     = local.data_lake_bucket_name
+
+    planet_integrated_alerts_url_arn = data.aws_secretsmanager_secret.planet_integrated_alerts_url.arn
   }
 }
 
@@ -43,6 +45,18 @@ data "aws_iam_policy_document" "read_new_relic_lic" {
   statement {
     actions   = ["secretsmanager:GetSecretValue"]
     resources = [data.aws_secretsmanager_secret.newrelic_license.arn]
+    effect    = "Allow"
+  }
+}
+
+data "aws_secretsmanager_secret" "planet_integrated_alerts_url" {
+  name = var.planet_integrated_alerts_url_secret
+}
+
+data "aws_iam_policy_document" "read_planet_integrated_alerts_url" {
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [data.aws_secretsmanager_secret.planet_integrated_alerts_url.arn]
     effect    = "Allow"
   }
 }

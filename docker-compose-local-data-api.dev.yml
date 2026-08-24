@@ -21,6 +21,7 @@ services:
       - LOG_LEVEL=debug
       - RASTER_TILER_LAMBDA_NAME=test
       - ENV=dev
+      - PLANET_INTEGRATED_ALERTS_URL=${PLANET_INTEGRATED_ALERTS_URL}
     ports:
       - 8088:80
     entrypoint: wait_for_postgres.sh /app/start.sh

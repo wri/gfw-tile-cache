@@ -96,6 +96,12 @@ variable "newrelic_license_key_secret" {
   default = "newrelic/license_key"
 }
 
+variable "planet_integrated_alerts_url_secret" {
+  type        = string
+  description = "Name of the secret holding the base URL of the WMTS service serving Planet imagery masked to integrated alerts"
+  default = "gfw-tile-cache/planet_integrated_alerts_url"
+}
+
 variable "data_lake_bucket_name" {
   description = "Data Lake S3 bucket name"
   default = ""

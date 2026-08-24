@@ -90,9 +90,10 @@ class Globals(BaseSettings):
         description="GFW Data API token for service account.",
     )
     api_key_name: str = Field("x-api-key", description="Header key name for API key.")
-    integrated_alerts_planet_imagery_url: str = Field(
-        "https://tfo-wmts-proxy-5ufe6llh5a-uc.a.run.app",
-        description="Base URL of the WMTS service serving Planet imagery masked to integrated alerts.",
+    planet_integrated_alerts_url: Optional[str] = Field(
+        None,
+        description="Base URL of the WMTS service serving Planet imagery masked to integrated alerts. "
+        "Set per environment; the endpoint is unavailable without it.",
     )
 
     dist_alerts_forest_filters: Dict = Field(

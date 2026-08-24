@@ -43,6 +43,11 @@ async def integrated_alerts_planet_imagery_tile(
 ) -> Response:
     """Planet imagery masked to integrated alerts."""
 
+    if not GLOBALS.planet_integrated_alerts_url:
+        raise HTTPException(
+            status_code=503, detail="Planet imagery service is not configured"
+        )
+
     # Mosaics run from the start of the archive to the last month that has ended.
     # Zero-padded `YYYY-MM` sorts chronologically, so compare as strings.
     last_full_month = pendulum.today().subtract(months=1).format("YYYY-MM")
@@ -53,7 +58,7 @@ async def integrated_alerts_planet_imagery_tile(
         )
 
     url = (
-        f"{GLOBALS.integrated_alerts_planet_imagery_url}/wmts/v1/"
+        f"{GLOBALS.planet_integrated_alerts_url}/wmts/v1/"
         f"planet_medres_visual_{month}_mosaic/{z}/{x}/{y}.png"
     )
 

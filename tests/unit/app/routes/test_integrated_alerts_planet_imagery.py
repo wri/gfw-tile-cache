@@ -8,6 +8,7 @@ from app.routes import integrated_alerts_planet_imagery as route
 from app.settings.globals import GLOBALS
 
 tile_path = "/integrated_alerts_planet_imagery/15/10014/16385.png?month=2020-09"
+upstream_url = "https://wmts.example.com"
 
 
 def month(months_ago: int) -> str:
@@ -17,6 +18,7 @@ def month(months_ago: int) -> str:
 
 def build_client(monkeypatch, handler) -> TestClient:
     """Client for an app with only this route, talking to a stubbed upstream."""
+    monkeypatch.setattr(GLOBALS, "planet_integrated_alerts_url", upstream_url)
     monkeypatch.setattr(
         route, "client", httpx.AsyncClient(transport=httpx.MockTransport(handler))
     )
@@ -46,8 +48,7 @@ def test_tile_is_served_from_the_mosaic_for_the_requested_month(monkeypatch):
     assert response.content == b"png-bytes"
     assert response.headers["content-type"] == "image/png"
     assert requested == [
-        f"{GLOBALS.integrated_alerts_planet_imagery_url}/wmts/v1/"
-        "planet_medres_visual_2020-09_mosaic/15/10014/16385.png"
+        f"{upstream_url}/wmts/v1/planet_medres_visual_2020-09_mosaic/15/10014/16385.png"
     ]
 
 
@@ -106,6 +107,16 @@ def test_zoom_outside_the_supported_range_is_rejected(monkeypatch, zoom):
     )
 
     assert response.status_code == 422
+
+
+def test_unconfigured_upstream_is_reported_as_unavailable(monkeypatch):
+    """The URL has no default in code, so a deploy can be missing it."""
+    client = build_client(monkeypatch, refuse_to_serve)
+    monkeypatch.setattr(GLOBALS, "planet_integrated_alerts_url", None)
+
+    response = client.get(tile_path)
+
+    assert response.status_code == 503
 
 
 def test_missing_upstream_tile_is_reported_as_not_found(monkeypatch):
