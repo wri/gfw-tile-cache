@@ -4,9 +4,8 @@ Proxies the WMTS service that does the masking. Planet mosaics are monthly, so
 tiles are requested by month.
 """
 
-import datetime
-
 import httpx
+import pendulum
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 from fastapi.logger import logger
 
@@ -32,7 +31,8 @@ async def integrated_alerts_planet_imagery_tile(
     month: str = Query(
         ...,
         pattern=MONTH_REGEX,
-        description="Month the imagery should cover, as `YYYY-MM`. The Planet mosaic for this month is served.",
+        description="Month the imagery should cover, as `YYYY-MM`. The Planet mosaic for this month is served. "
+        "Cannot be later than the last full calendar month.",
         examples=["2026-07"],
     ),
     z: int = Path(..., description="Zoom level", ge=3, le=15),
@@ -40,6 +40,15 @@ async def integrated_alerts_planet_imagery_tile(
     y: int = Path(..., description="Tile grid row", ge=0),
 ) -> Response:
     """Planet imagery masked to integrated alerts."""
+
+    # Mosaics are only published once their month is over.
+    # Zero-padded `YYYY-MM` sorts chronologically, so compare as strings.
+    last_full_month = pendulum.today().subtract(months=1).format("YYYY-MM")
+    if month > last_full_month:
+        raise HTTPException(
+            status_code=422,
+            detail=f"No mosaic later than {last_full_month}, the last full calendar month",
+        )
 
     url = (
         f"{GLOBALS.integrated_alerts_planet_imagery_url}/wmts/v1/"
@@ -61,14 +70,9 @@ async def integrated_alerts_planet_imagery_tile(
         logger.error(f"{url} returned status {response.status_code}")
         raise HTTPException(status_code=502, detail="Planet imagery is unavailable")
 
-    # A mosaic is only final once its month is over; the current month's is still
-    # being built from incoming imagery, and a future one doesn't exist yet.
-    # Zero-padded `YYYY-MM` sorts chronologically, so compare as strings.
-    is_final = month < f"{datetime.date.today():%Y-%m}"
-    max_age = 31536000 if is_final else 86400  # 1y / 1d
-
+    # Every month served is complete, so its imagery never changes again.
     return Response(
         response.content,
         media_type="image/png",
-        headers={"Cache-Control": f"max-age={max_age}"},
+        headers={"Cache-Control": "max-age=31536000"},  # 1y
     )

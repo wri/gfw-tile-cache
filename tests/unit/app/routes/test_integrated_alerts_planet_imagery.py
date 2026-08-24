@@ -1,6 +1,5 @@
-import datetime
-
 import httpx
+import pendulum
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -8,7 +7,12 @@ from fastapi.testclient import TestClient
 from app.routes import integrated_alerts_planet_imagery as route
 from app.settings.globals import GLOBALS
 
-tile_path = "/integrated_alerts_planet_imagery/15/10014/16385.png?month=2026-07"
+tile_path = "/integrated_alerts_planet_imagery/15/10014/16385.png?month=2020-09"
+
+
+def month(months_ago: int) -> str:
+    """`YYYY-MM` relative to the current month; negative reaches into the future."""
+    return pendulum.today().subtract(months=months_ago).format("YYYY-MM")
 
 
 def build_client(monkeypatch, handler) -> TestClient:
@@ -43,27 +47,29 @@ def test_tile_is_served_from_the_mosaic_for_the_requested_month(monkeypatch):
     assert response.headers["content-type"] == "image/png"
     assert requested == [
         f"{GLOBALS.integrated_alerts_planet_imagery_url}/wmts/v1/"
-        "planet_medres_visual_2026-07_mosaic/15/10014/16385.png"
+        "planet_medres_visual_2020-09_mosaic/15/10014/16385.png"
     ]
 
 
-def test_past_months_imagery_is_cached_for_a_year(monkeypatch):
+@pytest.mark.parametrize("months_ahead", [0, 1])
+def test_month_after_the_last_full_calendar_month_is_rejected(
+    monkeypatch, months_ahead
+):
+    """The current month's mosaic is still being built, and later ones don't exist."""
+    response = build_client(monkeypatch, refuse_to_serve).get(
+        f"/integrated_alerts_planet_imagery/15/10014/16385.png?month={month(-months_ahead)}"
+    )
+
+    assert response.status_code == 422
+
+
+def test_imagery_is_cached_for_a_year(monkeypatch):
+    """Every month that gets served is complete, so nothing needs revisiting."""
     response = build_client(monkeypatch, serve_tile).get(
-        "/integrated_alerts_planet_imagery/15/10014/16385.png?month=2020-09"
+        f"/integrated_alerts_planet_imagery/15/10014/16385.png?month={month(1)}"
     )
 
     assert response.headers["cache-control"] == "max-age=31536000"
-
-
-def test_current_months_imagery_is_cached_briefly(monkeypatch):
-    """The current month's mosaic is still being built from incoming imagery."""
-    today = datetime.date.today()
-
-    response = build_client(monkeypatch, serve_tile).get(
-        f"/integrated_alerts_planet_imagery/15/10014/16385.png?month={today:%Y-%m}"
-    )
-
-    assert response.headers["cache-control"] == "max-age=86400"
 
 
 def test_month_is_required(monkeypatch):
