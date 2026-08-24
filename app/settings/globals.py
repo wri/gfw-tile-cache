@@ -90,6 +90,10 @@ class Globals(BaseSettings):
         description="GFW Data API token for service account.",
     )
     api_key_name: str = Field("x-api-key", description="Header key name for API key.")
+    integrated_alerts_planet_imagery_url: str = Field(
+        "https://tfo-wmts-proxy-5ufe6llh5a-uc.a.run.app",
+        description="Base URL of the WMTS service serving Planet imagery masked to integrated alerts.",
+    )
 
     dist_alerts_forest_filters: Dict = Field(
         dist_alerts_forest_filters,
@@ -134,8 +138,8 @@ class Globals(BaseSettings):
         if db_reader_secret:
             secret = json.loads(db_reader_secret)
             v = DatabaseURL(
-                drivername="asyncpg",
-                username=secret["username"],
+                driver="asyncpg",
+                user=secret["username"],
                 password=secret["password"],
                 host=secret["host"],
                 port=secret["port"],
@@ -143,8 +147,8 @@ class Globals(BaseSettings):
             )
         else:
             v = DatabaseURL(
-                drivername="asyncpg",
-                username=input.get("reader_username"),
+                driver="asyncpg",
+                user=input.get("reader_username"),
                 password=input.get("reader_password"),
                 host=input.get("reader_host"),
                 port=input.get("reader_port"),
