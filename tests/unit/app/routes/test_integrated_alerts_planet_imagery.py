@@ -63,6 +63,16 @@ def test_month_after_the_last_full_calendar_month_is_rejected(
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize("month_before_archive", ["2020-08", "2019-01"])
+def test_month_before_the_archive_start_is_rejected(monkeypatch, month_before_archive):
+    """The Planet archive begins at 2020-09; nothing exists before it."""
+    response = build_client(monkeypatch, refuse_to_serve).get(
+        f"/integrated_alerts_planet_imagery/15/10014/16385.png?month={month_before_archive}"
+    )
+
+    assert response.status_code == 422
+
+
 def test_imagery_is_cached_for_a_year(monkeypatch):
     """Every month that gets served is complete, so nothing needs revisiting."""
     response = build_client(monkeypatch, serve_tile).get(

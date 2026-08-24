@@ -19,6 +19,8 @@ dataset = "integrated_alerts_planet_imagery"
 
 MONTH_REGEX = r"^\d{4}-(0[1-9]|1[0-2])$"
 
+ARCHIVE_START_MONTH = "2020-09"  # first Planet monthly mosaic
+
 
 @router.get(
     f"/{dataset}/{{z}}/{{x}}/{{y}}.png",
@@ -32,7 +34,7 @@ async def integrated_alerts_planet_imagery_tile(
         ...,
         pattern=MONTH_REGEX,
         description="Month the imagery should cover, as `YYYY-MM`. The Planet mosaic for this month is served. "
-        "Cannot be later than the last full calendar month.",
+        f"Ranges from {ARCHIVE_START_MONTH} to the last full calendar month.",
         examples=["2026-07"],
     ),
     z: int = Path(..., description="Zoom level", ge=3, le=15),
@@ -41,13 +43,13 @@ async def integrated_alerts_planet_imagery_tile(
 ) -> Response:
     """Planet imagery masked to integrated alerts."""
 
-    # Mosaics are only published once their month is over.
+    # Mosaics run from the start of the archive to the last month that has ended.
     # Zero-padded `YYYY-MM` sorts chronologically, so compare as strings.
     last_full_month = pendulum.today().subtract(months=1).format("YYYY-MM")
-    if month > last_full_month:
+    if not ARCHIVE_START_MONTH <= month <= last_full_month:
         raise HTTPException(
             status_code=422,
-            detail=f"No mosaic later than {last_full_month}, the last full calendar month",
+            detail=f"Month must be between {ARCHIVE_START_MONTH} and {last_full_month}, the last full calendar month",
         )
 
     url = (
