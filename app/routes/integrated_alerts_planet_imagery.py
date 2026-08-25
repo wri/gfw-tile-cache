@@ -1,7 +1,11 @@
 """Planet imagery masked to integrated alerts.
 
-Proxies the WMTS service that does the masking. Planet mosaics are monthly, so
-tiles are requested by month.
+The upstream WMTS service serves Planet monthly basemap imagery clipped to a
+buffer around integrated alerts. That masking is the reason this route exists
+and why alerts are in its name; general-purpose Planet imagery would go straight
+to Planet's public endpoints instead.
+
+Planet publishes one mosaic per calendar month, so tiles are requested by month.
 """
 
 import httpx
@@ -15,15 +19,13 @@ router = APIRouter()
 
 client = httpx.AsyncClient(timeout=GLOBALS.httpx_timeout)
 
-dataset = "integrated_alerts_planet_imagery"
-
 MONTH_REGEX = r"^\d{4}-(0[1-9]|1[0-2])$"
 
 ARCHIVE_START_MONTH = "2020-09"  # first Planet monthly mosaic
 
 
 @router.get(
-    f"/{dataset}/{{z}}/{{x}}/{{y}}.png",
+    "/integrated_alerts_planet_imagery/{z}/{x}/{y}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
