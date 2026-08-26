@@ -51,7 +51,8 @@ module "orchestration" {
   task_execution_role_policies = [
     local.core.postgresql_reader_secret_policy_arn,
     local.core.gfw_data_api_token_read_policy_arn,
-    aws_iam_policy.read_new_relic_secret.arn
+    aws_iam_policy.read_new_relic_secret.arn,
+    aws_iam_policy.read_planet_integrated_alerts_url_secret.arn
   ]
   container_definition         = data.template_file.container_definition.rendered
 }
@@ -103,6 +104,11 @@ module "lambda_raster_tiler" {
 resource "aws_iam_policy" "read_new_relic_secret" {
   name = substr("${local.project}-read_new-relic_secret${local.name_suffix}", 0, 64)
   policy = data.aws_iam_policy_document.read_new_relic_lic.json
+}
+
+resource "aws_iam_policy" "read_planet_integrated_alerts_url_secret" {
+  name = substr("${local.project}-read_planet_integrated_alerts_url${local.name_suffix}", 0, 64)
+  policy = data.aws_iam_policy_document.read_planet_integrated_alerts_url.json
 }
 
 module "ssm" {
