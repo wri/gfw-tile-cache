@@ -96,3 +96,33 @@ def test_upstream_failure_is_reported_as_bad_gateway(monkeypatch, handler):
     response = build_client(monkeypatch, handler).get(tile_path)
 
     assert response.status_code == 502
+
+
+def test_successful_tile_is_recorded_as_a_custom_event(monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        route,
+        "record_custom_event",
+        lambda name, params: events.append((name, params)),
+    )
+
+    build_client(monkeypatch, serve_tile).get(tile_path)
+
+    assert events == [("PlanetTileRequest", {"month": "2020-09", "zoom": 15})]
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [lambda request: httpx.Response(404), lambda request: httpx.Response(500)],
+)
+def test_unsuccessful_tile_is_not_recorded_as_a_custom_event(monkeypatch, handler):
+    events = []
+    monkeypatch.setattr(
+        route,
+        "record_custom_event",
+        lambda name, params: events.append((name, params)),
+    )
+
+    build_client(monkeypatch, handler).get(tile_path)
+
+    assert events == []
