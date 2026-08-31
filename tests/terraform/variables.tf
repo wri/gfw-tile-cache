@@ -7,7 +7,7 @@ variable "lambda_edge_runtime" {
 variable "lambda_runtime" {
   description = "Runtime name and version (example: python3.10)"
   type        = string
-  default     = "python3.11"
+  default     = "python3.12"
 }
 
 variable "mercantile_name_version" {
@@ -31,5 +31,5 @@ variable "pillow_name_version" {
 variable "rasterio_name_version" {
   description = "Name and version, separated by underscore (example: rasterio_1.3.8)"
   type        = string
-  default     = "rasterio_1.4.3"
+  default     = "rasterio_1.5.1"
 }
