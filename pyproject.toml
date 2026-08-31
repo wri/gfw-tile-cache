@@ -2,7 +2,7 @@
 name = "gfw-tile-cache"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = "~=3.11.0"
+requires-python = "~=3.12.0"
 dependencies = [
     "aenum<3.0",
     "aioboto3",
@@ -21,14 +21,14 @@ dependencies = [
     "jinja2",
     "mercantile",
     "newrelic",
-    "numpy",
+    "numpy==2.2.6",
     "orjson",
     "pendulum",
     "psycopg2",
     "pydantic",
     "pydantic-settings",
     "pyproj",
-    "rasterio==1.4.3",
+    "rasterio==1.5.1",
     "shapely",
     "sqlalchemy<1.4",
     "starlette",
@@ -40,7 +40,7 @@ dependencies = [
 dev = [
     "boto3",
     "localstack-utils",
-    "pillow>=11.3.0",
+    "pillow==12.1.1",
     "pre-commit",
     "pytest",
     "pytest-asyncio",

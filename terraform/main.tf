@@ -86,10 +86,10 @@ module "lambda_raster_tiler" {
   source      = "./modules/lambda_raster_tiler"
   environment = var.environment
   lambda_layers = [
-    local.lambda_layers.py310_numpy_1264_arn,
-    local.lambda_layers.py310_pillow_950_arn,
-    local.lambda_layers.py310_rasterio_143_arn,
-    local.lambda_layers.py310_mercantile_121_arn
+    local.lambda_layers.py312_numpy_226_arn,
+    local.lambda_layers.py312_pillow_1211_arn,
+    local.lambda_layers.py312_rasterio_143_arn,
+    local.lambda_layers.py312_mercantile_121_arn
   ]
   lambda_runtime        = var.lambda_runtime
   log_level             = var.log_level
