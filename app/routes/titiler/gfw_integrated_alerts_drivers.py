@@ -20,7 +20,7 @@ router = APIRouter()
 
 drivers_route_name = "gfw_integrated_alerts_drivers"
 drivers_dataset = "wur_integration_alert_drivers_class"
-integrated_alerts_dataset = "gfw_integrated_alerts"
+integrated_alerts_dataset = "gfw_integrated_dist_alerts"
 
 # We don't set a fixed set of versions that can be used, since we want to be able
 # to serve any new drivers version created since this server started.
