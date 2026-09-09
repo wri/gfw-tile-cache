@@ -77,9 +77,8 @@ class GhgFlux(BaseAlgorithm):
 class AgricultureGhgFlux(GhgFlux):
     """Visualize agriculture GHG emissions.
 
-    Same palette as ``GhgFlux``, but emissions per hectare of land are far
-    smaller than LULUCF fluxes, so the thresholds step roughly logarithmically
-    from 0.001 rather than linearly to 25. Emissions only, so no removal side.
+    Emissions only, so the ramp is sequential rather than diverging, with
+    thresholds stepping logarithmically to suit values well below 1 Mg/ha.
     """
 
     title: str = "Agriculture GHG emissions"
@@ -87,11 +86,11 @@ class AgricultureGhgFlux(GhgFlux):
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
-            0.001: Colors(255, 255, 212),  # palest emission
+            0.001: Colors(255, 255, 212),
             0.05: Colors(254, 227, 145),
             0.2: Colors(254, 196, 79),
             0.7: Colors(254, 153, 41),
             2.0: Colors(217, 95, 14),
-            6.0: Colors(153, 52, 4),  # darkest emission
+            6.0: Colors(153, 52, 4),
         }
     )

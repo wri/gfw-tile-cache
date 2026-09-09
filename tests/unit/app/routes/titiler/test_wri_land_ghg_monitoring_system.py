@@ -19,8 +19,14 @@ def build_client(monkeypatch, read_asset) -> TestClient:
     return TestClient(app)
 
 
-def serve_raster(asset, x, y, z) -> ImageData:
-    return ImageData(np.ma.MaskedArray(np.ones((1, 4, 4), dtype="float32"), mask=False))
+def serve_raster(asset, tile_x, tile_y, zoom, value=1.0) -> ImageData:
+    return ImageData(
+        np.ma.MaskedArray(np.full((1, 4, 4), value, dtype="float32"), mask=False)
+    )
+
+
+def refuse_to_read(asset, tile_x, tile_y, zoom) -> ImageData:
+    raise AssertionError("no raster should be read")
 
 
 @pytest.mark.parametrize(
@@ -39,9 +45,9 @@ def test_tile_is_rendered_from_the_layers_rasters(
 ):
     read = []
 
-    def read_asset(asset, x, y, z) -> ImageData:
+    def read_asset(asset, tile_x, tile_y, zoom) -> ImageData:
         read.append(asset.file_name)
-        return serve_raster(asset, x, y, z)
+        return serve_raster(asset, tile_x, tile_y, zoom)
 
     response = build_client(monkeypatch, read_asset).get(
         f"{tile_path}?layer={layer}&flux_type={flux_type}"
@@ -53,10 +59,7 @@ def test_tile_is_rendered_from_the_layers_rasters(
 
 
 def test_flux_type_the_layer_has_no_raster_for_is_rejected(monkeypatch):
-    def read_asset(asset, x, y, z) -> ImageData:
-        raise AssertionError("no raster should be read")
-
-    response = build_client(monkeypatch, read_asset).get(
+    response = build_client(monkeypatch, refuse_to_read).get(
         f"{tile_path}?layer=agriculture&flux_type=net"
     )
 
@@ -67,7 +70,7 @@ def test_flux_type_the_layer_has_no_raster_for_is_rejected(monkeypatch):
     "error", [TileOutsideBounds, NoAssetFoundError, EmptyMosaicError]
 )
 def test_tile_without_data_is_not_found(monkeypatch, error):
-    def read_asset(asset, x, y, z) -> ImageData:
+    def read_asset(asset, tile_x, tile_y, zoom) -> ImageData:
         raise error("nothing here")
 
     response = build_client(monkeypatch, read_asset).get(
@@ -81,9 +84,7 @@ def test_agriculture_layers_use_their_own_colour_ramp(monkeypatch):
     """0.5 Mg/ha is mid-ramp for agriculture but near-zero for LULUCF."""
 
     def read_asset(asset, tile_x, tile_y, zoom) -> ImageData:
-        return ImageData(
-            np.ma.MaskedArray(np.full((1, 4, 4), 0.5, dtype="float32"), mask=False)
-        )
+        return serve_raster(asset, tile_x, tile_y, zoom, value=0.5)
 
     client = build_client(monkeypatch, read_asset)
     agriculture = client.get(f"{tile_path}?layer=cropland&flux_type=gross_emissions")

@@ -9,8 +9,7 @@ from rio_tiler.models import ImageData
 def sum_tiles(images: List[ImageData]) -> ImageData:
     """Sum single-band tiles, treating nodata as zero.
 
-    A pixel is nodata in the result only where it is nodata in every input, so
-    a layer derived from children still has data where only some cover it.
+    A pixel is nodata in the result only where every input is nodata.
     """
 
     if len(images) == 1:

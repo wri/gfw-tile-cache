@@ -1,9 +1,7 @@
 """The LGMS sector hierarchy: which raster backs a layer and flux type.
 
 A layer serves its own raster when it has one, and is otherwise the sum of its
-children's rasters. Only combinations that have data in the data lake are
-modelled, so adding a layer later is an edit to the tree below rather than to
-the resolver.
+children's rasters. Only combinations with published rasters are modelled.
 """
 
 from typing import Dict, List, Literal
