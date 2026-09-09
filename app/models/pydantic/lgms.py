@@ -32,7 +32,7 @@ cropland = LgmsNode(
     layer=LgmsLayer.cropland,
     assets={
         LgmsFluxType.gross_emissions: LgmsAsset(
-            kind="cog", file_name="cropland_emissions.tif"
+            kind="cog", file_name="cropland_emissions_per_ha.tif"
         )
     },
 )
@@ -41,7 +41,7 @@ livestock = LgmsNode(
     layer=LgmsLayer.livestock,
     assets={
         LgmsFluxType.gross_emissions: LgmsAsset(
-            kind="cog", file_name="livestock_emissions.tif"
+            kind="cog", file_name="livestock_emissions_per_ha.tif"
         )
     },
 )
