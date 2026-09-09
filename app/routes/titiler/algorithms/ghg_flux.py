@@ -9,28 +9,13 @@ Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
 
 
 class GhgFlux(BaseAlgorithm):
-    """Visualize LGMS GHG flux: negative is removal, positive is emission."""
+    """Renders GHG flux as an RGBA tile. Subclasses supply the colour ramp."""
 
     title: str = "GHG flux"
-    description: str = "Visualize GHG flux for any LGMS layer and flux type"
+    description: str = "Visualize GHG flux"
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    conf_colors: OrderedDict[float, tuple] = OrderedDict(
-        {
-            -12.5: Colors(0, 60, 48),  # darkest removal
-            -10: Colors(1, 102, 94),
-            -7.5: Colors(53, 151, 143),
-            -5.0: Colors(128, 205, 193),
-            -2.5: Colors(199, 234, 229),  # lightest removal
-            -0.001: Colors(217, 231, 213),
-            0.001: Colors(217, 231, 213),
-            5.0: Colors(246, 232, 195),  # lightest emission
-            10.0: Colors(223, 194, 125),
-            15.0: Colors(191, 129, 45),
-            20.0: Colors(140, 81, 10),
-            25.0: Colors(84, 48, 5),  # darkest emission
-        }
-    )
+    conf_colors: OrderedDict[float, tuple] = OrderedDict()
 
     # metadata
     input_nbands: int = 1
@@ -74,7 +59,31 @@ class GhgFlux(BaseAlgorithm):
         return r, g, b
 
 
-class AgricultureGhgFlux(GhgFlux):
+class LulucfNetFlux(GhgFlux):
+    """Visualize LULUCF net GHG flux: negative is removal, positive is emission."""
+
+    title: str = "LULUCF net flux"
+    description: str = "Visualize LULUCF net GHG flux"
+
+    conf_colors: OrderedDict[float, tuple] = OrderedDict(
+        {
+            -12.5: Colors(0, 60, 48),  # darkest removal
+            -10: Colors(1, 102, 94),
+            -7.5: Colors(53, 151, 143),
+            -5.0: Colors(128, 205, 193),
+            -2.5: Colors(199, 234, 229),  # lightest removal
+            -0.001: Colors(217, 231, 213),
+            0.001: Colors(217, 231, 213),
+            5.0: Colors(246, 232, 195),  # lightest emission
+            10.0: Colors(223, 194, 125),
+            15.0: Colors(191, 129, 45),
+            20.0: Colors(140, 81, 10),
+            25.0: Colors(84, 48, 5),  # darkest emission
+        }
+    )
+
+
+class AgricultureEmissions(GhgFlux):
     """Visualize agriculture GHG emissions.
 
     Emissions only, so the ramp is sequential rather than diverging, with
