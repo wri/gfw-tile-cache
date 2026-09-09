@@ -8,11 +8,11 @@ from titiler.core.algorithm import BaseAlgorithm
 Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
 
 
-class LulucfNetFlux(BaseAlgorithm):
-    """Visualize LULUCF (2016-2024 average) net GHG flux."""
+class GhgFlux(BaseAlgorithm):
+    """Visualize LGMS GHG flux: negative is removal, positive is emission."""
 
-    title: str = "LULUCF net flux"
-    description: str = "Visualize LULUCF (2016-2024 average) net GHG flux"
+    title: str = "GHG flux"
+    description: str = "Visualize GHG flux for any LGMS layer and flux type"
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
