@@ -14,7 +14,7 @@ from ...models.enumerators.titiler import LgmsFluxType, LgmsLayer
 from ...models.pydantic.lgms import LgmsAsset, UnsupportedLayerFlux, resolve_assets
 from ...utils.rasters import sum_tiles
 from .. import raster_xyz
-from .algorithms.ghg_flux import GhgFlux
+from .algorithms.ghg_flux import AgricultureGhgFlux, GhgFlux
 
 DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
@@ -24,6 +24,13 @@ dataset = "wri_land_ghg_monitoring_system"
 VERSION = "v1.0.3"
 
 COG_FOLDER = f"s3://{DATA_LAKE_BUCKET}/{dataset}/{VERSION}/raster/epsg-4326/cog"
+
+colorizers = {
+    LgmsLayer.lulucf: GhgFlux,
+    LgmsLayer.agriculture: AgricultureGhgFlux,
+    LgmsLayer.cropland: AgricultureGhgFlux,
+    LgmsLayer.livestock: AgricultureGhgFlux,
+}
 
 
 @router.get(
@@ -54,7 +61,7 @@ def wri_land_ghg_monitoring_system_raster_tile(
     except (TileOutsideBounds, NoAssetFoundError, EmptyMosaicError):
         raise HTTPException(status_code=404, detail="No data for this tile")
 
-    processed_image = GhgFlux()(sum_tiles(images))
+    processed_image = colorizers[layer]()(sum_tiles(images))
 
     content, media_type = render_image(
         processed_image,

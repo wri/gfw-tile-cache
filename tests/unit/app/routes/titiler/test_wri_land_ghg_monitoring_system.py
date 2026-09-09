@@ -75,3 +75,19 @@ def test_tile_without_data_is_not_found(monkeypatch, error):
     )
 
     assert response.status_code == 404
+
+
+def test_agriculture_layers_use_their_own_colour_ramp(monkeypatch):
+    """0.5 Mg/ha is mid-ramp for agriculture but near-zero for LULUCF."""
+
+    def read_asset(asset, tile_x, tile_y, zoom) -> ImageData:
+        return ImageData(
+            np.ma.MaskedArray(np.full((1, 4, 4), 0.5, dtype="float32"), mask=False)
+        )
+
+    client = build_client(monkeypatch, read_asset)
+    agriculture = client.get(f"{tile_path}?layer=cropland&flux_type=gross_emissions")
+    lulucf = client.get(f"{tile_path}?layer=lulucf&flux_type=net")
+
+    assert agriculture.status_code == lulucf.status_code == 200
+    assert agriculture.content != lulucf.content
