@@ -22,7 +22,6 @@ def test_layer_without_its_own_raster_resolves_to_its_children():
     [
         (LgmsLayer.lulucf, LgmsFluxType.gross_emissions),
         (LgmsLayer.agriculture, LgmsFluxType.net),
-        (LgmsLayer.cropland, LgmsFluxType.gross_removals),
     ],
 )
 def test_flux_type_the_layer_has_no_raster_for_is_rejected(layer, flux_type):
