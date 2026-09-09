@@ -37,7 +37,7 @@ def refuse_to_read(asset, tile_x, tile_y, zoom) -> ImageData:
         (
             "agriculture",
             "gross_emissions",
-            ["cropland_emissions.tif", "livestock_emissions.tif"],
+            ["cropland_emissions_per_ha.tif", "livestock_emissions_per_ha.tif"],
         ),
     ],
 )

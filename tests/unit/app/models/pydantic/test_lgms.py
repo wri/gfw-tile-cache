@@ -12,8 +12,8 @@ def test_layer_with_its_own_raster_resolves_to_that_raster():
 
 def test_layer_without_its_own_raster_resolves_to_its_children():
     assert resolve_assets(LgmsLayer.agriculture, LgmsFluxType.gross_emissions) == [
-        LgmsAsset(kind="cog", file_name="cropland_emissions.tif"),
-        LgmsAsset(kind="cog", file_name="livestock_emissions.tif"),
+        LgmsAsset(kind="cog", file_name="cropland_emissions_per_ha.tif"),
+        LgmsAsset(kind="cog", file_name="livestock_emissions_per_ha.tif"),
     ]
 
 
