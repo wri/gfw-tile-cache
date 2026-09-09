@@ -40,3 +40,16 @@ class TCLTreeCoverDensityThreshold(StrEnum):
     tcd_50 = "50"
     tcd_75 = "75"
     tcd_90 = "90"
+
+
+class LgmsLayer(StrEnum):
+    lulucf = "lulucf"
+    agriculture = "agriculture"
+    cropland = "cropland"
+    livestock = "livestock"
+
+
+class LgmsFluxType(StrEnum):
+    net = "net"
+    gross_emissions = "gross_emissions"
+    gross_removals = "gross_removals"
