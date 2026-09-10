@@ -8,7 +8,7 @@ from titiler.core.algorithm import BaseAlgorithm
 Colors: namedtuple = namedtuple("Colors", ["red", "green", "blue"])
 
 
-class GhgFlux(BaseAlgorithm):
+class LgmsFlux(BaseAlgorithm):
     """Renders GHG flux as an RGBA tile. Subclasses supply the colour ramp."""
 
     title: str = "GHG flux"
@@ -16,6 +16,9 @@ class GhgFlux(BaseAlgorithm):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
     conf_colors: OrderedDict[float, tuple] = OrderedDict()
+
+    # Flux this close to zero renders as no flux.
+    zero_threshold: float = 0
 
     # metadata
     input_nbands: int = 1
@@ -46,9 +49,8 @@ class GhgFlux(BaseAlgorithm):
         return np.stack([r, g, b], axis=0)
 
     def create_true_color_alpha(self):
-        # alpha = np.where(~self.no_data, self.intensity, 0)
         return np.where(
-            ~self.no_data & ((self.flux < -0.001) | (self.flux > 0.001)), 255, 0
+            ~self.no_data & (np.abs(self.flux) > self.zero_threshold), 255, 0
         ).astype(self.output_dtype)
 
     def _rgb_zeros_array(self):
@@ -59,11 +61,13 @@ class GhgFlux(BaseAlgorithm):
         return r, g, b
 
 
-class LulucfNetFlux(GhgFlux):
+class LulucfNetFlux(LgmsFlux):
     """Visualize LULUCF net GHG flux: negative is removal, positive is emission."""
 
     title: str = "LULUCF net flux"
     description: str = "Visualize LULUCF net GHG flux"
+
+    zero_threshold: float = 0.001
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
@@ -83,7 +87,7 @@ class LulucfNetFlux(GhgFlux):
     )
 
 
-class AgricultureEmissions(GhgFlux):
+class AgricultureEmissions(LgmsFlux):
     """Visualize agriculture GHG emissions.
 
     Emissions only, so the ramp is sequential rather than diverging, with
@@ -95,7 +99,7 @@ class AgricultureEmissions(GhgFlux):
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
-            0.001: Colors(255, 255, 212),
+            0: Colors(255, 255, 212),
             0.05: Colors(254, 227, 145),
             0.2: Colors(254, 196, 79),
             0.7: Colors(254, 153, 41),

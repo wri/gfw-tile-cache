@@ -43,6 +43,7 @@ class TCLTreeCoverDensityThreshold(StrEnum):
 
 
 class LgmsLayer(StrEnum):
+    lgms = "lgms"
     lulucf = "lulucf"
     agriculture = "agriculture"
     cropland = "cropland"

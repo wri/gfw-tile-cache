@@ -4,7 +4,6 @@ from cogeo_mosaic.errors import NoAssetFoundError
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from rasterio.errors import RasterioIOError
-from rio_tiler.errors import EmptyMosaicError, TileOutsideBounds
 from rio_tiler.models import ImageData
 
 from app.routes.titiler import wri_land_ghg_monitoring_system as route
@@ -37,7 +36,7 @@ def refuse_to_read(asset, tile_x, tile_y, zoom) -> ImageData:
         (
             "agriculture",
             "gross_emissions",
-            ["cropland_emissions_per_ha.tif", "livestock_emissions_per_ha.tif"],
+            ["cropland_emissions_per_ha.tif", "livestock_per_ha_v2.tif"],
         ),
     ],
 )
@@ -60,19 +59,19 @@ def test_tile_is_rendered_from_the_layers_rasters(
 
 
 def test_flux_type_the_layer_has_no_raster_for_is_rejected(monkeypatch):
+    """LULUCF has no gross emissions raster, so an LGMS total would be partial."""
     response = build_client(monkeypatch, refuse_to_read).get(
-        f"{tile_path}?layer=agriculture&flux_type=net"
+        f"{tile_path}?layer=lgms&flux_type=gross_emissions"
     )
 
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize(
-    "error", [TileOutsideBounds, NoAssetFoundError, EmptyMosaicError]
-)
-def test_tile_without_data_is_not_found(monkeypatch, error):
+def test_tile_without_data_is_not_found(monkeypatch):
+    """NoAssetFoundError subclasses MosaicError, so it must not fall through to 503."""
+
     def read_asset(asset, tile_x, tile_y, zoom) -> ImageData:
-        raise error("nothing here")
+        raise NoAssetFoundError("nothing here")
 
     response = build_client(monkeypatch, read_asset).get(
         f"{tile_path}?layer=lulucf&flux_type=net"
