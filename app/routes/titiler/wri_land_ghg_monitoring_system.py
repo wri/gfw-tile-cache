@@ -16,7 +16,7 @@ from ...models.enumerators.titiler import LgmsFluxType, LgmsLayer
 from ...models.pydantic.lgms import LgmsAsset, UnsupportedLayerFlux, resolve_assets
 from ...utils.rasters import sum_tiles
 from .. import to_bbox, validate_bbox
-from .algorithms.ghg_flux import AgricultureEmissions, LulucfNetFlux
+from .algorithms.lgms_flux import AgricultureEmissions, LulucfNetFlux
 
 DATA_LAKE_BUCKET = os.environ.get("DATA_LAKE_BUCKET")
 
@@ -32,6 +32,7 @@ MIN_ZOOM = 2
 MAX_ZOOM = 12
 
 layer_algorithms = {
+    LgmsLayer.lgms: LulucfNetFlux,
     LgmsLayer.lulucf: LulucfNetFlux,
     LgmsLayer.agriculture: AgricultureEmissions,
     LgmsLayer.cropland: AgricultureEmissions,

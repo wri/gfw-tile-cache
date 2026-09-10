@@ -28,21 +28,23 @@ class LgmsNode(BaseModel):
     children: List["LgmsNode"] = []
 
 
+cropland_emissions = LgmsAsset(kind="cog", file_name="cropland_emissions_per_ha.tif")
+livestock_emissions = LgmsAsset(kind="cog", file_name="livestock_per_ha_v2.tif")
+
+# These sectors have no removals, so their net flux is their emissions.
 cropland = LgmsNode(
     layer=LgmsLayer.cropland,
     assets={
-        LgmsFluxType.gross_emissions: LgmsAsset(
-            kind="cog", file_name="cropland_emissions_per_ha.tif"
-        )
+        LgmsFluxType.gross_emissions: cropland_emissions,
+        LgmsFluxType.net: cropland_emissions,
     },
 )
 
 livestock = LgmsNode(
     layer=LgmsLayer.livestock,
     assets={
-        LgmsFluxType.gross_emissions: LgmsAsset(
-            kind="cog", file_name="livestock_emissions_per_ha.tif"
-        )
+        LgmsFluxType.gross_emissions: livestock_emissions,
+        LgmsFluxType.net: livestock_emissions,
     },
 )
 
@@ -53,8 +55,10 @@ lulucf = LgmsNode(
     assets={LgmsFluxType.net: LgmsAsset(kind="mosaic", file_name="mosaic.json")},
 )
 
+lgms = LgmsNode(layer=LgmsLayer.lgms, children=[lulucf, agriculture])
+
 nodes: Dict[LgmsLayer, LgmsNode] = {
-    node.layer: node for node in (lulucf, agriculture, cropland, livestock)
+    node.layer: node for node in (lgms, lulucf, agriculture, cropland, livestock)
 }
 
 
@@ -68,7 +72,13 @@ def resolve_assets(layer: LgmsLayer, flux_type: LgmsFluxType) -> List[LgmsAsset]
 
 
 def assets_for(node: LgmsNode, flux_type: LgmsFluxType) -> List[LgmsAsset]:
+    """A derived layer needs every child, or its total would be partial."""
+
     asset = node.assets.get(flux_type)
     if asset:
         return [asset]
-    return [a for child in node.children for a in assets_for(child, flux_type)]
+
+    children = [assets_for(child, flux_type) for child in node.children]
+    if not children or not all(children):
+        return []
+    return [asset for child in children for asset in child]
