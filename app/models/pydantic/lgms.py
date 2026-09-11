@@ -28,7 +28,7 @@ class LgmsNode(BaseModel):
     children: List["LgmsNode"] = []
 
 
-cropland_emissions = LgmsAsset(kind="cog", file_name="cropland_emissions_per_ha.tif")
+cropland_emissions = LgmsAsset(kind="cog", file_name="cropland_per_ha_v2.tif")
 livestock_emissions = LgmsAsset(kind="cog", file_name="livestock_per_ha_v2.tif")
 
 # These sectors have no removals, so their net flux is their emissions.
