@@ -56,7 +56,10 @@ from .routes.titiler.gfw_integrated_alerts_drivers import (
     router as gfw_integrated_alerts_drivers_router,
 )
 from .routes.titiler.gfw_integrated_dist_alerts import (
-    router as gfw_integrated_dist_alerts_router
+    router as gfw_integrated_dist_alerts_router,
+)
+from .routes.titiler.wri_land_ghg_monitoring_system import (
+    router as lgms_router,
 )
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
@@ -81,6 +84,7 @@ ROUTERS = (
     umd_tree_cover_loss_from_fires_router,
     gfw_integrated_alerts_drivers_router,
     gfw_integrated_dist_alerts_router,
+    lgms_router,
     umd_glad_landsat_alerts_raster_tiles.router,
     umd_glad_sentinel2_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,
