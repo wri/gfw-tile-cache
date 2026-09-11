@@ -17,9 +17,6 @@ class LgmsFlux(BaseAlgorithm):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     conf_colors: OrderedDict[float, tuple] = OrderedDict()
 
-    # Flux this close to zero renders as no flux.
-    zero_threshold: float = 0
-
     # metadata
     input_nbands: int = 1
     output_nbands: int = 4
@@ -49,9 +46,8 @@ class LgmsFlux(BaseAlgorithm):
         return np.stack([r, g, b], axis=0)
 
     def create_true_color_alpha(self):
-        return np.where(
-            ~self.no_data & (np.abs(self.flux) > self.zero_threshold), 255, 0
-        ).astype(self.output_dtype)
+        """Make no data values transparent."""
+        return np.where(~self.no_data, 255, 0).astype(self.output_dtype)
 
     def _rgb_zeros_array(self):
         r = np.zeros_like(self.flux, dtype=np.uint8)
@@ -66,8 +62,6 @@ class LulucfNetFlux(LgmsFlux):
 
     title: str = "LULUCF net flux"
     description: str = "Visualize LULUCF net GHG flux"
-
-    zero_threshold: float = 0.001
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
@@ -86,13 +80,15 @@ class LulucfNetFlux(LgmsFlux):
         }
     )
 
+    def create_true_color_alpha(self):
+        """Flux within a thousandth of zero is no flux."""
+        return np.where(
+            ~self.no_data & ((self.flux < -0.001) | (self.flux > 0.001)), 255, 0
+        ).astype(self.output_dtype)
+
 
 class AgricultureEmissions(LgmsFlux):
-    """Visualize agriculture GHG emissions.
-
-    Emissions only, so the ramp is sequential rather than diverging, with
-    thresholds stepping logarithmically to suit values well below 1 Mg/ha.
-    """
+    """Visualize agriculture GHG emissions. """
 
     title: str = "Agriculture GHG emissions"
     description: str = "Visualize agriculture GHG emissions"

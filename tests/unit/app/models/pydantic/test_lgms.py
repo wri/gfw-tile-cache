@@ -8,7 +8,7 @@ def test_lgms_rolls_up_every_sector():
     """LULUCF's own mosaic plus agriculture's children, whose net is emissions."""
     assert resolve_assets(LgmsLayer.lgms, LgmsFluxType.net) == [
         LgmsAsset(kind="mosaic", file_name="mosaic.json"),
-        LgmsAsset(kind="cog", file_name="cropland_emissions_per_ha.tif"),
+        LgmsAsset(kind="cog", file_name="cropland_per_ha_v2.tif"),
         LgmsAsset(kind="cog", file_name="livestock_per_ha_v2.tif"),
     ]
 
