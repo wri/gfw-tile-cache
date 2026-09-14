@@ -54,6 +54,7 @@ def lgms_xyz(
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",
+    include_in_schema=False,
 )
 def wri_land_ghg_monitoring_system_raster_tile(
     *,
