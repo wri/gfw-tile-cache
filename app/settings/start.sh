@@ -30,6 +30,13 @@ else
     echo "There is no script $PRE_START_PATH"
 fi
 
+# Bound GDAL's reads of COGs on S3 so a stalled connection cannot hold a
+# worker thread until the gunicorn timeout.
+export GDAL_HTTP_TIMEOUT=${GDAL_HTTP_TIMEOUT:-15}
+export GDAL_HTTP_CONNECTTIMEOUT=${GDAL_HTTP_CONNECTTIMEOUT:-5}
+export GDAL_HTTP_MAX_RETRY=${GDAL_HTTP_MAX_RETRY:-2}
+export GDAL_HTTP_RETRY_DELAY=${GDAL_HTTP_RETRY_DELAY:-1}
+
 export NEW_RELIC_LICENSE_KEY=$(jq -nr 'env.NEW_RELIC_LICENSE_KEY' | jq '.license_key' | sed 's/"//g')
 NEW_RELIC_CONFIG_FILE=/app/newrelic.ini
 export NEW_RELIC_CONFIG_FILE
