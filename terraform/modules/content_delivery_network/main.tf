@@ -533,6 +533,34 @@ resource "aws_cloudfront_distribution" "tiles" {
     }
   }
 
+  # Planet imagery masked to integrated alerts is proxied live by the tile cache
+  # app; it is never written to S3. This must precede the "*.png" behavior below,
+  # which would otherwise send it to the static bucket.
+  ordered_cache_behavior {
+    allowed_methods        = local.methods
+    cached_methods         = local.methods
+    target_origin_id       = "dynamic"
+    compress               = true
+    path_pattern           = "integrated_alerts_planet_imagery/*"
+    default_ttl            = 31536000 # 1y
+    max_ttl                = 31536000 # 1y
+    min_ttl                = 0
+    smooth_streaming       = false
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      headers                 = local.headers
+      query_string            = true
+      query_string_cache_keys = ["month"]
+
+      cookies {
+        forward           = "none"
+        whitelisted_names = []
+      }
+    }
+  }
+
   # Non default static tiles are stored on S3.
   # There might be some static raster tile caches which don't have default in their name.
   # We need to cache them somehow. In consequence, dynamic raster tile caches must always have `dynamic` in their name.

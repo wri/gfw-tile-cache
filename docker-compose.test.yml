@@ -34,6 +34,7 @@ services:
       - ENV=test
       - BUCKET=gfw-tiles-test
       - DATA_LAKE_BUCKET=gfw-data-lake-test
+      - PLANET_INTEGRATED_ALERTS_URL=http://planet-integrated-alerts-test  # stubbed in tests, never called
     entrypoint: /app/tests/run_tests.sh
     depends_on:
       - test_database
