@@ -86,6 +86,7 @@ ROUTERS = (
     gfw_integrated_alerts_drivers_router,
     gfw_integrated_dist_alerts_router,
     integrated_alerts_planet_imagery.router,
+    lgms_router,
     umd_glad_landsat_alerts_raster_tiles.router,
     umd_glad_sentinel2_alerts_raster_tiles.router,
     wur_radd_alerts_raster_tiles.router,
