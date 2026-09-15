@@ -65,18 +65,18 @@ class LulucfNetFlux(LgmsFlux):
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
-            -12.5: Colors(0, 60, 48),  # darkest removal
-            -10: Colors(1, 102, 94),
-            -7.5: Colors(53, 151, 143),
-            -5.0: Colors(128, 205, 193),
-            -2.5: Colors(199, 234, 229),  # lightest removal
-            -0.001: Colors(217, 231, 213),
-            0.001: Colors(217, 231, 213),
-            5.0: Colors(246, 232, 195),  # lightest emission
-            10.0: Colors(223, 194, 125),
-            15.0: Colors(191, 129, 45),
-            20.0: Colors(140, 81, 10),
-            25.0: Colors(84, 48, 5),  # darkest emission
+            -40: Colors(0, 60, 48),  # darkest removal
+            -20: Colors(1, 102, 94),
+            -10: Colors(53, 151, 143),
+            -4.5: Colors(128, 205, 193),
+            -1: Colors(199, 234, 229),  # lightest removal
+            -0.05: Colors(217, 231, 213),
+            0.05: Colors(217, 231, 213),
+            1: Colors(246, 232, 195),  # lightest emission
+            5: Colors(223, 194, 125),
+            12: Colors(191, 129, 45),
+            30: Colors(140, 81, 10),
+            75: Colors(84, 48, 5),  # darkest emission
         }
     )
 
@@ -88,18 +88,18 @@ class LulucfNetFlux(LgmsFlux):
 
 
 class AgricultureEmissions(LgmsFlux):
-    """Visualize agriculture GHG emissions. """
+    """Visualize agriculture GHG emissions."""
 
     title: str = "Agriculture GHG emissions"
     description: str = "Visualize agriculture GHG emissions"
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
-            0: Colors(255, 255, 212),
-            0.05: Colors(254, 227, 145),
-            0.2: Colors(254, 196, 79),
-            0.7: Colors(254, 153, 41),
-            2.0: Colors(217, 95, 14),
-            6.0: Colors(153, 52, 4),
+            0: Colors(217, 231, 213),
+            0.05: Colors(246, 232, 195),
+            0.2: Colors(223, 194, 125),
+            0.7: Colors(191, 129, 45),
+            2.0: Colors(140, 81, 10),
+            6.0: Colors(84, 48, 5),
         }
     )
