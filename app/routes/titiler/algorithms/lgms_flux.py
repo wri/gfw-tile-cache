@@ -65,10 +65,10 @@ class LulucfNetFlux(LgmsFlux):
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
-            -40: Colors(0, 60, 48),  # darkest removal
-            -20: Colors(1, 102, 94),
-            -10: Colors(53, 151, 143),
-            -4.5: Colors(128, 205, 193),
+            -25: Colors(0, 60, 48),  # darkest removal
+            -13: Colors(1, 102, 94),
+            -6.5: Colors(53, 151, 143),
+            -3: Colors(128, 205, 193),
             -1: Colors(199, 234, 229),  # lightest removal
             -0.05: Colors(217, 231, 213),
             0.05: Colors(217, 231, 213),
