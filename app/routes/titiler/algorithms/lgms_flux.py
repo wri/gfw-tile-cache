@@ -73,10 +73,10 @@ class LulucfNetFlux(LgmsFlux):
             -0.05: Colors(217, 231, 213),
             0.05: Colors(217, 231, 213),
             1: Colors(246, 232, 195),  # lightest emission
-            5: Colors(223, 194, 125),
-            12: Colors(191, 129, 45),
-            30: Colors(140, 81, 10),
-            75: Colors(84, 48, 5),  # darkest emission
+            3: Colors(223, 194, 125),
+            8: Colors(191, 129, 45),
+            20: Colors(140, 81, 10),
+            50: Colors(84, 48, 5),  # darkest emission
         }
     )
 
