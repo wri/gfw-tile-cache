@@ -20,7 +20,7 @@ router = APIRouter()
 
 drivers_route_name = "gfw_integrated_alerts_drivers"
 drivers_dataset = "wur_integration_alert_drivers_class"
-integrated_alerts_dataset = "gfw_integrated_alerts"
+integrated_alerts_dataset = "gfw_integrated_dist_alerts"
 
 # We don't set a fixed set of versions that can be used, since we want to be able
 # to serve any new drivers version created since this server started.
@@ -75,7 +75,7 @@ async def gfw_integrated_alerts_drivers_raster_tile(
     if integrated_alerts_version is None:
         raise RuntimeError("No latest version set for gfw_integrated_alerts.")
 
-    bands = ["default", "intensity"]
+    bands = ["overlap", "overlapintensity"]
     folder: str = f"s3://{DATA_LAKE_BUCKET}/{integrated_alerts_dataset}/{integrated_alerts_version}/raster/epsg-4326/cog"
     with AlertsReader(input=folder) as reader:
         tile_x, tile_y, zoom = xyz
