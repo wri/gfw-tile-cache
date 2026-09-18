@@ -70,8 +70,9 @@ class LulucfNetFlux(LgmsFlux):
             -6.5: Colors(53, 151, 143),
             -3: Colors(128, 205, 193),
             -1: Colors(199, 234, 229),  # lightest removal
-            -0.05: Colors(217, 231, 213),
-            0.05: Colors(217, 231, 213),
+            -0.05: Colors(232, 240, 230),  # palest removal
+            0: Colors(255, 251, 241),  # palest emission
+            0.05: Colors(254, 246, 228),
             1: Colors(246, 232, 195),  # lightest emission
             3: Colors(223, 194, 125),
             8: Colors(191, 129, 45),
@@ -95,7 +96,7 @@ class AgricultureEmissions(LgmsFlux):
 
     conf_colors: OrderedDict[float, tuple] = OrderedDict(
         {
-            0: Colors(217, 231, 213),
+            0: Colors(254, 246, 228),  # palest emission
             0.05: Colors(246, 232, 195),
             0.2: Colors(223, 194, 125),
             0.7: Colors(191, 129, 45),
