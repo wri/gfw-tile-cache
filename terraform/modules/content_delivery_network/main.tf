@@ -542,8 +542,9 @@ resource "aws_cloudfront_distribution" "tiles" {
     target_origin_id       = "dynamic"
     compress               = true
     path_pattern           = "integrated_alerts_planet_imagery/*"
-    default_ttl            = 31536000 # 1y
-    max_ttl                = 31536000 # 1y
+    # Planet refreshes the alert mask monthly, so every month's tiles change.
+    default_ttl            = 86400 # 1d
+    max_ttl                = 86400 # 1d
     min_ttl                = 0
     smooth_streaming       = false
     trusted_signers        = []

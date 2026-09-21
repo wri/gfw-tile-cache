@@ -48,7 +48,7 @@ def test_tile_is_served_from_the_mosaic_for_the_requested_month(monkeypatch):
     assert response.status_code == 200
     assert response.content == b"png-bytes"
     assert response.headers["content-type"] == "image/png"
-    assert response.headers["cache-control"] == "max-age=31536000"
+    assert response.headers["cache-control"] == "max-age=86400"
     assert requested == [
         f"{upstream_url}/wmts/v1/planet_medres_visual_2020-09_mosaic/15/10014/16385.png"
     ]
@@ -64,7 +64,7 @@ def test_month_outside_the_available_range_is_rejected(monkeypatch, month):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("zoom", [2, 16])
+@pytest.mark.parametrize("zoom", [9, 19])
 def test_zoom_outside_the_supported_range_is_rejected(monkeypatch, zoom):
     response = build_client(monkeypatch, refuse_to_serve).get(
         f"/integrated_alerts_planet_imagery/{zoom}/1/1.png?month=2020-09"

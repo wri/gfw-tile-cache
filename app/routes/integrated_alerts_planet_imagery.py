@@ -40,7 +40,7 @@ async def integrated_alerts_planet_imagery_tile(
         f"Ranges from {ARCHIVE_START_MONTH} to the last full calendar month.",
         examples=["2026-07"],
     ),
-    z: int = Path(..., description="Zoom level", ge=3, le=15),
+    z: int = Path(..., description="Zoom level", ge=10, le=18),
     x: int = Path(..., description="Tile grid column", ge=0),
     y: int = Path(..., description="Tile grid row", ge=0),
 ) -> Response:
@@ -82,10 +82,10 @@ async def integrated_alerts_planet_imagery_tile(
 
     # NR Telemetry: Track tiles actually served against Planet's monthly tile quota.
     record_custom_event("PlanetTileRequest", {"month": month, "zoom": z})
-
-    # Every month served is complete, so its imagery never changes again.
+    
+    # Cache just 1 day for now since upstream caches 30 days and then invalidates
     return Response(
         response.content,
         media_type="image/png",
-        headers={"Cache-Control": "max-age=31536000"},  # 1y
+        headers={"Cache-Control": "max-age=86400"},  # 1d
     )
