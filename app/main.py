@@ -55,6 +55,7 @@ from .routes.titiler.umd_tree_cover_loss_from_fires import (
 from .routes.titiler.gfw_integrated_alerts_drivers import (
     router as gfw_integrated_alerts_drivers_router,
 )
+from .routes.titiler.wur_alert_drivers import router as wur_alerts_drivers_router
 from .routes.titiler.gfw_integrated_dist_alerts import (
     router as gfw_integrated_dist_alerts_router,
 )
@@ -84,6 +85,7 @@ ROUTERS = (
     umd_tree_cover_loss_router,
     umd_tree_cover_loss_from_fires_router,
     gfw_integrated_alerts_drivers_router,
+    wur_alerts_drivers_router,
     gfw_integrated_dist_alerts_router,
     integrated_alerts_planet_imagery.router,
     umd_glad_landsat_alerts_raster_tiles.router,
