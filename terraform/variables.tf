@@ -102,6 +102,12 @@ variable "planet_integrated_alerts_url_secret" {
   default = "planet/integrated_alerts_url"
 }
 
+variable "planet_api_key_secret" {
+  type        = string
+  description = "Name of the secret holding a Planet API key able to read tile usage reports for the subscription"
+  default = "planet/api_key"
+}
+
 variable "data_lake_bucket_name" {
   description = "Data Lake S3 bucket name"
   default = ""

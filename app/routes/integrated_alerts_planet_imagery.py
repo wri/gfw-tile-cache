@@ -15,6 +15,7 @@ from fastapi.logger import logger
 from newrelic.agent import record_custom_event
 
 from ..settings.globals import GLOBALS
+from ..utils.planet_quota import seconds_until_quota_reset, tiles_used_this_month
 
 router = APIRouter()
 
@@ -23,6 +24,27 @@ client = httpx.AsyncClient(timeout=GLOBALS.httpx_timeout)
 MONTH_REGEX = r"^\d{4}-(0[1-9]|1[0-2])$"
 
 ARCHIVE_START_MONTH = "2020-09"  # first Planet monthly mosaic
+
+# The Planet subscription tile usage is billed to, from my/subscriptions.
+PLANET_SUBSCRIPTION_ID = 800877
+MONTHLY_TILE_LIMIT = 250_000  # tiles the contract allows per calendar month
+
+
+async def quota_exhausted() -> bool:
+    """Whether the plan has spent its monthly tile allowance.
+
+    Cached per month, so this costs one Planet call every few minutes per
+    worker rather than one per tile. Unknown usage serves the tile.
+    """
+    if not GLOBALS.planet_api_key:
+        return False
+    used = await tiles_used_this_month(
+        client,
+        subscription_id=PLANET_SUBSCRIPTION_ID,
+        api_key=str(GLOBALS.planet_api_key),
+        month=pendulum.now("UTC").format("YYYY-MM"),
+    )
+    return used is not None and used >= MONTHLY_TILE_LIMIT
 
 
 @router.get(
@@ -60,6 +82,18 @@ async def integrated_alerts_planet_imagery_tile(
             detail=f"Month must be between {ARCHIVE_START_MONTH} and {last_full_month}, the last full calendar month",
         )
 
+    # Planet answers an exhausted allowance with a plain 502, so the only way to
+    # report it honestly is to stop before asking them.
+    if await quota_exhausted():
+        raise HTTPException(
+            status_code=429,
+            detail="Planet monthly tile allowance is exhausted",
+            headers={
+                "Retry-After": str(seconds_until_quota_reset()),
+                "Cache-Control": "no-store",
+            },
+        )
+
     url = (
         f"{GLOBALS.planet_integrated_alerts_url}/wmts/v1/"
         f"planet_medres_visual_{month}_mosaic/{z}/{x}/{y}.png"
@@ -82,7 +116,7 @@ async def integrated_alerts_planet_imagery_tile(
 
     # NR Telemetry: Track tiles actually served against Planet's monthly tile quota.
     record_custom_event("PlanetTileRequest", {"month": month, "zoom": z})
-    
+
     # Cache just 1 day for now since upstream caches 30 days and then invalidates
     return Response(
         response.content,

@@ -126,3 +126,30 @@ def test_unsuccessful_tile_is_not_recorded_as_a_custom_event(monkeypatch, handle
     build_client(monkeypatch, handler).get(tile_path)
 
     assert events == []
+
+
+async def exhausted():
+    return True
+
+
+async def not_exhausted():
+    return False
+
+
+def test_exhausted_quota_is_rejected_without_calling_planet(monkeypatch):
+    """Planet can't tell us we're over, so we must stop before asking."""
+    monkeypatch.setattr(route, "quota_exhausted", exhausted)
+
+    response = build_client(monkeypatch, refuse_to_serve).get(tile_path)
+
+    assert response.status_code == 429
+    assert int(response.headers["retry-after"]) > 0
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_a_tile_is_still_served_while_the_quota_lasts(monkeypatch):
+    monkeypatch.setattr(route, "quota_exhausted", not_exhausted)
+
+    response = build_client(monkeypatch, serve_tile).get(tile_path)
+
+    assert response.status_code == 200

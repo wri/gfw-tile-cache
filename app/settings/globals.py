@@ -96,6 +96,12 @@ class Globals(BaseSettings):
         "Set per environment; the endpoint is unavailable without it.",
     )
 
+    planet_api_key: Optional[Secret] = Field(
+        None,
+        description="Planet API key entitled to the subscription, used to read its tile "
+        "usage reports. Quota monitoring is off without it.",
+    )
+
     dist_alerts_forest_filters: Dict = Field(
         dist_alerts_forest_filters,
         description="Datasets that are used as forest filters for DIST alerts",
@@ -124,6 +130,13 @@ class Globals(BaseSettings):
                     "Could not extract token from token secret. Set token to None."
                 )
         return None
+
+    @field_validator("planet_api_key", mode="before")
+    def hide_planet_api_key(cls, v: Optional[str]) -> Optional[Secret]:
+        """Wrap the key before validation, which would otherwise echo it in the error."""
+        if v:
+            return Secret(v)
+        return v
 
     @field_validator("reader_password", mode="before")
     def hide_password(cls, v: Optional[str]) -> Optional[Secret]:
