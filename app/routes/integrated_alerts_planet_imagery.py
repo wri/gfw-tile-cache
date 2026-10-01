@@ -25,17 +25,13 @@ MONTH_REGEX = r"^\d{4}-(0[1-9]|1[0-2])$"
 
 ARCHIVE_START_MONTH = "2020-09"  # first Planet monthly mosaic
 
-# The Planet subscription tile usage is billed to, from my/subscriptions.
 PLANET_SUBSCRIPTION_ID = 800877
-MONTHLY_TILE_LIMIT = 250_000  # tiles the contract allows per calendar month
-
-# Planet republishes the alert mask monthly, starting on the 15th and finishing
-# within hours, so by this day every month's tiles are clipped to a new mask.
+MONTHLY_TILE_LIMIT = 250_000
 ALERT_REFRESH_DAY = 16
 
 
 def seconds_until_alert_refresh(now: pendulum.DateTime) -> int:
-    """How long the current mask lasts, so every tile expires as it changes."""
+    """Seconds until Planet next republishes the alert mask."""
     refresh = now.set(day=ALERT_REFRESH_DAY).start_of("day")
     if refresh <= now:
         refresh = refresh.add(months=1)
@@ -43,16 +39,12 @@ def seconds_until_alert_refresh(now: pendulum.DateTime) -> int:
 
 
 def cache_headers(now: pendulum.DateTime) -> dict:
-    """Every cache, edge or browser, drops the tile when the mask changes."""
+    """Cache headers that expire with the alert mask."""
     return {"Cache-Control": f"max-age={seconds_until_alert_refresh(now)}"}
 
 
 async def quota_exhausted() -> bool:
-    """Whether the plan has spent its monthly tile allowance.
-
-    Cached per month, so this costs one Planet call every few minutes per
-    worker rather than one per tile. Unknown usage serves the tile.
-    """
+    """Whether the plan has spent its monthly tile allowance."""
     if not GLOBALS.planet_api_key:
         return False
     used = await tiles_used_this_month(
@@ -99,8 +91,6 @@ async def integrated_alerts_planet_imagery_tile(
             detail=f"Month must be between {ARCHIVE_START_MONTH} and {last_full_month}, the last full calendar month",
         )
 
-    # Planet answers an exhausted allowance with a plain 502, so the only way to
-    # report it honestly is to stop before asking them.
     if await quota_exhausted():
         raise HTTPException(
             status_code=429,

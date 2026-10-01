@@ -1,16 +1,7 @@
-"""Planet's usage reports, which cover tile streaming for a whole subscription.
+"""Planet tile streaming usage for a subscription.
 
-This is an account-level API, separate from the WMTS endpoint the tile route
-proxies. Reading it needs a Planet key entitled to the subscription; an ordinary key
-works, despite what the release doc says about Organization Administrators.
-Planet builds the reports daily, each covering the previous 24 hours, so a
-report that includes today always undercounts.
-
-The paths and parameters here are what the service actually does, which differs
-from Planet's WMTS release doc in three ways, all verified against a real call
-on 2026-09-30: the documented `reports/v1` path is a redirect, the id in it is
-the subscription id rather than the plan id from the account page, and
-`include_user` is required rather than optional.
+Reports are built daily and cover the previous 24 hours, so one including today
+undercounts.
 """
 
 import csv
@@ -22,11 +13,7 @@ USAGE_REPORT_URL = "https://api.planet.com/receipts/v1/usage-reports/plans/{subs
 
 
 def tiles_used(report: str) -> int:
-    """Total tile views in a usage report, which Planet returns as CSV.
-
-    One row per user and period, so the total is the sum rather than a single
-    figure. Columns: date, subscription_id, type, tile_views, email.
-    """
+    """Total tile views in a usage report, which Planet returns as CSV."""
     return sum(int(row["tile_views"]) for row in csv.DictReader(report.splitlines()))
 
 

@@ -12,13 +12,11 @@ report = (
 
 
 def test_every_row_of_the_report_counts_towards_the_total():
-    """Planet returns CSV with a row per user and period, not a single figure."""
     assert tiles_used(report) == 6802
 
 
 @pytest.mark.asyncio
 async def test_usage_is_requested_for_the_current_month_to_date():
-    """Planet bills per calendar month, so the window starts on the 1st."""
     requested = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -41,7 +39,7 @@ async def test_usage_is_requested_for_the_current_month_to_date():
         "end": "2026-09-30",
         "interval": "monthly",
         "type": "basemaps",
-        "include_user": "true",  # required: omitting it is a 400
+        "include_user": "true",
     }
 
 

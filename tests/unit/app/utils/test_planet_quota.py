@@ -20,7 +20,6 @@ def report(views: int) -> str:
 
 @pytest.mark.asyncio
 async def test_usage_is_only_fetched_once_per_cached_month():
-    """The check runs on the tile path, so it must not call Planet every request."""
     calls = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -42,7 +41,6 @@ async def test_usage_is_only_fetched_once_per_cached_month():
 
 @pytest.mark.asyncio
 async def test_a_new_month_is_fetched_again():
-    """Keying on the month resets the reading the moment the allowance does."""
     calls = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -63,7 +61,6 @@ async def test_a_new_month_is_fetched_again():
 
 @pytest.mark.asyncio
 async def test_planet_being_unreachable_does_not_block_tiles():
-    """Unknown usage must serve tiles, and must not retry on every request."""
     calls = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -80,7 +77,7 @@ async def test_planet_being_unreachable_does_not_block_tiles():
             )
 
     assert used is None
-    assert len(calls) == 1  # the failure is cached too, so an outage can't stampede
+    assert len(calls) == 1
 
 
 def test_the_allowance_returns_at_the_start_of_next_month():

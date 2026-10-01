@@ -137,7 +137,6 @@ async def not_exhausted():
 
 
 def test_exhausted_quota_is_rejected_without_calling_planet(monkeypatch):
-    """Planet can't tell us we're over, so we must stop before asking."""
     monkeypatch.setattr(route, "quota_exhausted", exhausted)
 
     response = build_client(monkeypatch, refuse_to_serve).get(tile_path)
@@ -175,7 +174,6 @@ def test_tiles_expire_when_planet_republishes_the_alert_mask(now, expires):
 
 
 def test_the_tile_is_cached_until_the_refresh(monkeypatch):
-    """One lifetime for every cache, since the mask changes for all of them at once."""
     monkeypatch.setattr(route, "quota_exhausted", not_exhausted)
 
     response = build_client(monkeypatch, serve_tile).get(tile_path)
