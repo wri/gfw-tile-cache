@@ -62,7 +62,7 @@ async def integrated_alerts_planet_imagery_tile(
         f"Ranges from {ARCHIVE_START_MONTH} to the last full calendar month.",
         examples=["2026-07"],
     ),
-    z: int = Path(..., description="Zoom level", ge=10, le=18),
+    z: int = Path(..., description="Zoom level", ge=10, le=15),
     x: int = Path(..., description="Tile grid column", ge=0),
     y: int = Path(..., description="Tile grid row", ge=0),
 ) -> Response:

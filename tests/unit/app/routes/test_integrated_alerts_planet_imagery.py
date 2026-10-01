@@ -64,7 +64,7 @@ def test_month_outside_the_available_range_is_rejected(monkeypatch, month):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("zoom", [9, 19])
+@pytest.mark.parametrize("zoom", [9, 16])
 def test_zoom_outside_the_supported_range_is_rejected(monkeypatch, zoom):
     response = build_client(monkeypatch, refuse_to_serve).get(
         f"/integrated_alerts_planet_imagery/{zoom}/1/1.png?month=2020-09"
