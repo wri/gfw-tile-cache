@@ -8,14 +8,18 @@ to Planet's public endpoints instead.
 Planet publishes one mosaic per calendar month, so tiles are requested by month.
 """
 
+import csv
+import datetime
+from typing import Optional
+
 import httpx
 import pendulum
+from async_lru import alru_cache
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 from fastapi.logger import logger
 from newrelic.agent import record_custom_event
 
 from ..settings.globals import GLOBALS
-from ..utils.planet_quota import seconds_until_quota_reset, tiles_used_this_month
 
 router = APIRouter()
 
@@ -28,6 +32,52 @@ ARCHIVE_START_MONTH = "2020-09"  # first Planet monthly mosaic
 PLANET_SUBSCRIPTION_ID = 800877
 MONTHLY_TILE_LIMIT = 250_000
 ALERT_REFRESH_DAY = 16
+USAGE_CACHE_SECONDS = 300
+USAGE_REPORT_URL = "https://api.planet.com/receipts/v1/usage-reports/plans/{subscription_id}/tiles/usage/"
+
+
+def tiles_used(report: str) -> int:
+    """Total tile views in a usage report, which Planet returns as CSV."""
+    return sum(int(row["tile_views"]) for row in csv.DictReader(report.splitlines()))
+
+
+async def fetch_monthly_usage(
+    subscription_id: int, api_key: str, today: datetime.date
+) -> int:
+    """Tile views billed to the subscription since the start of `today`'s month."""
+    response = await client.get(
+        USAGE_REPORT_URL.format(subscription_id=subscription_id),
+        auth=(api_key, ""),
+        params={
+            "start": today.replace(day=1).isoformat(),
+            "end": today.isoformat(),
+            "interval": "monthly",
+            "type": "basemaps",
+            "include_user": "true",
+        },
+    )
+    response.raise_for_status()
+    return tiles_used(response.text)
+
+
+@alru_cache(maxsize=2, ttl=USAGE_CACHE_SECONDS)
+async def tiles_used_this_month(
+    subscription_id: int, api_key: str, month: str
+) -> Optional[int]:
+    """Tile views so far this month, or None if Planet can't be read."""
+    try:
+        return await fetch_monthly_usage(
+            subscription_id, api_key, datetime.date.today()
+        )
+    except (httpx.HTTPError, KeyError, ValueError) as error:
+        logger.error(f"Planet tile usage for {month} is unavailable: {error}")
+        return None
+
+
+def seconds_until_quota_reset() -> int:
+    """Seconds until the allowance resets."""
+    now = pendulum.now("UTC")
+    return int((now.start_of("month").add(months=1) - now).total_seconds())
 
 
 def seconds_until_alert_refresh(now: pendulum.DateTime) -> int:
@@ -48,10 +98,9 @@ async def quota_exhausted() -> bool:
     if not GLOBALS.planet_api_key:
         return False
     used = await tiles_used_this_month(
-        client,
-        subscription_id=PLANET_SUBSCRIPTION_ID,
-        api_key=str(GLOBALS.planet_api_key),
-        month=pendulum.now("UTC").format("YYYY-MM"),
+        PLANET_SUBSCRIPTION_ID,
+        str(GLOBALS.planet_api_key),
+        pendulum.now("UTC").format("YYYY-MM"),
     )
     return used is not None and used >= MONTHLY_TILE_LIMIT
 

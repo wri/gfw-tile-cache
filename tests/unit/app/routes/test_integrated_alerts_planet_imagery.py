@@ -180,3 +180,115 @@ def test_the_tile_is_cached_until_the_refresh(monkeypatch):
 
     age = int(response.headers["cache-control"].split("max-age=")[1])
     assert 0 < age <= 31 * 24 * 3600
+
+
+@pytest.fixture(autouse=True)
+def clear_usage_cache():
+    route.tiles_used_this_month.cache_clear()
+
+
+def usage_report(views: int) -> str:
+    return f"date,subscription_id,type,tile_views,email\n2026-10-01,1,basemaps,{views},a@b.c\n"
+
+
+def stub_planet(monkeypatch, handler):
+    monkeypatch.setattr(
+        route, "client", httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    )
+
+
+def test_every_row_of_the_report_counts_towards_the_total():
+    rows = usage_report(42) + "2026-10-01,1,basemaps,8,a@b.c\n"
+
+    assert route.tiles_used(rows) == 50
+
+
+@pytest.mark.asyncio
+async def test_usage_is_requested_for_the_current_month_to_date(monkeypatch):
+    requested = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(request)
+        return httpx.Response(200, text=usage_report(6802))
+
+    stub_planet(monkeypatch, handler)
+    used = await route.fetch_monthly_usage(
+        800877, "planet-key", pendulum.date(2026, 9, 30)  # pragma: allowlist secret
+    )
+
+    assert used == 6802
+    assert (
+        requested[0].url.path == "/receipts/v1/usage-reports/plans/800877/tiles/usage/"
+    )
+    assert dict(requested[0].url.params) == {
+        "start": "2026-09-01",
+        "end": "2026-09-30",
+        "interval": "monthly",
+        "type": "basemaps",
+        "include_user": "true",
+    }
+
+
+@pytest.mark.asyncio
+async def test_an_error_from_planet_is_raised(monkeypatch):
+    stub_planet(monkeypatch, lambda request: httpx.Response(403))
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await route.fetch_monthly_usage(
+            800877, "planet-key", pendulum.date(2026, 9, 30)  # pragma: allowlist secret
+        )
+
+
+@pytest.mark.asyncio
+async def test_usage_is_only_fetched_once_per_cached_month(monkeypatch):
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(200, text=usage_report(42))
+
+    stub_planet(monkeypatch, handler)
+    for _ in range(3):
+        used = await route.tiles_used_this_month(1, "k", "2026-10")
+
+    assert used == 42
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_new_month_is_fetched_again(monkeypatch):
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(200, text=usage_report(42))
+
+    stub_planet(monkeypatch, handler)
+    for month in ("2026-10", "2026-11"):
+        await route.tiles_used_this_month(1, "k", month)
+
+    assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_planet_being_unreachable_does_not_block_tiles(monkeypatch):
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(503)
+
+    stub_planet(monkeypatch, handler)
+    for _ in range(3):
+        used = await route.tiles_used_this_month(1, "k", "2026-10")
+
+    assert used is None
+    assert len(calls) == 1
+
+
+def test_the_allowance_returns_at_the_start_of_next_month():
+    now = pendulum.now("UTC")
+    seconds = route.seconds_until_quota_reset()
+
+    assert 0 < seconds <= 31 * 24 * 3600
+    assert now.add(seconds=seconds + 1) >= now.start_of("month").add(months=1)
