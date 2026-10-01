@@ -48,7 +48,7 @@ def test_tile_is_served_from_the_mosaic_for_the_requested_month(monkeypatch):
     assert response.status_code == 200
     assert response.content == b"png-bytes"
     assert response.headers["content-type"] == "image/png"
-    assert response.headers["cache-control"] == "max-age=86400"
+    assert response.headers["cache-control"].startswith("max-age=")
     assert requested == [
         f"{upstream_url}/wmts/v1/planet_medres_visual_2020-09_mosaic/15/10014/16385.png"
     ]
@@ -153,3 +153,32 @@ def test_a_tile_is_still_served_while_the_quota_lasts(monkeypatch):
     response = build_client(monkeypatch, serve_tile).get(tile_path)
 
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    "now, expires",
+    [
+        ("2026-10-01T00:00:00Z", "2026-10-16T00:00:00Z"),  # before this month's refresh
+        ("2026-10-15T23:59:59Z", "2026-10-16T00:00:00Z"),  # the night the refresh lands
+        (
+            "2026-10-16T00:00:00Z",
+            "2026-11-16T00:00:00Z",
+        ),  # on the boundary, wait for next
+        ("2026-10-20T12:00:00Z", "2026-11-16T00:00:00Z"),  # after it, next month
+        ("2026-12-20T12:00:00Z", "2027-01-16T00:00:00Z"),  # across the year
+    ],
+)
+def test_tiles_expire_when_planet_republishes_the_alert_mask(now, expires):
+    seconds = route.seconds_until_alert_refresh(pendulum.parse(now))
+
+    assert pendulum.parse(now).add(seconds=seconds) == pendulum.parse(expires)
+
+
+def test_the_tile_is_cached_until_the_refresh(monkeypatch):
+    """One lifetime for every cache, since the mask changes for all of them at once."""
+    monkeypatch.setattr(route, "quota_exhausted", not_exhausted)
+
+    response = build_client(monkeypatch, serve_tile).get(tile_path)
+
+    age = int(response.headers["cache-control"].split("max-age=")[1])
+    assert 0 < age <= 31 * 24 * 3600

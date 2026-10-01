@@ -29,6 +29,23 @@ ARCHIVE_START_MONTH = "2020-09"  # first Planet monthly mosaic
 PLANET_SUBSCRIPTION_ID = 800877
 MONTHLY_TILE_LIMIT = 250_000  # tiles the contract allows per calendar month
 
+# Planet republishes the alert mask monthly, starting on the 15th and finishing
+# within hours, so by this day every month's tiles are clipped to a new mask.
+ALERT_REFRESH_DAY = 16
+
+
+def seconds_until_alert_refresh(now: pendulum.DateTime) -> int:
+    """How long the current mask lasts, so every tile expires as it changes."""
+    refresh = now.set(day=ALERT_REFRESH_DAY).start_of("day")
+    if refresh <= now:
+        refresh = refresh.add(months=1)
+    return int((refresh - now).total_seconds())
+
+
+def cache_headers(now: pendulum.DateTime) -> dict:
+    """Every cache, edge or browser, drops the tile when the mask changes."""
+    return {"Cache-Control": f"max-age={seconds_until_alert_refresh(now)}"}
+
 
 async def quota_exhausted() -> bool:
     """Whether the plan has spent its monthly tile allowance.
@@ -117,9 +134,8 @@ async def integrated_alerts_planet_imagery_tile(
     # NR Telemetry: Track tiles actually served against Planet's monthly tile quota.
     record_custom_event("PlanetTileRequest", {"month": month, "zoom": z})
 
-    # Cache just 1 day for now since upstream caches 30 days and then invalidates
     return Response(
         response.content,
         media_type="image/png",
-        headers={"Cache-Control": "max-age=86400"},  # 1d
+        headers=cache_headers(pendulum.now("UTC")),
     )
