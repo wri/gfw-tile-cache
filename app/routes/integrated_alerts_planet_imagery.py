@@ -33,6 +33,7 @@ PLANET_SUBSCRIPTION_ID = 800877
 MONTHLY_TILE_LIMIT = 250_000
 ALERT_REFRESH_DAY = 16
 USAGE_CACHE_SECONDS = 300
+USAGE_TIMEOUT_SECONDS = 5
 USAGE_REPORT_URL = "https://api.planet.com/receipts/v1/usage-reports/plans/{subscription_id}/tiles/usage/"
 
 
@@ -55,6 +56,7 @@ async def fetch_monthly_usage(
             "type": "basemaps",
             "include_user": "true",
         },
+        timeout=USAGE_TIMEOUT_SECONDS,
     )
     response.raise_for_status()
     return tiles_used(response.text)

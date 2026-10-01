@@ -230,6 +230,20 @@ async def test_usage_is_requested_for_the_current_month_to_date(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_the_usage_request_gives_up_quickly(monkeypatch):
+    requested = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(request)
+        return httpx.Response(200, text=usage_report(1))
+
+    stub_planet(monkeypatch, handler)
+    await route.fetch_monthly_usage(1, "k", pendulum.date(2026, 10, 1))
+
+    assert requested[0].extensions["timeout"]["read"] == route.USAGE_TIMEOUT_SECONDS
+
+
+@pytest.mark.asyncio
 async def test_an_error_from_planet_is_raised(monkeypatch):
     stub_planet(monkeypatch, lambda request: httpx.Response(403))
 
