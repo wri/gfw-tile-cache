@@ -17,7 +17,6 @@ import pendulum
 from async_lru import alru_cache
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 from fastapi.logger import logger
-from newrelic.agent import record_custom_event
 
 from ..settings.globals import GLOBALS
 
@@ -171,9 +170,6 @@ async def integrated_alerts_planet_imagery_tile(
     if response.status_code != 200:
         logger.error(f"{url} returned status {response.status_code}")
         raise HTTPException(status_code=502, detail="Planet imagery is unavailable")
-
-    # NR Telemetry: Track tiles actually served against Planet's monthly tile quota.
-    record_custom_event("PlanetTileRequest", {"month": month, "zoom": z})
 
     return Response(
         response.content,
