@@ -34,6 +34,7 @@ data "template_file" "container_definition" {
     data_lake_bucket_name     = local.data_lake_bucket_name
 
     planet_integrated_alerts_url_arn = data.aws_secretsmanager_secret.planet_integrated_alerts_url.arn
+    planet_api_key_arn               = data.aws_secretsmanager_secret.planet_api_key.arn
   }
 }
 
@@ -57,6 +58,18 @@ data "aws_iam_policy_document" "read_planet_integrated_alerts_url" {
   statement {
     actions   = ["secretsmanager:GetSecretValue"]
     resources = [data.aws_secretsmanager_secret.planet_integrated_alerts_url.arn]
+    effect    = "Allow"
+  }
+}
+
+data "aws_secretsmanager_secret" "planet_api_key" {
+  name = var.planet_api_key_secret
+}
+
+data "aws_iam_policy_document" "read_planet_api_key" {
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [data.aws_secretsmanager_secret.planet_api_key.arn]
     effect    = "Allow"
   }
 }
