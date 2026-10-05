@@ -276,3 +276,20 @@ def test_the_allowance_returns_at_the_start_of_next_month():
 
     assert 0 < seconds <= 31 * 24 * 3600
     assert now.add(seconds=seconds + 1) >= now.start_of("month").add(months=1)
+
+
+status_path = "/integrated_alerts_planet_imagery/status"
+
+
+@pytest.mark.parametrize(
+    "quota, status",
+    [(not_exhausted, "available"), (exhausted, "unavailable")],
+)
+def test_status_reports_whether_tiles_can_still_be_served(monkeypatch, quota, status):
+    monkeypatch.setattr(route, "quota_exhausted", quota)
+
+    response = build_client(monkeypatch, refuse_to_serve).get(status_path)
+
+    assert response.status_code == 200
+    assert response.json() == {"status": status}
+    assert response.headers["cache-control"] == "no-store"

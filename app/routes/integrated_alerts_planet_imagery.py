@@ -16,6 +16,7 @@ import httpx
 import pendulum
 from async_lru import alru_cache
 from fastapi import APIRouter, HTTPException, Path, Query, Response
+from fastapi.responses import JSONResponse
 from fastapi.logger import logger
 
 from ..settings.globals import GLOBALS
@@ -104,6 +105,17 @@ async def quota_exhausted() -> bool:
         pendulum.now("UTC").format("YYYY-MM"),
     )
     return used is not None and used >= MONTHLY_TILE_LIMIT
+
+
+@router.get(
+    "/integrated_alerts_planet_imagery/status",
+    tags=["Raster Tiles"],
+    response_description="Whether tiles are currently being served",
+)
+async def integrated_alerts_planet_imagery_status() -> JSONResponse:
+    """Whether Planet imagery is still within its monthly tile allowance."""
+    status = "unavailable" if await quota_exhausted() else "available"
+    return JSONResponse({"status": status}, headers={"Cache-Control": "no-store"})
 
 
 @router.get(
