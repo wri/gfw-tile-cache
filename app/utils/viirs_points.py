@@ -14,6 +14,10 @@ Tiles mimic GFW's dynamic VIIRS vector layer: alerts are counted on the same
 grid it aggregates them on (1024 cells across a 512-pixel vector tile, so half
 a CSS pixel), each cell is drawn as a dot sized by zoom, and the dot's color
 follows GFW's count ramp, from yellow-orange (one alert) to black (16 or more).
+At low zooms the dots overlap. GFW's map draws them in whatever order its tiles
+list the cells, so the dot on top is effectively arbitrary; here overlapping
+dots are drawn in a fixed pseudo-random order, so tiles look like GFW's rather
+than letting the densest cells cover their neighbors.
 """
 
 import fcntl
@@ -30,7 +34,6 @@ from typing import List, Optional, Tuple
 
 import boto3
 import datashader as ds
-import datashader.transfer_functions as tf
 import mercantile
 import numpy as np
 import pandas as pd
@@ -246,6 +249,28 @@ class PointsStore:
         logger.info(f"Converted {self.uri} in {seconds}s")
 
 
+def draw_priority(rows: np.ndarray, columns: np.ndarray) -> np.ndarray:
+    """A fixed pseudo-random priority for each grid cell, from its position in
+    the zoom level's whole grid, so a dot crossing a tile edge is drawn the
+    same way in both tiles."""
+    h = (rows.astype(np.uint64) * np.uint64(0x9E3779B1)) ^ (
+        columns.astype(np.uint64) * np.uint64(0x85EBCA77)
+    )
+    h ^= h >> np.uint64(15)
+    h *= np.uint64(0x2C1B3C6D)
+    h ^= h >> np.uint64(12)
+    return (h & np.uint64(0xFFFFF)).astype(np.int64)
+
+
+def disk_offsets(radius: int) -> List[Tuple[int, int]]:
+    """The cells of a dot `2 * radius + 1` cells wide, around its center
+    (datashader's circle shape)."""
+    span = range(-radius, radius + 1)
+    return [
+        (dy, dx) for dy in span for dx in span if math.hypot(dy, dx) <= radius + 0.5
+    ]
+
+
 def render_tile(
     points: Points,
     z: int,
@@ -270,18 +295,28 @@ def render_tile(
         x_range=(left - margin * cell, right + margin * cell),
         y_range=(bottom - margin * cell, top + margin * cell),
     )
-    counts = canvas.points(frame, "x", "y", agg=ds.count())
-    if margin:
-        counts = tf.spread(counts, px=margin, shape="circle", how="max")
-    grid = counts.values[margin : margin + cells, margin : margin + cells]
     # datashader's rows run south to north; images run north to south
-    grid = np.flipud(grid)
+    counts = np.flipud(canvas.points(frame, "x", "y", agg=ds.count()).values)
+    # Each cell's dot covers the cells around it. Where dots overlap, the one
+    # with the highest draw priority is on top: encode priority and count in
+    # one number, and take the largest over each cell's neighborhood.
+    side = np.arange(cells + 2 * margin) - margin
+    priority = draw_priority((y * cells + side)[:, None], (x * cells + side)[None, :])
+    keys = np.where(counts > 0, priority * 32 + np.minimum(counts, 16), -1)
+    top_keys = np.full((cells, cells), -1, dtype=np.int64)
+    for dy, dx in disk_offsets(margin):
+        np.maximum(
+            top_keys,
+            keys[margin + dy : margin + dy + cells, margin + dx : margin + dx + cells],
+            out=top_keys,
+        )
     block = CELLS_PER_CSS_PIXEL // scale
     if block > 1:
-        grid = grid.reshape(cells // block, block, cells // block, block).max(
+        top_keys = top_keys.reshape(cells // block, block, cells // block, block).max(
             axis=(1, 3)
         )
-    rgba = COUNT_LUT[np.minimum(grid, 16)]
+    grid = np.where(top_keys >= 0, top_keys % 32, 0)
+    rgba = COUNT_LUT[grid]
     buffer = io.BytesIO()
     Image.fromarray(rgba).save(buffer, "PNG")
     return buffer.getvalue()

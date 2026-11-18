@@ -240,3 +240,59 @@ def test_unknown_confidence_values_fail_the_load(tmp_path):
 
     with pytest.raises(ValueError, match="Confidence"):
         PointsStore(path, str(tmp_path / "cache")).get()
+
+
+def cluster_store(tmp_path, z, tile_x, tile_y, edge=False):
+    """One cell with 20 alerts and single alerts in the 24 cells around it,
+    at zoom z, in the middle of a tile or just inside its east edge."""
+    cells = 512
+    left, bottom, right, top = mercantile.bounds(tile_x, tile_y, z)
+    size_lon = (right - left) / cells
+    size_lat = (top - bottom) / cells
+    column = cells - 3 if edge else cells // 2
+    row = cells // 2
+    alerts = []
+    for dr in range(-2, 3):
+        for dc in range(-2, 3):
+            lon = left + (column + dc + 0.5) * size_lon
+            lat = top - (row + dr + 0.5) * size_lat
+            for _ in range(20 if (dr, dc) == (0, 0) else 1):
+                alerts.append((lat, lon, "2026-09-01", "0100", "n"))
+    return PointsStore(publish(tmp_path, "cluster", alerts), str(tmp_path / "cache"))
+
+
+def test_a_dense_cell_does_not_cover_its_overlapping_neighbors(tmp_path):
+    z, x, y = 9, 300, 200
+    store = cluster_store(tmp_path, z, x, y)
+
+    image = decode(
+        render_tile(
+            store.get(), z, x, y, date(2026, 9, 1), date(2026, 9, 1), False, scale=2
+        )
+    )
+
+    drawn = image[..., 3] > 0
+    black = (image[..., :3] == 0).all(axis=-1) & drawn
+    assert spread_cells(z) >= 2  # the dots overlap
+    # 1 of the 25 cells is black, and its dot is mostly or wholly under
+    # others; drawing the highest count on top made about a quarter black
+    assert black.sum() < drawn.sum() / 10
+
+
+def test_a_cluster_across_a_tile_edge_is_drawn_whole(tmp_path):
+    z, x, y = 9, 300, 200
+    day = date(2026, 9, 1)
+    (tmp_path / "middle").mkdir()
+    (tmp_path / "edge").mkdir()
+    middle = cluster_store(tmp_path / "middle", z, x, y)
+    edge = cluster_store(tmp_path / "edge", z, x, y, edge=True)
+
+    whole = decode(render_tile(middle.get(), z, x, y, day, day, False, scale=2))
+    west = decode(render_tile(edge.get(), z, x, y, day, day, False, scale=2))
+    east = decode(render_tile(edge.get(), z, x + 1, y, day, day, False, scale=2))
+
+    # the dots spilling over the edge are drawn in the next tile
+    assert (east[..., 3] > 0).any()
+    assert (west[..., 3] > 0).sum() + (east[..., 3] > 0).sum() == (
+        whole[..., 3] > 0
+    ).sum()
