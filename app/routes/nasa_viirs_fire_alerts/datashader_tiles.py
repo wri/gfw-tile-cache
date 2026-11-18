@@ -1,5 +1,13 @@
 """NASA VIIRS fire alerts as raster tiles rendered with datashader from a
-Parquet file of alert points (see app/utils/viirs_points.py)."""
+Parquet file of alert points (see app/utils/viirs_points.py).
+
+The tiles are under .../dynamic/ so that CloudFront's "*/dynamic/*" behavior
+sends them to this app with their query strings; its "*.png" behavior would
+send them to the static tile bucket and drop the dates. The prefix avoids
+/latest/, which CloudFront redirects to the Data API's latest version.
+
+These routes are experimental, so they are left out of the API docs.
+"""
 
 import threading
 from datetime import date, timedelta
@@ -16,9 +24,9 @@ from ...settings.globals import GLOBALS
 from ...utils.viirs_points import Points, PointsStore, nearby_alerts, render_tile
 from .. import DATE_REGEX, validate_dates
 
-router = APIRouter()
+router = APIRouter(include_in_schema=False)
 
-PREFIX = "/nasa_viirs_fire_alerts/latest/datashader"
+PREFIX = "/nasa_viirs_fire_alerts/datashader"
 CACHE_CONTROL = "max-age=3600"
 DEFAULT_DAYS = 7
 TILE_Y_REGEX = r"^\d+(@2x)?$"
@@ -168,7 +176,7 @@ def viirs_datashader_alerts(
 
 
 @router.get(
-    f"{PREFIX}/{{z}}/{{x}}/{{y}}.png",
+    f"{PREFIX}/dynamic/{{z}}/{{x}}/{{y}}.png",
     response_class=Response,
     tags=["Raster Tiles"],
     response_description="PNG Raster Tile",

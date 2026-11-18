@@ -11,7 +11,8 @@ from PIL import Image
 from app.routes.nasa_viirs_fire_alerts import datashader_tiles as route
 from app.utils.viirs_points import PointsStore
 
-PREFIX = "/nasa_viirs_fire_alerts/latest/datashader"
+PREFIX = "/nasa_viirs_fire_alerts/datashader"
+TILES = f"{PREFIX}/dynamic"
 # zoom 10 tile holding the alerts below
 TILE = "10/575/547"
 
@@ -53,7 +54,7 @@ def drawn_pixels(response) -> int:
 
 
 def test_tile_is_a_png_cached_for_an_hour(client):
-    response = client.get(f"{PREFIX}/{TILE}.png")
+    response = client.get(f"{TILES}/{TILE}.png")
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"
@@ -62,18 +63,16 @@ def test_tile_is_a_png_cached_for_an_hour(client):
 
 
 def test_retina_tile_is_512_pixels(client):
-    response = client.get(f"{PREFIX}/10/575/547@2x.png")
+    response = client.get(f"{TILES}/10/575/547@2x.png")
 
     assert image(response).size == (512, 512)
 
 
 def test_default_dates_are_the_last_week_of_alerts(client):
-    default = client.get(f"{PREFIX}/{TILE}.png")
-    august = client.get(
-        f"{PREFIX}/{TILE}.png?start_date=2026-08-01&end_date=2026-08-01"
-    )
+    default = client.get(f"{TILES}/{TILE}.png")
+    august = client.get(f"{TILES}/{TILE}.png?start_date=2026-08-01&end_date=2026-08-01")
     september = client.get(
-        f"{PREFIX}/{TILE}.png?start_date=2026-09-01&end_date=2026-09-30"
+        f"{TILES}/{TILE}.png?start_date=2026-09-01&end_date=2026-09-30"
     )
 
     assert drawn_pixels(default) > 0
@@ -82,14 +81,14 @@ def test_default_dates_are_the_last_week_of_alerts(client):
 
 
 def test_more_than_90_days_needs_force_date_range(client):
-    url = f"{PREFIX}/{TILE}.png?start_date=2026-01-01&end_date=2026-11-16"
+    url = f"{TILES}/{TILE}.png?start_date=2026-01-01&end_date=2026-11-16"
 
     assert client.get(url).status_code == 403
     assert client.get(url + "&force_date_range=true").status_code == 200
 
 
 def test_tile_outside_the_grid_is_rejected(client):
-    assert client.get(f"{PREFIX}/2/4/0.png").status_code == 400
+    assert client.get(f"{TILES}/2/4/0.png").status_code == 400
 
 
 def test_max_alert_date_is_the_newest_alert(client):
@@ -134,6 +133,13 @@ def test_unavailable_points_return_503(tmp_path, monkeypatch):
     app = FastAPI()
     app.include_router(route.router)
 
-    response = TestClient(app).get(f"{PREFIX}/{TILE}.png")
+    response = TestClient(app).get(f"{TILES}/{TILE}.png")
 
     assert response.status_code == 503
+
+
+def test_routes_are_left_out_of_the_api_docs(client):
+    paths = client.get("/openapi.json").json()["paths"]
+
+    assert not [path for path in paths if "datashader" in path]
+    assert client.get(f"{PREFIX}/max_alert__date").status_code == 200
