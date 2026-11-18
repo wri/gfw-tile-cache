@@ -95,6 +95,16 @@ class Globals(BaseSettings):
         description="Base URL of the WMTS service serving Planet imagery masked to integrated alerts. "
         "Set per environment; the endpoint is unavailable without it.",
     )
+    viirs_points_uri: str = Field(
+        "s3://gfw-data-lake/nasa_viirs_fire_alerts/viirs_fire_alerts.parquet",
+        description="Parquet of VIIRS fire alert points served by the datashader "
+        "VIIRS tiles.",
+    )
+    viirs_points_cache_dir: str = Field(
+        "/tmp/viirs_points",
+        description="Local directory for the VIIRS alert arrays shared by all "
+        "server processes on a machine.",
+    )
 
     planet_api_key: Optional[Secret] = Field(
         None,

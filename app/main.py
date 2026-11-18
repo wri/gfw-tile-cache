@@ -28,6 +28,7 @@ from .routes.nasa_viirs_fire_alerts import (
     esri_vector_tile_server as viirs_esri_vector_tile_server,
 )
 from .routes.nasa_viirs_fire_alerts import vector_tiles as viirs_vector_tiles
+from .routes.nasa_viirs_fire_alerts import datashader_tiles as viirs_datashader_tiles
 from .routes.umd_modis_burned_areas import vector_tiles as burned_areas_tiles
 from .routes.umd_glad_landsat_alerts import (
     raster_tiles as umd_glad_landsat_alerts_raster_tiles,
@@ -72,6 +73,7 @@ logger.handlers = gunicorn_logger.handlers
 ####################
 
 ROUTERS = (
+    viirs_datashader_tiles.router,
     viirs_vector_tiles.router,
     burned_areas_tiles.router,
     dynamic_vector_tiles.router,
@@ -102,6 +104,11 @@ ROUTERS = (
 
 for r in ROUTERS:
     app.include_router(r)
+
+
+@app.on_event("startup")
+async def load_viirs_points():
+    viirs_datashader_tiles.warm_up()
 
 
 # titiler routes
