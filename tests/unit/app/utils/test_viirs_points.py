@@ -11,10 +11,10 @@ from PIL import Image
 from app.utils.viirs_points import (
     COUNT_LUT,
     PointsStore,
+    dot_kernel,
     dot_radius,
     nearby_alerts,
     render_tile,
-    spread_cells,
 )
 
 
@@ -86,8 +86,18 @@ def test_dot_sizes_follow_gfw_zoom_stops():
     assert dot_radius(1) == 0.75
     assert dot_radius(13) == 4
     assert dot_radius(20) == 4
-    # a dot 2 * spread + 1 cells (half pixels) wide is about GFW's diameter
-    assert (spread_cells(4), spread_cells(10), spread_cells(13)) == (1, 4, 8)
+    # between stops, GFW's layer interpolates exponentially with base 0.5
+    assert dot_radius(5) == pytest.approx(0.75 + 0.25 * 2 / 3)
+
+
+def test_small_dots_fade_like_maplibre_circles():
+    # opacity is smoothstep of the distance inside the edge in device pixels:
+    # a 0.75-pixel radius centered on a pixel peaks at smoothstep(0.75)
+    assert dot_kernel(4, 1).max() == pytest.approx(0.84375)
+    # at twice the pixel density the edge fade is half as wide
+    assert 0.84375 < dot_kernel(4, 2).max() < 1
+    # larger dots are opaque in the middle
+    assert dot_kernel(10, 1).max() == 1
 
 
 def test_points_are_sorted_by_date_and_time(store):
@@ -242,26 +252,47 @@ def test_unknown_confidence_values_fail_the_load(tmp_path):
         PointsStore(path, str(tmp_path / "cache")).get()
 
 
+def grid_point_lnglat(z, tile_x, tile_y, row, column):
+    """Longitude and latitude of a point of the tile's grid of 512 x 512
+    cells, counted from its north-west corner."""
+    left, bottom, right, top = mercantile.xy_bounds(tile_x, tile_y, z)
+    size = (right - left) / 512
+    return mercantile.lnglat(left + column * size, top - row * size)
+
+
 def cluster_store(tmp_path, z, tile_x, tile_y, edge=False):
-    """One cell with 20 alerts and single alerts in the 24 cells around it,
-    at zoom z, in the middle of a tile or just inside its east edge."""
-    cells = 512
-    left, bottom, right, top = mercantile.bounds(tile_x, tile_y, z)
-    size_lon = (right - left) / cells
-    size_lat = (top - bottom) / cells
-    column = cells - 3 if edge else cells // 2
-    row = cells // 2
+    """One grid point with 20 alerts and single alerts at the 24 grid points
+    around it, at zoom z, in the middle of a tile or just inside its east
+    edge."""
+    column = 512 - 3 if edge else 256
     alerts = []
     for dr in range(-2, 3):
         for dc in range(-2, 3):
-            lon = left + (column + dc + 0.5) * size_lon
-            lat = top - (row + dr + 0.5) * size_lat
+            lon, lat = grid_point_lnglat(z, tile_x, tile_y, 256 + dr, column + dc)
             for _ in range(20 if (dr, dc) == (0, 0) else 1):
                 alerts.append((lat, lon, "2026-09-01", "0100", "n"))
     return PointsStore(publish(tmp_path, "cluster", alerts), str(tmp_path / "cache"))
 
 
-def test_a_dense_cell_does_not_cover_its_overlapping_neighbors(tmp_path):
+def test_a_lone_small_dot_is_partly_transparent(tmp_path):
+    z, x, y = 4, 9, 8
+    # grid point 201 is the center of pixel 100 of a 256-pixel tile
+    lon, lat = grid_point_lnglat(z, x, y, 201, 201)
+    store = PointsStore(
+        publish(tmp_path, "lone", [(lat, lon, "2026-09-01", "0100", "n")]),
+        str(tmp_path / "cache"),
+    )
+
+    image = decode(
+        render_tile(store.get(), z, x, y, date(2026, 9, 1), date(2026, 9, 1), False)
+    )
+
+    assert list(image[100, 100, :3]) == rgba("#FFCC00")[:3]
+    assert image[100, 100, 3] == round(0.84375 * 255)
+    assert (image[..., 3] > 0).sum() == 1
+
+
+def test_overlapping_dots_are_blended(tmp_path):
     z, x, y = 9, 300, 200
     store = cluster_store(tmp_path, z, x, y)
 
@@ -271,12 +302,15 @@ def test_a_dense_cell_does_not_cover_its_overlapping_neighbors(tmp_path):
         )
     )
 
+    # the pixels around the 20-alert grid point mix its black with the
+    # yellow of the single alerts around it, and are opaque
+    center = image[255:257, 255:257].reshape(-1, 4)
+    yellow = np.array(rgba("#FFCC00")[:3])
+    assert (center[:, 3] == 255).all()
+    assert ((center[:, :3] > 0) & (center[:, :3] < yellow.clip(1))).any(axis=1).all()
+    # and nothing is pure black
     drawn = image[..., 3] > 0
-    black = (image[..., :3] == 0).all(axis=-1) & drawn
-    assert spread_cells(z) >= 2  # the dots overlap
-    # 1 of the 25 cells is black, and its dot is mostly or wholly under
-    # others; drawing the highest count on top made about a quarter black
-    assert black.sum() < drawn.sum() / 10
+    assert not ((image[..., :3] == 0).all(axis=-1) & drawn).any()
 
 
 def test_a_cluster_across_a_tile_edge_is_drawn_whole(tmp_path):
@@ -291,8 +325,10 @@ def test_a_cluster_across_a_tile_edge_is_drawn_whole(tmp_path):
     west = decode(render_tile(edge.get(), z, x, y, day, day, False, scale=2))
     east = decode(render_tile(edge.get(), z, x + 1, y, day, day, False, scale=2))
 
-    # the dots spilling over the edge are drawn in the next tile
+    # the dots spilling over the edge are drawn in the next tile, the same
+    # as when the cluster is in the middle of a tile
     assert (east[..., 3] > 0).any()
-    assert (west[..., 3] > 0).sum() + (east[..., 3] > 0).sum() == (
-        whole[..., 3] > 0
-    ).sum()
+    assert (
+        np.concatenate([west[..., 3], east[..., 3]], axis=1).sum()
+        == whole[..., 3].sum()
+    )

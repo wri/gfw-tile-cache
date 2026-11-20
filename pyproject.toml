@@ -34,6 +34,7 @@ dependencies = [
     "pyarrow",
     "pyproj",
     "rasterio==1.4.3",
+    "scipy",
     "shapely",
     "sqlalchemy<1.4",
     "starlette",

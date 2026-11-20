@@ -14,10 +14,15 @@ Tiles mimic GFW's dynamic VIIRS vector layer: alerts are counted on the same
 grid it aggregates them on (1024 cells across a 512-pixel vector tile, so half
 a CSS pixel), each cell is drawn as a dot sized by zoom, and the dot's color
 follows GFW's count ramp, from yellow-orange (one alert) to black (16 or more).
-At low zooms the dots overlap. GFW's map draws them in whatever order its tiles
-list the cells, so the dot on top is effectively arbitrary; here overlapping
-dots are drawn in a fixed pseudo-random order, so tiles look like GFW's rather
-than letting the densest cells cover their neighbors.
+
+Dots are drawn the way MapLibre draws GFW's circles. Its anti-aliasing fades
+each circle from fully opaque one device pixel inside the edge to transparent
+at the edge, so the small dots of low zooms are partly transparent (a 0.75
+pixel radius peaks at 84% opacity on a standard screen) and pale colors almost
+vanish into the basemap. Overlapping dots are blended: their colors averaged,
+weighted by opacity, and their opacities combined as for layered dots, so the
+result doesn't depend on drawing order. A 256-pixel tile is faded as on a
+standard screen and a 512-pixel (@2x) tile as on a high-density screen.
 """
 
 import fcntl
@@ -29,6 +34,7 @@ import shutil
 import tempfile
 import threading
 import time
+from bisect import bisect_right
 from datetime import date
 from typing import List, Optional, Tuple
 
@@ -42,6 +48,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from boto3.s3.transfer import TransferConfig
 from PIL import Image
+from scipy.signal import fftconvolve
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +69,9 @@ COUNT_COLOR_STOPS = [
     (8, "#B51212"),
     (16, "#000000"),
 ]
+# Exponential interpolation between the radius stops, as in GFW's layer
+# ({"base": 0.5, "stops": ...})
+RADIUS_BASE = 0.5
 RADIUS_STOPS = [
     (3, 0.75),
     (5, 1),
@@ -103,14 +113,40 @@ def dot_radius(z: int) -> float:
     """GFW's circle radius in CSS pixels for a 256-pixel raster tile at zoom z,
     which is displayed at the scale of map zoom z - 1 (map zoom is measured
     in 512-pixel tiles)."""
+    zoom = z - 1
     zooms, radii = zip(*RADIUS_STOPS)
-    return float(np.interp(z - 1, zooms, radii))
+    if zoom <= zooms[0]:
+        return float(radii[0])
+    if zoom >= zooms[-1]:
+        return float(radii[-1])
+    i = bisect_right(zooms, zoom) - 1
+    t = (RADIUS_BASE ** (zoom - zooms[i]) - 1) / (
+        RADIUS_BASE ** (zooms[i + 1] - zooms[i]) - 1
+    )
+    return radii[i] + t * (radii[i + 1] - radii[i])
 
 
-def spread_cells(z: int) -> int:
-    """How many grid cells a dot extends beyond its own cell, so its diameter
-    in cells (2 * spread + 1) is close to GFW's dot diameter."""
-    return max(0, round(dot_radius(z) * CELLS_PER_CSS_PIXEL - 0.5))
+def dot_kernel(z: int, scale: int) -> np.ndarray:
+    """The opacity a dot gives each pixel around it, as a square array: entry
+    [half + i, half + j] (`half` being the array's half width) is for the dot
+    i grid points below and j right of the first grid point at or above and
+    left of the pixel's center. Dots sit on grid points, as GFW's tiles round
+    alerts to them, and a pixel of a 256 * scale tile spans
+    `CELLS_PER_CSS_PIXEL / scale` grid steps each way.
+
+    This is MapLibre's circle anti-aliasing (circle.fragment.glsl, with no blur
+    or stroke): opacity is smoothstep of the distance inside the circle's edge,
+    in device pixels, reaching 1 one device pixel in. A scale-1 tile is drawn
+    as on a screen with one device pixel per CSS pixel, scale 2 as on one with
+    two."""
+    radius = dot_radius(z)
+    step = CELLS_PER_CSS_PIXEL // scale  # cells across one pixel
+    half = math.ceil(radius * CELLS_PER_CSS_PIXEL + step / 2)
+    # grid steps from the pixel's center to each dot
+    offsets = np.arange(-half, half + 1) - step / 2
+    distance = np.hypot(offsets[:, None], offsets[None, :]) / CELLS_PER_CSS_PIXEL
+    inside = np.clip((radius - distance) * scale, 0, 1)
+    return inside * inside * (3 - 2 * inside)
 
 
 def to_day(value: date) -> int:
@@ -249,28 +285,6 @@ class PointsStore:
         logger.info(f"Converted {self.uri} in {seconds}s")
 
 
-def draw_priority(rows: np.ndarray, columns: np.ndarray) -> np.ndarray:
-    """A fixed pseudo-random priority for each grid cell, from its position in
-    the zoom level's whole grid, so a dot crossing a tile edge is drawn the
-    same way in both tiles."""
-    h = (rows.astype(np.uint64) * np.uint64(0x9E3779B1)) ^ (
-        columns.astype(np.uint64) * np.uint64(0x85EBCA77)
-    )
-    h ^= h >> np.uint64(15)
-    h *= np.uint64(0x2C1B3C6D)
-    h ^= h >> np.uint64(12)
-    return (h & np.uint64(0xFFFFF)).astype(np.int64)
-
-
-def disk_offsets(radius: int) -> List[Tuple[int, int]]:
-    """The cells of a dot `2 * radius + 1` cells wide, around its center
-    (datashader's circle shape)."""
-    span = range(-radius, radius + 1)
-    return [
-        (dy, dx) for dy in span for dx in span if math.hypot(dy, dx) <= radius + 0.5
-    ]
-
-
 def render_tile(
     points: Points,
     z: int,
@@ -285,41 +299,60 @@ def render_tile(
     wide, styled like GFW's VIIRS layer."""
     rows = points.rows(start, end, high_confidence_only)
     cells = TILE_CSS_PIXELS * CELLS_PER_CSS_PIXEL
-    margin = spread_cells(z)
+    pixels = TILE_CSS_PIXELS * scale
+    kernel = dot_kernel(z, scale)
+    margin = kernel.shape[0] // 2
     left, bottom, right, top = mercantile.xy_bounds(x, y, z)
     cell = (right - left) / cells
     frame = pd.DataFrame({"x": points.x[rows], "y": points.y[rows]}, copy=False)
+    # Count alerts by their nearest grid point, as GFW's tiles do: shift the
+    # bins half a cell left and up, so bin i is centered on grid point i
+    # (counted from the tile's west and north edges, from -margin).
     canvas = ds.Canvas(
         plot_width=cells + 2 * margin,
         plot_height=cells + 2 * margin,
-        x_range=(left - margin * cell, right + margin * cell),
-        y_range=(bottom - margin * cell, top + margin * cell),
+        x_range=(left - (margin + 0.5) * cell, right + (margin - 0.5) * cell),
+        y_range=(bottom - (margin - 0.5) * cell, top + (margin + 0.5) * cell),
     )
     # datashader's rows run south to north; images run north to south
     counts = np.flipud(canvas.points(frame, "x", "y", agg=ds.count()).values)
-    # Each cell's dot covers the cells around it. Where dots overlap, the one
-    # with the highest draw priority is on top: encode priority and count in
-    # one number, and take the largest over each cell's neighborhood.
-    side = np.arange(cells + 2 * margin) - margin
-    priority = draw_priority((y * cells + side)[:, None], (x * cells + side)[None, :])
-    keys = np.where(counts > 0, priority * 32 + np.minimum(counts, 16), -1)
-    top_keys = np.full((cells, cells), -1, dtype=np.int64)
-    for dy, dx in disk_offsets(margin):
-        np.maximum(
-            top_keys,
-            keys[margin + dy : margin + dy + cells, margin + dx : margin + dx + cells],
-            out=top_keys,
-        )
-    block = CELLS_PER_CSS_PIXEL // scale
-    if block > 1:
-        top_keys = top_keys.reshape(cells // block, block, cells // block, block).max(
-            axis=(1, 3)
-        )
-    grid = np.where(top_keys >= 0, top_keys % 32, 0)
-    rgba = COUNT_LUT[grid]
+    rgba = np.zeros((pixels, pixels, 4), dtype=np.uint8)
+    if counts.any():
+        rgba = blend_dots(counts, kernel, CELLS_PER_CSS_PIXEL // scale)
     buffer = io.BytesIO()
     Image.fromarray(rgba).save(buffer, "PNG")
     return buffer.getvalue()
+
+
+def blend_dots(counts: np.ndarray, kernel: np.ndarray, step: int) -> np.ndarray:
+    """RGBA pixels of the dots of a grid of alert counts (with a margin of half
+    the kernel's width), one pixel per `step` cells each way.
+
+    Where dots overlap, the color is their colors' average weighted by
+    opacity, and the opacity is 1 - (1 - a1)(1 - a2)..., as for dots drawn
+    over each other in random order. Each is a sum over the dots around a
+    pixel of a fixed function of their offset, so it's computed by
+    convolution."""
+    # single precision is plenty for 8-bit output and halves the FFT time
+    present = (counts > 0).astype(np.float32)
+    colors = COUNT_LUT[np.minimum(counts, 16), :3] * present[..., None]
+    layers = np.concatenate([present[..., None], colors], axis=-1)
+    # convolution flips the kernel; kernel[dy, dx] is for the dot at +dy, +dx
+    flipped = kernel[::-1, ::-1].astype(np.float32)
+    sums = fftconvolve(layers, flipped[..., None], mode="valid", axes=(0, 1))
+    clear = np.log1p(-np.minimum(flipped, 1 - 1e-6))
+    log_transparency = fftconvolve(present, clear, mode="valid")
+    sums, log_transparency = sums[::step, ::step], log_transparency[::step, ::step]
+    weight = sums[..., 0]
+    drawn = weight > 1e-6
+    rgba = np.zeros(weight.shape + (4,), dtype=np.uint8)
+    rgba[drawn, :3] = np.rint(
+        np.clip(sums[drawn, 1:] / weight[drawn, None], 0, 255)
+    ).astype(np.uint8)
+    rgba[drawn, 3] = np.rint(
+        255 * np.clip(-np.expm1(log_transparency[drawn]), 0, 1)
+    ).astype(np.uint8)
+    return rgba
 
 
 def nearby_alerts(
